@@ -1,3 +1,4 @@
+#jxrm5m-codex/create-a-website
 # WebSite Profissional
 
 Este repositório traz um site institucional responsivo inspirado na proposta da Produtos Digitais BH. O código é simples, focado em desempenho e acessibilidade.
@@ -30,3 +31,16 @@ robots.txt
 ## Personalização rápida
 
 Substitua `TODO` no link do WhatsApp em cada página pelo seu número. Ajuste imagens e conteúdo conforme a necessidade.
+=======
+# WebSite
+
+Este repositório contém um exemplo de site simples que você pode usar como ponto de partida.
+
+## Como usar
+
+1. Abra o arquivo `index.html` em um navegador para visualizar o site.
+2. Edite os arquivos `index.html` e `style.css` para personalizar o conteúdo e o visual.
+3. Salve suas mudanças e recarregue o navegador para ver o resultado.
+
+O layout foi estruturado para ser responsivo e funcionar bem em dispositivos móveis.
+# main

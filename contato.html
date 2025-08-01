@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contato - Site Profissional</title>
+    <meta name="description" content="Entre em contato conosco">
+    <link rel="canonical" href="contato.html">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container site-header__top">
+            <h1 class="site-header__logo">Site Profissional</h1>
+            <nav class="site-header__nav" aria-label="Primária">
+                <ul>
+                    <li><a href="index.html">Início</a></li>
+                    <li><a href="sobre.html">Sobre</a></li>
+                    <li><a href="servicos.html">Serviços</a></li>
+                    <li><a href="portfolio.html">Portfólio</a></li>
+                    <li><a href="blog/index.html">Blog</a></li>
+                    <li><a href="contato.html">Contato</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main>
+        <section class="container">
+            <h2>Fale Conosco</h2>
+            <p>Envie uma mensagem ou fale diretamente no WhatsApp.</p>
+            <form class="form" action="https://formspree.io/f/xxxx" method="POST">
+                <input class="form__input" type="text" name="nome" placeholder="Seu nome" required>
+                <input class="form__input" type="email" name="email" placeholder="Seu e-mail" required>
+                <textarea class="form__input" name="mensagem" placeholder="Sua mensagem" rows="4"></textarea>
+                <input type="text" name="_gotcha" style="display:none">
+                <button type="submit" class="btn">Enviar</button>
+            </form>
+            <p><a href="https://wa.me/55TODO?text=Ol%C3%A1!%20Quero%20um%20or%C3%A7amento%20para%20meu%20site." class="btn">WhatsApp</a></p>
+        </section>
+    </main>
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2023 Site Profissional</p>
+        </div>
+    </footer>
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

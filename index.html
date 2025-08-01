@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Profissional</title>
+    <meta name="description" content="Exemplo de site profissional responsivo">
+    <link rel="canonical" href="index.html">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <a href="#conteudo" class="skip-link">Pular para conteúdo</a>
+    <header class="site-header">
+        <div class="container site-header__top">
+            <h1 class="site-header__logo">Site Profissional</h1>
+            <nav class="site-header__nav" aria-label="Primária">
+                <ul>
+                    <li><a href="index.html">Início</a></li>
+                    <li><a href="sobre.html">Sobre</a></li>
+                    <li><a href="servicos.html">Serviços</a></li>
+                    <li><a href="portfolio.html">Portfólio</a></li>
+                    <li><a href="blog/index.html">Blog</a></li>
+                    <li><a href="contato.html">Contato</a></li>
+                </ul>
+            </nav>
+        </div>
+        <div class="hero" id="inicio">
+            <h2 class="hero__title">Soluções Digitais que Impulsionam o seu Negócio</h2>
+            <p class="hero__subtitle">Criação de sites modernos, rápidos e otimizados para SEO.</p>
+            <a href="#contato" class="btn">Saiba Mais</a>
+        </div>
+    </header>
+    <main id="conteudo">
+        <section id="sobre" class="container">
+            <h2>Sobre Nós</h2>
+            <p>Somos especialistas em desenvolver produtos digitais de alta qualidade para empresas de todos os tamanhos.</p>
+        </section>
+        <section id="servicos" class="container services">
+            <h2>Serviços</h2>
+            <div class="services__cards">
+                <div class="services__card">
+                    <h3>Web Design</h3>
+                    <p>Layouts atraentes, modernos e totalmente responsivos.</p>
+                </div>
+                <div class="services__card">
+                    <h3>Desenvolvimento</h3>
+                    <p>Sites rápidos, seguros e fáceis de manter.</p>
+                </div>
+                <div class="services__card">
+                    <h3>Consultoria</h3>
+                    <p>Orientação especializada para alavancar o seu projeto.</p>
+                </div>
+            </div>
+        </section>
+        <section id="contato" class="container">
+            <h2>Entre em Contato</h2>
+            <form class="form">
+                <input class="form__input" type="text" placeholder="Seu nome" required>
+                <input class="form__input" type="email" placeholder="Seu e-mail" required>
+                <textarea class="form__input" placeholder="Sua mensagem" rows="4"></textarea>
+                <button type="submit" class="btn">Enviar</button>
+            </form>
+        </section>
+    </main>
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2023 Site Profissional</p>
+        </div>
+    </footer>
+    <script src="assets/js/main.js"></script>
+</body>
+</html>

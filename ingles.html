@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Material completo de inglês do A1 ao C2. Do básico ao avançado com um único material estruturado, progressivo e prático." />
+  <title>Material de Inglês A1 ao C2 — Do Zero ao Fluente</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #0A0F1E;
+      --blue:   #1D4ED8;
+      --cyan:   #06B6D4;
+      --green:  #10B981;
+      --yellow: #F59E0B;
+      --purple: #7C3AED;
+      --red:    #EF4444;
+      --white:  #FFFFFF;
+      --gray-50:  #F8FAFC;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-400: #94A3B8;
+      --gray-600: #475569;
+      --gray-800: #1E293B;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--white);
+      color: var(--gray-800);
+      line-height: 1.6;
+    }
+
+    /* ── SKIP LINK ── */
+    .skip-link {
+      position: absolute;
+      top: -100%;
+      left: 1rem;
+      background: var(--blue);
+      color: var(--white);
+      padding: .5rem 1rem;
+      border-radius: 0 0 8px 8px;
+      font-weight: 600;
+      z-index: 9999;
+    }
+    .skip-link:focus { top: 0; }
+
+    /* ── NAV ── */
+    .nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+      background: rgba(10, 15, 30, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    .nav__inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav__logo {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--white);
+      text-decoration: none;
+      letter-spacing: -.5px;
+    }
+    .nav__logo span { color: var(--cyan); }
+    .nav__cta {
+      background: var(--blue);
+      color: var(--white);
+      font-weight: 600;
+      font-size: .9rem;
+      padding: .5rem 1.25rem;
+      border-radius: 8px;
+      text-decoration: none;
+      transition: background .2s;
+    }
+    .nav__cta:hover { background: #1e40af; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0A0F1E 0%, #0f2460 50%, #0A0F1E 100%);
+      display: flex;
+      align-items: center;
+      padding: 100px 1.5rem 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 70% 50%, rgba(6,182,212,.12) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(29,78,216,.2) 0%, transparent 60%);
+    }
+    .hero__inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 4rem;
+      align-items: center;
+    }
+    .hero__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      background: rgba(6,182,212,.15);
+      border: 1px solid rgba(6,182,212,.3);
+      color: var(--cyan);
+      font-size: .8rem;
+      font-weight: 600;
+      padding: .35rem .9rem;
+      border-radius: 999px;
+      margin-bottom: 1.5rem;
+      letter-spacing: .5px;
+      text-transform: uppercase;
+    }
+    .hero__title {
+      font-size: clamp(2.2rem, 5vw, 3.6rem);
+      font-weight: 900;
+      color: var(--white);
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 1.25rem;
+    }
+    .hero__title em {
+      font-style: normal;
+      color: var(--cyan);
+    }
+    .hero__subtitle {
+      font-size: 1.1rem;
+      color: #94A3B8;
+      max-width: 520px;
+      margin-bottom: 2rem;
+      line-height: 1.7;
+    }
+    .hero__actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      color: var(--white);
+      font-weight: 700;
+      font-size: 1rem;
+      padding: .9rem 2rem;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: opacity .2s, transform .2s;
+      box-shadow: 0 4px 24px rgba(6,182,212,.3);
+    }
+    .btn-primary:hover { opacity: .9; transform: translateY(-2px); }
+    .btn-secondary {
+      background: rgba(255,255,255,.07);
+      color: var(--white);
+      font-weight: 600;
+      font-size: 1rem;
+      padding: .9rem 2rem;
+      border-radius: 10px;
+      text-decoration: none;
+      border: 1px solid rgba(255,255,255,.15);
+      transition: background .2s;
+    }
+    .btn-secondary:hover { background: rgba(255,255,255,.12); }
+
+    /* card flutuante hero */
+    .hero__card {
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      border-radius: 20px;
+      padding: 2rem;
+      backdrop-filter: blur(10px);
+    }
+    .hero__card-title {
+      color: var(--white);
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 1.25rem;
+      text-align: center;
+    }
+    .levels-preview {
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+    }
+    .level-row {
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      padding: .6rem .85rem;
+      border-radius: 10px;
+      transition: background .2s;
+    }
+    .level-row:hover { background: rgba(255,255,255,.05); }
+    .level-badge {
+      width: 48px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .75rem;
+      font-weight: 800;
+      flex-shrink: 0;
+    }
+    .level-name { color: var(--white); font-size: .9rem; font-weight: 600; }
+    .level-desc { color: var(--gray-400); font-size: .78rem; margin-left: auto; }
+    .level-bar-wrap { flex: 1; background: rgba(255,255,255,.08); height: 4px; border-radius: 999px; }
+    .level-bar { height: 4px; border-radius: 999px; }
+
+    /* A1–C2 colors */
+    .l-a1 { background: #4ADE80; color: #052e16; }
+    .l-a2 { background: #86EFAC; color: #052e16; }
+    .l-b1 { background: #60A5FA; color: #172554; }
+    .l-b2 { background: #3B82F6; color: #eff6ff; }
+    .l-c1 { background: #A78BFA; color: #2e1065; }
+    .l-c2 { background: #7C3AED; color: #ede9fe; }
+
+    .bar-a1 { background: #4ADE80; width: 15%; }
+    .bar-a2 { background: #86EFAC; width: 30%; }
+    .bar-b1 { background: #60A5FA; width: 50%; }
+    .bar-b2 { background: #3B82F6; width: 65%; }
+    .bar-c1 { background: #A78BFA; width: 82%; }
+    .bar-c2 { background: #7C3AED; width: 100%; }
+
+    /* ── STATS ── */
+    .stats {
+      background: var(--gray-800);
+      padding: 2.5rem 1.5rem;
+    }
+    .stats__inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 2rem;
+      text-align: center;
+    }
+    .stat__number {
+      font-size: 2.2rem;
+      font-weight: 900;
+      color: var(--cyan);
+      letter-spacing: -1px;
+    }
+    .stat__label { color: var(--gray-400); font-size: .85rem; margin-top: .2rem; }
+
+    /* ── SECTION COMMONS ── */
+    section { padding: 80px 1.5rem; }
+    .section-inner { max-width: 1100px; margin: 0 auto; }
+    .section-tag {
+      display: inline-block;
+      background: #EFF6FF;
+      color: var(--blue);
+      font-size: .75rem;
+      font-weight: 700;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      padding: .3rem .8rem;
+      border-radius: 999px;
+      margin-bottom: .9rem;
+    }
+    .section-title {
+      font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+      font-weight: 900;
+      color: var(--gray-800);
+      letter-spacing: -1px;
+      margin-bottom: .9rem;
+      line-height: 1.15;
+    }
+    .section-sub {
+      color: var(--gray-600);
+      font-size: 1.05rem;
+      max-width: 580px;
+      line-height: 1.7;
+    }
+
+    /* ── LEVELS ── */
+    .levels { background: var(--gray-50); }
+    .levels__grid {
+      margin-top: 3rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .level-card {
+      background: var(--white);
+      border-radius: 16px;
+      padding: 1.75rem;
+      border: 2px solid transparent;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      transition: transform .25s, box-shadow .25s, border-color .25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .level-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+    }
+    .level-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,.1); }
+    .level-card[data-level="A1"]::before { background: #4ADE80; }
+    .level-card[data-level="A2"]::before { background: #86EFAC; }
+    .level-card[data-level="B1"]::before { background: #60A5FA; }
+    .level-card[data-level="B2"]::before { background: #3B82F6; }
+    .level-card[data-level="C1"]::before { background: #A78BFA; }
+    .level-card[data-level="C2"]::before { background: #7C3AED; }
+    .level-card__header {
+      display: flex;
+      align-items: center;
+      gap: .85rem;
+      margin-bottom: 1rem;
+    }
+    .level-card__badge {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      font-weight: 900;
+    }
+    .level-card__name { font-size: .95rem; font-weight: 700; color: var(--gray-800); }
+    .level-card__tag {
+      font-size: .75rem;
+      color: var(--gray-400);
+      font-weight: 500;
+      background: var(--gray-100);
+      padding: .15rem .55rem;
+      border-radius: 999px;
+      margin-top: .2rem;
+      display: inline-block;
+    }
+    .level-card__desc {
+      font-size: .88rem;
+      color: var(--gray-600);
+      line-height: 1.6;
+      margin-bottom: 1.1rem;
+    }
+    .level-card__topics {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: .35rem;
+    }
+    .level-card__topics li {
+      display: flex;
+      align-items: flex-start;
+      gap: .5rem;
+      font-size: .82rem;
+      color: var(--gray-600);
+    }
+    .level-card__topics li::before {
+      content: '✓';
+      font-weight: 700;
+      color: var(--green);
+      flex-shrink: 0;
+      margin-top: .05em;
+    }
+
+    /* ── WHAT'S INCLUDED ── */
+    .included__grid {
+      margin-top: 3rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .included-card {
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: 14px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: .7rem;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .included-card:hover {
+      border-color: var(--blue);
+      box-shadow: 0 4px 20px rgba(29,78,216,.1);
+    }
+    .included-card__icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: #EFF6FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+    }
+    .included-card__title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gray-800);
+    }
+    .included-card__desc {
+      font-size: .875rem;
+      color: var(--gray-600);
+      line-height: 1.6;
+    }
+
+    /* ── FOR WHOM ── */
+    .for-whom { background: var(--gray-50); }
+    .for-whom__grid {
+      margin-top: 3rem;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+    }
+    .persona-card {
+      background: var(--white);
+      border-radius: 14px;
+      padding: 1.5rem;
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      box-shadow: 0 2px 10px rgba(0,0,0,.05);
+      transition: transform .2s;
+    }
+    .persona-card:hover { transform: translateY(-2px); }
+    .persona-card__emoji { font-size: 2rem; line-height: 1; flex-shrink: 0; }
+    .persona-card__title { font-size: .95rem; font-weight: 700; color: var(--gray-800); margin-bottom: .35rem; }
+    .persona-card__desc { font-size: .85rem; color: var(--gray-600); line-height: 1.6; }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials__grid {
+      margin-top: 3rem;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+    }
+    .testimonial-card {
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: 14px;
+      padding: 1.5rem;
+      position: relative;
+    }
+    .testimonial-card__quote {
+      font-size: 2.5rem;
+      color: var(--cyan);
+      line-height: .8;
+      font-weight: 900;
+      margin-bottom: .5rem;
+    }
+    .testimonial-card__text {
+      font-size: .875rem;
+      color: var(--gray-600);
+      line-height: 1.7;
+      margin-bottom: 1.2rem;
+    }
+    .testimonial-card__author { display: flex; align-items: center; gap: .75rem; }
+    .testimonial-card__avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--white);
+      font-weight: 700;
+      font-size: .85rem;
+    }
+    .testimonial-card__name { font-weight: 700; font-size: .88rem; color: var(--gray-800); }
+    .testimonial-card__info { font-size: .78rem; color: var(--gray-400); }
+    .stars { color: #F59E0B; font-size: .85rem; margin-bottom: .6rem; }
+
+    /* ── CTA FINAL ── */
+    .cta-section {
+      background: linear-gradient(135deg, #0A0F1E 0%, #0f2460 100%);
+      padding: 100px 1.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 50%, rgba(6,182,212,.1) 0%, transparent 70%);
+    }
+    .cta-section__inner { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; }
+    .cta-section__badge {
+      display: inline-block;
+      background: rgba(6,182,212,.15);
+      border: 1px solid rgba(6,182,212,.3);
+      color: var(--cyan);
+      font-size: .78rem;
+      font-weight: 700;
+      letter-spacing: .8px;
+      text-transform: uppercase;
+      padding: .35rem .9rem;
+      border-radius: 999px;
+      margin-bottom: 1.5rem;
+    }
+    .cta-section__title {
+      font-size: clamp(2rem, 4.5vw, 3rem);
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -1px;
+      line-height: 1.15;
+      margin-bottom: 1rem;
+    }
+    .cta-section__title em { font-style: normal; color: var(--cyan); }
+    .cta-section__sub {
+      color: #94A3B8;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      margin-bottom: 2.5rem;
+    }
+    .cta-section__actions { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
+    .btn-cta {
+      background: linear-gradient(135deg, var(--blue), var(--cyan));
+      color: var(--white);
+      font-weight: 800;
+      font-size: 1.05rem;
+      padding: 1rem 2.5rem;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: opacity .2s, transform .2s;
+      box-shadow: 0 8px 32px rgba(6,182,212,.35);
+    }
+    .btn-cta:hover { opacity: .92; transform: translateY(-2px); }
+
+    /* ── FAQ ── */
+    .faq { background: var(--gray-50); }
+    .faq__list {
+      margin-top: 3rem;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+    }
+    details {
+      background: var(--white);
+      border: 1.5px solid var(--gray-200);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      transition: border-color .2s;
+    }
+    details[open] { border-color: var(--blue); }
+    summary {
+      font-weight: 700;
+      font-size: .95rem;
+      color: var(--gray-800);
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: '+';
+      font-size: 1.4rem;
+      font-weight: 400;
+      color: var(--gray-400);
+      flex-shrink: 0;
+      transition: transform .2s;
+    }
+    details[open] summary::after { content: '−'; }
+    .faq__answer {
+      margin-top: .9rem;
+      font-size: .88rem;
+      color: var(--gray-600);
+      line-height: 1.7;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      background: var(--navy);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+    }
+    .footer__text { color: var(--gray-400); font-size: .85rem; }
+    .footer__text a { color: var(--cyan); text-decoration: none; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .hero__inner { grid-template-columns: 1fr; }
+      .hero__card { display: none; }
+      .levels__grid { grid-template-columns: repeat(2, 1fr); }
+      .included__grid { grid-template-columns: repeat(2, 1fr); }
+      .testimonials__grid { grid-template-columns: 1fr; }
+      .stats__inner { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+    }
+    @media (max-width: 600px) {
+      .levels__grid { grid-template-columns: 1fr; }
+      .included__grid { grid-template-columns: 1fr; }
+      .for-whom__grid { grid-template-columns: 1fr; }
+      .stats__inner { grid-template-columns: 1fr; }
+    }
+
+    /* ── ANIMATIONS ── */
+    .fade-up {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity .6s ease, transform .6s ease;
+    }
+    .fade-up.visible { opacity: 1; transform: translateY(0); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .fade-up { opacity: 1; transform: none; transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="#main" class="skip-link">Pular para o conteúdo</a>
+
+  <!-- NAV -->
+  <nav class="nav" aria-label="Principal">
+    <div class="nav__inner">
+      <a href="#" class="nav__logo">English<span>A1→C2</span></a>
+      <a href="#cta" class="nav__cta">Quero o material</a>
+    </div>
+  </nav>
+
+  <main id="main">
+
+    <!-- HERO -->
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="hero__inner">
+        <div class="hero__text">
+          <span class="hero__badge">🇺🇸 Material completo · 6 níveis CEFR</span>
+          <h1 class="hero__title" id="hero-title">
+            Do <em>zero</em> ao<br />inglês <em>fluente</em>
+          </h1>
+          <p class="hero__subtitle">
+            Um material estruturado, progressivo e prático que cobre todos os níveis do CEFR — do A1 iniciante ao C2 avançado — em um único lugar.
+          </p>
+          <div class="hero__actions">
+            <a href="#cta" class="btn-primary">Quero o material agora</a>
+            <a href="#niveis" class="btn-secondary">Ver os níveis</a>
+          </div>
+        </div>
+
+        <div class="hero__card" aria-hidden="true">
+          <p class="hero__card-title">Progresso por nível CEFR</p>
+          <div class="levels-preview">
+            <div class="level-row">
+              <span class="level-badge l-a1">A1</span>
+              <span class="level-name">Iniciante</span>
+              <div class="level-bar-wrap"><div class="level-bar bar-a1"></div></div>
+            </div>
+            <div class="level-row">
+              <span class="level-badge l-a2">A2</span>
+              <span class="level-name">Básico</span>
+              <div class="level-bar-wrap"><div class="level-bar bar-a2"></div></div>
+            </div>
+            <div class="level-row">
+              <span class="level-badge l-b1">B1</span>
+              <span class="level-name">Intermediário</span>
+              <div class="level-bar-wrap"><div class="level-bar bar-b1"></div></div>
+            </div>
+            <div class="level-row">
+              <span class="level-badge l-b2">B2</span>
+              <span class="level-name">Intermediário Avançado</span>
+              <div class="level-bar-wrap"><div class="level-bar bar-b2"></div></div>
+            </div>
+            <div class="level-row">
+              <span class="level-badge l-c1">C1</span>
+              <span class="level-name">Avançado</span>
+              <div class="level-bar-wrap"><div class="level-bar bar-c1"></div></div>
+            </div>
+            <div class="level-row">
+              <span class="level-badge l-c2">C2</span>
+              <span class="level-name">Proficiência</span>
+              <div class="level-bar-wrap"><div class="level-bar bar-c2"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <div class="stats" aria-label="Números do material">
+      <div class="stats__inner">
+        <div class="fade-up">
+          <p class="stat__number">6</p>
+          <p class="stat__label">Níveis CEFR completos</p>
+        </div>
+        <div class="fade-up">
+          <p class="stat__number">A1→C2</p>
+          <p class="stat__label">Do iniciante ao proficiente</p>
+        </div>
+        <div class="fade-up">
+          <p class="stat__number">100%</p>
+          <p class="stat__label">Progressivo e estruturado</p>
+        </div>
+        <div class="fade-up">
+          <p class="stat__number">∞</p>
+          <p class="stat__label">Acesso vitalício</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- NIVEIS -->
+    <section class="levels" id="niveis" aria-labelledby="niveis-title">
+      <div class="section-inner">
+        <span class="section-tag">Níveis CEFR</span>
+        <h2 class="section-title" id="niveis-title">Cada nível tem seu próprio caminho</h2>
+        <p class="section-sub">Seis módulos completos, cada um construindo sobre o anterior — sem lacunas, sem saltos.</p>
+
+        <div class="levels__grid">
+
+          <article class="level-card fade-up" data-level="A1">
+            <div class="level-card__header">
+              <div class="level-card__badge l-a1">A1</div>
+              <div>
+                <p class="level-card__name">Iniciante</p>
+                <span class="level-card__tag">Breakthrough</span>
+              </div>
+            </div>
+            <p class="level-card__desc">Ponto de partida absoluto. Você aprende as primeiras palavras, saudações, números e frases básicas do dia a dia.</p>
+            <ul class="level-card__topics">
+              <li>Alfabeto e pronúncia</li>
+              <li>Saudações e apresentações</li>
+              <li>Números, datas e horas</li>
+              <li>Verbo to be e pronomes</li>
+              <li>Vocabulário essencial do cotidiano</li>
+            </ul>
+          </article>
+
+          <article class="level-card fade-up" data-level="A2">
+            <div class="level-card__header">
+              <div class="level-card__badge l-a2">A2</div>
+              <div>
+                <p class="level-card__name">Básico</p>
+                <span class="level-card__tag">Waystage</span>
+              </div>
+            </div>
+            <p class="level-card__desc">Você começa a se comunicar em situações simples: compras, restaurantes, viagens e conversas curtas.</p>
+            <ul class="level-card__topics">
+              <li>Tempos verbais: presente simples e contínuo</li>
+              <li>Passado simples (regular e irregular)</li>
+              <li>Perguntas e respostas cotidianas</li>
+              <li>Vocabulário de viagens e lugares</li>
+              <li>Expressões de tempo e frequência</li>
+            </ul>
+          </article>
+
+          <article class="level-card fade-up" data-level="B1">
+            <div class="level-card__header">
+              <div class="level-card__badge l-b1">B1</div>
+              <div>
+                <p class="level-card__name">Intermediário</p>
+                <span class="level-card__tag">Threshold</span>
+              </div>
+            </div>
+            <p class="level-card__desc">A virada. Você passa a entender e se expressar sobre temas variados com mais confiança e fluência.</p>
+            <ul class="level-card__topics">
+              <li>Futuro: will e going to</li>
+              <li>Modais: can, could, should, must</li>
+              <li>Condicionais (1º e 2º)</li>
+              <li>Voz passiva básica</li>
+              <li>Vocabulário de trabalho e opiniões</li>
+            </ul>
+          </article>
+
+          <article class="level-card fade-up" data-level="B2">
+            <div class="level-card__header">
+              <div class="level-card__badge l-b2">B2</div>
+              <div>
+                <p class="level-card__name">Intermediário Avançado</p>
+                <span class="level-card__tag">Vantage</span>
+              </div>
+            </div>
+            <p class="level-card__desc">Você debate, argumenta e escreve com clareza. Entende textos e conversas naturais sem dificuldade.</p>
+            <ul class="level-card__topics">
+              <li>Todos os tempos perfeitos</li>
+              <li>Discurso indireto e reportado</li>
+              <li>Inversão e ênfase</li>
+              <li>Vocabulário acadêmico e profissional</li>
+              <li>Compreensão de sotaques variados</li>
+            </ul>
+          </article>
+
+          <article class="level-card fade-up" data-level="C1">
+            <div class="level-card__header">
+              <div class="level-card__badge l-c1">C1</div>
+              <div>
+                <p class="level-card__name">Avançado</p>
+                <span class="level-card__tag">Effective Proficiency</span>
+              </div>
+            </div>
+            <p class="level-card__desc">Você se comunica com precisão, clareza e riqueza lexical. Pronto para ambientes acadêmicos e corporativos internacionais.</p>
+            <ul class="level-card__topics">
+              <li>Estruturas sintáticas complexas</li>
+              <li>Colocações e expressões idiomáticas</li>
+              <li>Escrita formal e acadêmica</li>
+              <li>Nuances de tom e registro</li>
+              <li>Leitura de textos densos e técnicos</li>
+            </ul>
+          </article>
+
+          <article class="level-card fade-up" data-level="C2">
+            <div class="level-card__header">
+              <div class="level-card__badge l-c2">C2</div>
+              <div>
+                <p class="level-card__name">Proficiência</p>
+                <span class="level-card__tag">Mastery</span>
+              </div>
+            </div>
+            <p class="level-card__desc">O topo. Você fala, escreve e compreende inglês com a precisão de um falante nativo culto.</p>
+            <ul class="level-card__topics">
+              <li>Retórica e argumentação avançada</li>
+              <li>Variedades e dialetos do inglês</li>
+              <li>Humor, ironia e subtexto</li>
+              <li>Literatura e textos literários</li>
+              <li>Preparação para IELTS / TOEFL Band 9</li>
+            </ul>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- O QUE INCLUI -->
+    <section aria-labelledby="included-title">
+      <div class="section-inner">
+        <span class="section-tag">O que está incluso</span>
+        <h2 class="section-title" id="included-title">Tudo que você precisa para aprender de verdade</h2>
+        <p class="section-sub">Material pensado para quem quer resultado, não apenas teoria.</p>
+
+        <div class="included__grid">
+          <div class="included-card fade-up">
+            <div class="included-card__icon">📖</div>
+            <h3 class="included-card__title">Material teórico completo</h3>
+            <p class="included-card__desc">Explicações claras de gramática, vocabulário e uso real da língua para cada nível do CEFR.</p>
+          </div>
+          <div class="included-card fade-up">
+            <div class="included-card__icon">✏️</div>
+            <h3 class="included-card__title">Exercícios práticos</h3>
+            <p class="included-card__desc">Centenas de exercícios com gabarito comentado para fixar o conteúdo e ganhar segurança.</p>
+          </div>
+          <div class="included-card fade-up">
+            <div class="included-card__icon">💬</div>
+            <h3 class="included-card__title">Diálogos e situações reais</h3>
+            <p class="included-card__desc">Situações do dia a dia, trabalho e viagens para praticar como o inglês é usado de verdade.</p>
+          </div>
+          <div class="included-card fade-up">
+            <div class="included-card__icon">📝</div>
+            <h3 class="included-card__title">Listas de vocabulário</h3>
+            <p class="included-card__desc">Palavras organizadas por tema e nível com exemplos de uso, pronúncia e colocações.</p>
+          </div>
+          <div class="included-card fade-up">
+            <div class="included-card__icon">🎯</div>
+            <h3 class="included-card__title">Testes de progresso</h3>
+            <p class="included-card__desc">Avaliações ao final de cada nível para você medir sua evolução e saber quando avançar.</p>
+          </div>
+          <div class="included-card fade-up">
+            <div class="included-card__icon">♾️</div>
+            <h3 class="included-card__title">Acesso vitalício</h3>
+            <p class="included-card__desc">Pague uma vez e use para sempre, incluindo todas as atualizações e novos conteúdos.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PARA QUEM É -->
+    <section class="for-whom" aria-labelledby="for-whom-title">
+      <div class="section-inner">
+        <span class="section-tag">Para quem é</span>
+        <h2 class="section-title" id="for-whom-title">Este material é para você se…</h2>
+        <p class="section-sub">Não importa onde você está agora — o que importa é onde quer chegar.</p>
+
+        <div class="for-whom__grid">
+          <div class="persona-card fade-up">
+            <span class="persona-card__emoji">🌱</span>
+            <div>
+              <h3 class="persona-card__title">Está começando do zero</h3>
+              <p class="persona-card__desc">Nunca estudou inglês, ou estudou e esqueceu tudo. O módulo A1 começa do absoluto básico sem julgamentos.</p>
+            </div>
+          </div>
+          <div class="persona-card fade-up">
+            <span class="persona-card__emoji">📊</span>
+            <div>
+              <h3 class="persona-card__title">Está travado no intermediário</h3>
+              <p class="persona-card__desc">Sabe o básico mas não consegue avançar. O módulo B1/B2 desfaz o "plateau" com conteúdo estruturado.</p>
+            </div>
+          </div>
+          <div class="persona-card fade-up">
+            <span class="persona-card__emoji">💼</span>
+            <div>
+              <h3 class="persona-card__title">Precisa do inglês para o trabalho</h3>
+              <p class="persona-card__desc">Reuniões, e-mails, apresentações. Os níveis C1 e C2 focam em inglês profissional e acadêmico.</p>
+            </div>
+          </div>
+          <div class="persona-card fade-up">
+            <span class="persona-card__emoji">✈️</span>
+            <div>
+              <h3 class="persona-card__title">Quer se preparar para morar fora</h3>
+              <p class="persona-card__desc">Visto, intercâmbio, imigração. O material prepara você para viver e funcionar em inglês no mundo real.</p>
+            </div>
+          </div>
+          <div class="persona-card fade-up">
+            <span class="persona-card__emoji">🎓</span>
+            <div>
+              <h3 class="persona-card__title">Vai fazer IELTS, TOEFL ou OAB</h3>
+              <p class="persona-card__desc">Os módulos C1 e C2 cobrem exatamente o que os exames internacionais exigem, com dicas específicas.</p>
+            </div>
+          </div>
+          <div class="persona-card fade-up">
+            <span class="persona-card__emoji">🔁</span>
+            <div>
+              <h3 class="persona-card__title">Quer revisar do básico ao avançado</h3>
+              <p class="persona-card__desc">Ótimo para quem já tem conhecimento e quer uma revisão sistemática e completa de A1 a C2.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DEPOIMENTOS -->
+    <section aria-labelledby="depoimentos-title">
+      <div class="section-inner">
+        <span class="section-tag">Depoimentos</span>
+        <h2 class="section-title" id="depoimentos-title">O que quem usou diz</h2>
+        <p class="section-sub">Resultados reais de pessoas que levaram o inglês a sério.</p>
+
+        <div class="testimonials__grid">
+          <blockquote class="testimonial-card fade-up">
+            <p class="stars">★★★★★</p>
+            <p class="testimonial-card__quote">"</p>
+            <p class="testimonial-card__text">Tentei vários métodos e sempre travava no intermediário. Com esse material fui do B1 ao C1 em menos de um ano. A estrutura faz toda a diferença.</p>
+            <footer class="testimonial-card__author">
+              <div class="testimonial-card__avatar">AM</div>
+              <div>
+                <p class="testimonial-card__name">Ana M.</p>
+                <p class="testimonial-card__info">Analista de TI · São Paulo</p>
+              </div>
+            </footer>
+          </blockquote>
+
+          <blockquote class="testimonial-card fade-up">
+            <p class="stars">★★★★★</p>
+            <p class="testimonial-card__quote">"</p>
+            <p class="testimonial-card__text">Comecei do A1 sem saber nada. Hoje trabalho em uma empresa americana 100% em inglês. O material cobre tudo — gramática, vocabulário, situações reais.</p>
+            <footer class="testimonial-card__author">
+              <div class="testimonial-card__avatar">RS</div>
+              <div>
+                <p class="testimonial-card__name">Rafael S.</p>
+                <p class="testimonial-card__info">Desenvolvedor · Remote</p>
+              </div>
+            </footer>
+          </blockquote>
+
+          <blockquote class="testimonial-card fade-up">
+            <p class="stars">★★★★★</p>
+            <p class="testimonial-card__quote">"</p>
+            <p class="testimonial-card__text">Tirei 8.0 no IELTS usando principalmente os módulos C1 e C2. Conteúdo denso, exercícios desafiadores e explicações que realmente fazem sentido.</p>
+            <footer class="testimonial-card__author">
+              <div class="testimonial-card__avatar">CL</div>
+              <div>
+                <p class="testimonial-card__name">Carolina L.</p>
+                <p class="testimonial-card__info">Médica · Intercâmbio na Irlanda</p>
+              </div>
+            </footer>
+          </blockquote>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section" id="cta" aria-labelledby="cta-title">
+      <div class="cta-section__inner">
+        <span class="cta-section__badge">Acesso imediato</span>
+        <h2 class="cta-section__title" id="cta-title">
+          Comece hoje.<br />Do <em>A1</em> ao <em>C2</em>.
+        </h2>
+        <p class="cta-section__sub">
+          Um material, seis níveis, uma única decisão. Pare de adiar o inglês que vai mudar a sua vida.
+        </p>
+        <div class="cta-section__actions">
+          <a href="#" class="btn-cta">Quero o material agora</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section class="faq" aria-labelledby="faq-title">
+      <div class="section-inner">
+        <span class="section-tag">Dúvidas frequentes</span>
+        <h2 class="section-title" id="faq-title">Perguntas e respostas</h2>
+
+        <div class="faq__list">
+          <details>
+            <summary>Para qual nível este material é indicado?</summary>
+            <p class="faq__answer">Para todos os níveis. O material é dividido em seis módulos — A1, A2, B1, B2, C1 e C2 — cada um independente e completo. Você começa no nível que já possui e avança no seu ritmo.</p>
+          </details>
+          <details>
+            <summary>Em que formato o material é entregue?</summary>
+            <p class="faq__answer">O material é entregue em formato digital (PDF), podendo ser lido em qualquer dispositivo — celular, tablet ou computador — online ou offline.</p>
+          </details>
+          <details>
+            <summary>Preciso ter algum conhecimento prévio de inglês?</summary>
+            <p class="faq__answer">Não. O módulo A1 começa do zero absoluto, sem pressupor nenhum conhecimento anterior. Se você já sabe algo, pode pular para o nível correspondente.</p>
+          </details>
+          <details>
+            <summary>Quantas horas de estudo preciso por dia?</summary>
+            <p class="faq__answer">O material é flexível. Com 30 minutos por dia você já progride de forma consistente. Com uma hora diária, a evolução é muito mais rápida. O importante é a regularidade.</p>
+          </details>
+          <details>
+            <summary>O material prepara para exames internacionais?</summary>
+            <p class="faq__answer">Sim. Os módulos C1 e C2 incluem conteúdo específico para IELTS, TOEFL, Cambridge e outros exames internacionais, com dicas de prova e exercícios no formato dos testes.</p>
+          </details>
+          <details>
+            <summary>O acesso é vitalício?</summary>
+            <p class="faq__answer">Sim. Após a compra, o acesso é permanente. Você também receberá gratuitamente todas as futuras atualizações e adições de conteúdo.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p class="footer__text">
+      &copy; 2026 Material de Inglês A1→C2. Todos os direitos reservados.
+    </p>
+  </footer>
+
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>

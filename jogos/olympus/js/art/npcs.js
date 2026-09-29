@@ -40,6 +40,7 @@
     pink: ['#ffe6f0', '#f9aac8', '#e2709e', '#aa467e', '#602858'],
     terra: ['#ffb68a', '#e87a4a', '#c0522e', '#843428', '#4a1c20'],
     ochre: ['#ffe29a', '#f0b44a', '#d0842c', '#94502a', '#5a2c24'],
+    magenta: ['#ffa6cc', '#e8528e', '#b42e6c', '#7a1e54', '#46123c'],
     violet: ['#aa9ada', '#6c5aaa', '#483a84', '#2e2458', '#181232'],
     iron: ['#bcbad0', '#84829e', '#585670', '#38364c', '#1e1c2e'],
     wood: ['#e0b27e', '#aa7850', '#7a5038', '#4e3129', '#2b1b1c'],
@@ -405,7 +406,7 @@
     blob(hd, [[30.2, 19.4], [34.2, 19.2], [34.5, 21.4], [33, 22.2], [31, 21.4]], S[2], hd);
     blob(hd, [[32.4, 25.6], [35.5, 25.6], [35, 26.6], [33, 26.8]], S[2], hd);
     // ear (skin + one shadow tone + 1-px inner shadow)
-    art(hd, 19, 19, ['.01.', '0122', '0132', '0122', '.12.', '..2.'], faceLG(S), 'ear');
+    art(hd, 17, 19, ['.01.', '0122', '0132', '0132', '0122', '.12.'], faceLG(S), 'ear');
     // brows: raised 1 px off the lid, slight inner lift = determined but kind
     const E = faceLG(S, { L: '#4a1e2c', B: H[3], b: H[2], J: '#2f5a3c', j: '#6fae5e', h: S[0], m: '#8a3440', r: '#c8705e', n: S[3], k: '#f2a58e' });
     art(hd, 24, 16, ['.bBBB.', 'B....B'.replace(/\./g, '.')], E, 'brow-near');
@@ -427,7 +428,7 @@
     ], E, 'eye-far');
     // nose: bridge light, nostril notch; mouth: firm line with a slight upturn
     art(hd, 33, 21, ['0.', '.0', '..', '.n'], E, 'nose');
-    art(hd, 31, 27, ['.mmm', 'n.rr', '..n.'], E, 'mouth');
+    art(hd, 30, 26, ['n...', '.mmm', '..r.'], E, 'mouth');          // firm line, corner lifted
     comp(fig, hd, S[3]);
     // --- hair on top: 4 big S-shaped locks sweeping back, curls spilling over the band
     const ht = L48();
@@ -738,7 +739,7 @@
     return p;
   }
   function portraitHermes() {
-    const S = R.skin, H = R.chestnut, G = R.gold, F = R.feather, SK = R.sky, OC = R.ochre;
+    const S = R.skin, H = R.chestnut, G = R.gold, F = R.feather, SK = R.sky, OC = R.magenta;
     const fig = L48();
     // --- curls at the nape under the helmet
     const hb = L48();
@@ -759,9 +760,11 @@
     blob(ck, [[0, 48, 1], [0, 42], [4, 38], [11, 36], [18, 37], [21, 40], [18, 44], [15, 48, 1]], OC[2]);
     blob(ck, [[1, 41.6], [4.6, 38.4], [11, 36.8], [15.6, 38], [11, 40], [5, 42.6], [1.6, 45.6]], OC[1], ck);
     curve(ck, [[4, 39.4], [9, 37.4], [13, 37.8]], 1, OC[0], ck);
-    fold(ck, [[16, 40], [12, 44], [9, 48]], [3, 2], OC[3], null, ck);
-    fold(ck, [[17, 42], [16, 45], [15, 48]], [2, 1.4], OC[3], null, ck);
-    fold(ck, [[7, 43], [4, 46], [3, 48]], [2.4, 1.6], OC[3], OC[1], ck);
+    // folds hang from the pin: a lit ridge beside each shadow valley, widening as they fall
+    fold(ck, [[16.4, 40], [13, 44], [11, 48]], [1.6, 3], OC[3], OC[1], ck);
+    fold(ck, [[17, 41.6], [17, 45], [17.4, 48]], [1.2, 2.4], OC[3], null, ck);
+    fold(ck, [[9, 41.4], [6, 44.6], [5, 48]], [1.4, 2.6], OC[3], OC[1], ck);
+    curve(ck, [[0, 46.6], [4, 47.4]], 1, OC[4], ck);
     comp(fig, ck, SK[4]);
     art(fig, 17, 38, ['.yG.', 'yY*G', 'GYGg', '.gg.'], LG({ '*': '#ffffff' }, ['yYGg', [G[0], G[1], G[2], G[3]]]), 'pin');
     // --- neck: chin up, so the throat is long and lit, set back behind the jaw
@@ -1176,7 +1179,9 @@
     const ht = L48();
     blob(ht, [[15, 15], [17, 8], [22, 4.8], [29, 5], [34, 8.4], [36.4, 13.4], [35.4, 17.4], [33, 14.6], [29.4, 13.2], [25, 14.4], [22.4, 18], [21.6, 24], [19, 20]], H[2]);
     blob(ht, [[17, 11], [19.4, 7], [25, 5.4], [30.4, 6.4], [26, 8.4], [21, 10.6], [18.4, 13.4]], H[1], ht);
-    curve(ht, [[19.6, 8.4], [23, 6.4], [27, 6]], [2, 1], H[0], ht);
+    curve(ht, [[18.6, 9.4], [22, 6.8], [26, 6], [29.6, 6.6]], [2.4, 1.4], H[0], ht);
+    curve(ht, [[17.6, 12], [18.6, 10.2]], 1, H[0], ht);
+    fold(ht, [[29, 6.2], [24, 8.4], [19.6, 12.6]], [1.4, 1], H[3], null, ht);
     curve(ht, [[31, 8], [34, 10.4]], 1, H[0], ht);
     fold(ht, [[35, 15.4], [31.4, 11.4], [26, 10.6], [21, 13.4]], [1.8, 1], H[3], null, ht);
     lockShape(ht, [[23, 14], [21.4, 19], [21.6, 25], [23.4, 30]], 3.4, 1.4, H, { wave: 1, bias: 0.15 });
@@ -1744,7 +1749,7 @@
     return p;
   }
   function hermesFrames() {
-    const F = R.feather, OC = R.ochre, G = R.gold;
+    const F = R.feather, OC = R.magenta, G = R.gold;
     const lg = LG({ K: '#2a1a14', W: '#ffffff', m: '#7e3440', k: '#f4a08a', L: R.leather[1], N: G[2], n: G[1] },
     ['0123', R.skin], ['ABCD', R.chestnut], ['yYgG', R.gold], ['abcd', R.sky]);
     const FL = [0, 1, 2, 1];               // wing flutter phase

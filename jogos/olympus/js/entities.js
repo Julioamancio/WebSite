@@ -3,6 +3,7 @@
   'use strict';
   const T = O.TILE, VY = O.HUD_H;
   const P = O.PHYS = { walk: 1.5, grav: 0.25, jump: 4.8, jumpHigh: 5.8, maxFall: 5 };
+  const STAND_H = 28, CROUCH_H = 18;
 
   /* ---------- tile collision for any body {x,y,w,h,vx,vy} ---------- */
   O.moveBody = function (b, lvl) {
@@ -37,30 +38,41 @@
     b.y = ny;
   };
 
+  // Draws a sprite with its bottom row (the outline) resting on `feet`, centred on the body.
+  function drawOn(c, g, name, body, flip, white, dy) {
+    const s = O.SPR[name];
+    const sx = Math.round(body.x + body.w / 2 - s.w / 2 - g.cam);
+    const sy = Math.round(body.y + body.h - s.h + 1 + (dy || 0)) + VY;
+    O.drawSpr(c, name, sx, sy, flip, white);
+    return { sx, sy, s };
+  }
+  O.drawOn = drawOn;
+
   /* ---------- ORPHEUS ---------- */
   class Player {
     constructor() {
-      this.w = 10; this.h = 22;
+      this.w = 10; this.h = STAND_H;
       this.x = 0; this.y = 0; this.vx = 0; this.vy = 0;
       this.facing = 1; this.onGround = false; this.crouch = false;
       this.atk = 0; this.atkCrouch = false; this.swingId = 0;
       this.inv = 0; this.hurtT = 0; this.anim = 0; this.safe = null;
     }
     place(x, feet) {
-      this.h = 22; this.crouch = false;
+      this.h = STAND_H; this.crouch = false;
       this.x = x; this.y = feet - this.h;
       this.vx = 0; this.vy = 0; this.onGround = true;
       this.atk = 0; this.hurtT = 0;
       this.safe = { x, feet };
     }
     setCrouch(want, lvl) {
+      const d = STAND_H - CROUCH_H;
       if (want && !this.crouch) {
-        this.crouch = true; this.y += 8; this.h = 14;
+        this.crouch = true; this.y += d; this.h = CROUCH_H;
       } else if (!want && this.crouch) {
-        const ny = this.y - 8;
+        const ny = this.y - d;
         const ty = Math.floor(ny / T), x0 = Math.floor(this.x / T), x1 = Math.floor((this.x + this.w - 1) / T);
         for (let tx = x0; tx <= x1; tx++) if (lvl.isSolid(tx, ty)) return;
-        this.crouch = false; this.y = ny; this.h = 22;
+        this.crouch = false; this.y = ny; this.h = STAND_H;
       }
     }
     update(g) {
@@ -88,13 +100,20 @@
           this.vy = -(st.items.sandals ? P.jumpHigh : P.jump);
           this.onGround = false;
           g.sfx('jump');
+          g.dust(this.x + this.w / 2, this.y + this.h, 1);
         }
         if (!I.down.jump && this.vy < -2) this.vy = -2;
       }
+      const fallSpeed = this.vy;
+      const wasGround = this.onGround;
       this.vy = Math.min(P.maxFall, this.vy + P.grav);
       O.moveBody(this, lvl);
+      if (this.onGround && !wasGround && fallSpeed > 2.5) g.dust(this.x + this.w / 2, this.y + this.h, 2);
 
-      if (this.onGround && this.vx !== 0) this.anim++; else this.anim = 0;
+      if (this.onGround && this.vx !== 0) {
+        this.anim++;
+        if (this.anim % 16 === 1) g.dust(this.x + this.w / 2 - this.facing * 4, this.y + this.h, 0);
+      } else this.anim = 0;
 
       if (this.onGround) {
         const fy = Math.floor((this.y + this.h) / T);
@@ -123,15 +142,16 @@
       this.vx = dir * 1.6; this.vy = -2.6; this.onGround = false;
       this.setCrouch(false, g.lvl);
       g.sfx('hurt');
+      g.flash = 3;
     }
     attackBox() {
       if (this.atk < 7) return null;
       const reach = 16;
       return {
         x: this.facing > 0 ? this.x + this.w : this.x - reach,
-        y: this.crouch ? this.y + 3 : this.y + 4,
+        y: this.crouch ? this.y + 5 : this.y + 6,
         w: reach,
-        h: this.crouch ? 11 : 9
+        h: this.crouch ? 13 : 10
       };
     }
     draw(c, g) {
@@ -141,16 +161,18 @@
       if (this.crouch) name = atkVis ? 'heroCrouchAtk' : 'heroCrouch';
       else if (!this.onGround) name = atkVis ? 'heroJumpAtk' : 'heroJump';
       else if (atkVis) name = 'heroAtk';
-      else if (this.vx !== 0) name = (this.anim >> 3) & 1 ? 'heroWalk2' : 'heroWalk1';
+      else if (this.vx !== 0) name = Math.floor(this.anim / 7) & 1 ? 'heroWalk2' : 'heroWalk1';
       else name = 'heroStand';
-      const s = O.SPR[name], flip = this.facing < 0;
-      const sx = Math.round(this.x - 3 - g.cam), sy = Math.round(this.y + this.h - s.h) + VY;
-      O.drawSpr(c, name, sx, sy, flip, this.hurtT > 10 && (this.hurtT & 2));
+      const flip = this.facing < 0;
+      const d = drawOn(c, g, name, this, flip, this.hurtT > 10 && (this.hurtT & 2));
       if (atkVis) {
         const club = O.SPR.club;
-        const oy = this.crouch ? 7 : 9;
-        const ox = flip ? 16 - 15 - club.w : 15;
-        O.drawSpr(c, 'club', sx + ox, sy + oy, flip);
+        const ox = flip ? d.s.w - 14 - club.w : 14;
+        O.drawSpr(c, 'club', d.sx + ox, d.sy + 11, flip);
+        if (this.atk >= 10) {
+          const sw = O.SPR.swipe;
+          O.drawSpr(c, 'swipe', flip ? d.sx - sw.w + 2 : d.sx + d.s.w - 2, d.sy + 3, flip);
+        }
       }
     }
   }
@@ -172,6 +194,7 @@
       this.lastSwing = swing;
       this.hp -= dmg; this.flash = 10; this.inv = 8;
       g.sfx('hit');
+      g.hitstop = 4;
       g.spark(this.x + this.w / 2, this.y + this.h / 2);
       if (this.hp <= 0) this.kill(g); else this.onHit(g, dir);
     }
@@ -193,18 +216,15 @@
       O.moveBody(this, lvl);
       if (this.y > lvl.pxH) this.remove = true;
     }
-    drawSpr(c, g, name) {
-      const s = O.SPR[name];
-      const sx = Math.round(this.x + this.w / 2 - s.w / 2 - g.cam);
-      const sy = Math.round(this.y + this.h - s.h) + VY;
-      O.drawSpr(c, name, sx, sy, this.facing < 0, this.flash > 0 && (this.flash & 2));
+    drawSpr(c, g, name, dy) {
+      drawOn(c, g, name, this, this.facing < 0, this.flash > 0 && (this.flash & 2), dy);
     }
   }
   O.Enemy = Enemy;
 
   class Snake extends Enemy {
     constructor(x, feet) {
-      super(x, feet - 7, 14, 7);
+      super(x, feet - 8, 14, 8);
       this.cool = 60; this.lunge = 0;
     }
     update(g) {
@@ -239,7 +259,7 @@
         if (Math.abs(dx) < 80 && p.y > this.y - 8) { this.state = 'fly'; this.t = 0; g.sfx('bat'); }
         return;
       }
-      this.baseY += Math.sign(p.y + 4 - this.baseY) * 0.4;
+      this.baseY += Math.sign(p.y + 6 - this.baseY) * 0.4;
       this.facing = dx < 0 ? -1 : 1;
       if (this.knock > 0) this.knock--;
       else this.vx = O.clamp(this.vx + this.facing * 0.04, -1.1, 1.1);
@@ -247,13 +267,13 @@
       this.y = this.baseY + Math.sin(this.t * 0.09) * 14;
     }
     draw(c, g) {
-      this.drawSpr(c, g, this.state === 'hang' ? 'batHang' : (this.t >> 2) & 1 ? 'bat1' : 'bat2');
+      this.drawSpr(c, g, this.state === 'hang' ? 'batHang' : (this.t >> 2) & 1 ? 'bat1' : 'bat2', 2);
     }
   }
 
   class Satyr extends Enemy {
     constructor(x, feet) {
-      super(x, feet - 22, 10, 22);
+      super(x, feet - 26, 10, 26);
       this.hp = 3; this.dmg = 2; this.olives = 3; this.dropChance = 0.85; this.jumpCool = 0;
     }
     update(g) {
@@ -280,12 +300,11 @@
   /* ---------- BOSS: Erymanthian Boar ---------- */
   class Boar extends Enemy {
     constructor(x, feet) {
-      super(x, feet - 20, 28, 20);
+      super(x, feet - 24, 36, 24);
       this.hp = 16; this.maxHp = 16; this.dmg = 2;
       this.state = 'wait'; this.st = 0; this.dir = -1; this.facing = -1;
     }
     contactDmg() { return this.state === 'charge' ? 3 : this.state === 'stun' ? 1 : 2; }
-    harmful() { return !this.dying; }
     setState(s) { this.state = s; this.st = 0; }
     update(g) {
       this.tick();
@@ -305,10 +324,12 @@
           if (this.st > 35) this.setState('paw');
           break;
         case 'paw':
+          if (this.st % 10 === 0) g.dust(this.x + this.w / 2 - this.dir * 14, this.y + this.h, 0);
           if (this.st > 30) { this.setState('charge'); g.sfx('roar'); }
           break;
         case 'charge':
           this.vx = this.dir * 3.2;
+          if (this.st % 5 === 0) g.dust(this.x + this.w / 2 - this.dir * 16, this.y + this.h, 0);
           break;
         case 'stun':
           this.vx *= 0.9;
@@ -329,6 +350,7 @@
         this.setState('stun');
         this.vx = -this.dir * 1.5; this.vy = -2.5;
         g.shake = 20; g.sfx('crash');
+        g.dust(this.x + (this.dir > 0 ? this.w : 0), this.y + this.h - 6, 2);
         for (let i = 0; i < 3; i++) g.enemies.push(new Rock((3 + Math.floor(Math.random() * 14)) * T + 4, 20 + i * 18));
       }
     }
@@ -338,24 +360,23 @@
       this.hp -= this.state === 'stun' ? dmg * 2 : dmg;
       this.flash = 12; this.inv = 20;
       g.sfx('bosshit');
+      g.hitstop = 6;
       g.spark(this.x + this.w / 2, this.y + this.h / 2);
-      if (this.hp <= 0) { this.hp = 0; this.dying = true; this.setState('dying'); g.music(null); }
+      if (this.hp <= 0) { this.hp = 0; this.dying = true; this.setState('dying'); g.music(null); g.flash = 8; }
     }
     draw(c, g) {
-      let name = 'boar1';
+      let name = 'boar0';
       if (this.state === 'charge') name = (this.t >> 2) & 1 ? 'boar2' : 'boar1';
       else if (this.state === 'stun' || this.state === 'dying') name = 'boarStun';
-      const s = O.SPR[name];
-      let sx = Math.round(this.x - 2 - g.cam);
-      const sy = Math.round(this.y + this.h - s.h) + VY;
-      if (this.state === 'paw') sx += (this.st >> 1) & 1 ? 1 : -1;
       if (this.state === 'dying' && (this.st & 2)) return;
-      O.drawSpr(c, name, sx, sy, this.facing < 0, this.flash > 0 && (this.flash & 2));
+      const shakeX = this.state === 'paw' ? ((this.st >> 1) & 1 ? 1 : -1) : 0;
+      const d = drawOn(c, g, name, { x: this.x + shakeX, y: this.y, w: this.w, h: this.h }, this.facing < 0, this.flash > 0 && (this.flash & 2));
       if (this.state === 'stun') {
         for (let i = 0; i < 3; i++) {
           const a = this.t * 0.15 + i * 2.1;
-          c.fillStyle = '#f8b800';
-          c.fillRect(Math.round(sx + 16 + Math.cos(a) * 10), Math.round(sy - 2 + Math.sin(a) * 3), 2, 2);
+          const x = Math.round(d.sx + d.s.w / 2 + (this.facing < 0 ? -10 : 10) + Math.cos(a) * 9), y = Math.round(d.sy + 2 + Math.sin(a) * 3);
+          c.fillStyle = '#f8b800'; c.fillRect(x - 1, y, 3, 1); c.fillRect(x, y - 1, 1, 3);
+          c.fillStyle = '#fcfcfc'; c.fillRect(x, y, 1, 1);
         }
       }
     }
@@ -383,10 +404,10 @@
     draw(c, g) {
       const sx = Math.round(this.x - g.cam), sy = Math.round(this.y) + VY;
       if (this.delay > 0) {
-        if (this.t & 4) { c.fillStyle = '#ac7c00'; c.fillRect(sx + 1, sy - 2, 1, 1); c.fillRect(sx + 5, sy - 1, 1, 1); }
+        if (this.t & 4) { c.fillStyle = '#b87850'; c.fillRect(sx + 1, sy - 2, 1, 1); c.fillRect(sx + 5, sy - 1, 1, 1); c.fillRect(sx + 3, sy + 1, 1, 1); }
         return;
       }
-      O.drawSpr(c, 'rock', sx, sy);
+      O.drawSpr(c, 'rock', sx - 1, sy - 1);
     }
   }
 
@@ -402,11 +423,12 @@
   class Pickup {
     constructor(kind, x, y, vy, life) {
       this.kind = kind; this.x = x; this.y = y; this.w = 8; this.h = 8;
-      this.vx = vy !== undefined ? (Math.random() - 0.5) * 1.2 : 0;
+      this.vx = vy !== undefined && vy !== 0 ? (Math.random() - 0.5) * 1.2 : 0;
       this.vy = vy || 0;
-      this.life = life || 600; this.remove = false;
+      this.life = life || 600; this.remove = false; this.t = (Math.random() * 60) | 0;
     }
     update(g) {
+      this.t++;
       this.vy = Math.min(4, this.vy + 0.2);
       O.moveBody(this, g.lvl);
       if (this.onGround) this.vx *= 0.8;
@@ -416,7 +438,10 @@
     draw(c, g) {
       if (this.life < 120 && (this.life & 4)) return;
       const name = this.kind === 'olive' ? 'olive' : this.kind === 'pom' ? 'pom' : 'ambrosia';
-      O.drawSpr(c, name, this.x - g.cam, this.y + VY);
+      const s = O.SPR[name];
+      const bob = this.onGround ? Math.round(Math.sin(this.t * 0.08)) : 0;
+      O.drawSpr(c, name, this.x + this.w / 2 - s.w / 2 - g.cam, this.y + this.h - s.h + 1 + VY - 1 + bob);
+      if (((this.t >> 3) % 6) === 0) { c.fillStyle = '#fcfcfc'; c.fillRect(Math.round(this.x + 6 - g.cam), Math.round(this.y + VY - 1), 1, 1); }
     }
   }
   O.Pickup = Pickup;
@@ -426,11 +451,11 @@
     constructor(def) {
       this.kind = def.kind;
       this.sprite = def.kind;
-      this.scale = def.scale || 1;
       this.float = !!def.float;
+      this.god = def.kind === 'zeus' || def.kind === 'hermes';
       const s = O.SPR[this.sprite];
-      this.w = s.w * this.scale; this.h = s.h * this.scale;
-      this.x = def.tx * T; this.y = (def.row || 11) * T - this.h;
+      this.w = 12; this.h = s.h - 2;
+      this.x = def.tx * T + 2; this.y = (def.row || 11) * T - this.h;
       this.facing = -1; this.t = 0;
     }
     update(g) {
@@ -439,26 +464,35 @@
       this.facing = p.x + p.w / 2 < this.x + this.w / 2 ? -1 : 1;
     }
     near(p) {
-      return Math.abs(p.x + p.w / 2 - (this.x + this.w / 2)) < this.w / 2 + 12 * this.scale &&
+      return Math.abs(p.x + p.w / 2 - (this.x + this.w / 2)) < this.w / 2 + 16 &&
         p.y < this.y + this.h && p.y + p.h > this.y;
     }
     draw(c, g) {
-      const bob = this.float ? Math.round(Math.sin(this.t * 0.05) * 2) - 4 : 0;
-      const sx = Math.round(this.x - g.cam), sy = Math.round(this.y) + VY + bob;
-      if (this.scale > 1) {
-        for (let i = 0; i < 6; i++) {
-          const a = this.t * 0.03 + i * 1.05;
-          c.fillStyle = i % 2 ? '#f8b800' : '#fcfcfc';
-          c.fillRect(Math.round(sx + this.w / 2 + Math.cos(a) * 24), Math.round(sy + this.h / 2 + Math.sin(a) * 30), 1, 1);
+      const bob = this.float ? Math.round(Math.sin(this.t * 0.05) * 2) - 5 : 0;
+      const s = O.SPR[this.sprite];
+      const sx = Math.round(this.x + this.w / 2 - s.w / 2 - g.cam), sy = Math.round(this.y + this.h - s.h + 1 + bob) + VY;
+      if (this.god) {
+        const cx = sx + s.w / 2, cy = sy + s.h / 2;
+        for (let i = 0; i < 12; i++) {
+          const a = (i / 12) * Math.PI * 2 + this.t * 0.01;
+          const len = 18 + ((i + (this.t >> 4)) % 3) * 5;
+          c.fillStyle = i % 2 ? '#f8b800' : '#fcf088';
+          for (let k = 12; k < len; k += 2) c.fillRect(Math.round(cx + Math.cos(a) * k), Math.round(cy + Math.sin(a) * k * 1.1), 1, 1);
         }
+        for (let i = 0; i < 5; i++) {
+          const a = this.t * 0.04 + i * 1.26;
+          c.fillStyle = '#fcfcfc';
+          c.fillRect(Math.round(cx + Math.cos(a) * 14), Math.round(cy + Math.sin(a) * 20), 1, 1);
+        }
+        c.fillStyle = '#fcf088';
+        c.fillRect(sx + 3, sy + s.h + 2 - bob, s.w - 6, 1);
       }
-      O.drawSpr(c, this.sprite, sx, sy, this.facing < 0, false, this.scale);
-      if (this.kind === 'zeus') {
-        const bx = this.facing < 0 ? sx - 6 : sx + this.w - 10;
-        if ((this.t >> 3) & 1) O.drawSpr(c, 'bolt', bx, sy + 12, this.facing < 0);
+      O.drawSpr(c, this.sprite, sx, sy, this.facing < 0);
+      if (this.kind === 'zeus' && ((this.t >> 4) & 1)) {
+        O.drawSpr(c, 'bolt', this.facing < 0 ? sx - 6 : sx + s.w - 2, sy + 4, this.facing < 0);
       }
       if (this.near(g.player) && !g.dialog && ((this.t >> 4) & 1)) {
-        O.drawSpr(c, 'arrowUp', sx + this.w / 2 - 4, sy - 10);
+        O.drawSpr(c, 'arrowUp', sx + s.w / 2 - 4, sy - 9);
       }
     }
   }

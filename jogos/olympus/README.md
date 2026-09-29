@@ -36,14 +36,16 @@ jogos/olympus/
   index.html        Página do jogo (canvas + controles de toque)
   css/game.css      Layout, escala pixel-perfect e controles de celular
   js/core.js        Paleta NES, utilitários e fonte bitmap
-  js/sprites.js     Todos os sprites em pixel art (texto -> imagem)
-  js/tiles.js       Tiles 16×16 e cenários de fundo (parallax)
+  js/pix.js         Motor de pixel art (sombreamento, dithering, contornos)
+  js/sprites.js     Todos os sprites (texto -> imagem com sombreamento automático)
+  js/tiles.js       Tiles 16×16 com variações, decoração e cenários em parallax
   js/audio.js       Motor chiptune (2 pulsos + triângulo + ruído), músicas e efeitos
   js/input.js       Teclado, controle e toque
   js/levels.js      Mapas das fases
   js/story.js       TODOS os textos: abertura, diálogos, itens e final
   js/entities.js    Física, Orfeu, inimigos, chefe, NPCs e itens coletáveis
-  js/game.js        Estados do jogo, HUD, diálogos, salvamento e telas
+  js/game.js        Estados do jogo, diálogos, salvamento e lógica
+  js/render.js      Tudo o que aparece na tela: fases, luzes, partículas, HUD, título
   js/main.js        Inicialização e loop a 60 FPS
 ```
 
@@ -51,5 +53,6 @@ jogos/olympus/
 
 - **Textos e diálogos**: `js/story.js`. Use apenas letras sem acento, números e `. , ! ? ' - : / ( ) " + =`.
 - **Fases**: `js/levels.js`. A legenda dos tiles está no topo do arquivo.
-- **Sprites**: `js/sprites.js`. Cada letra corresponde a uma cor da tabela `O.PAL` em `js/core.js`, e `.` é transparente.
+- **Sprites**: `js/sprites.js`. Cada letra MAIÚSCULA é um material com sombreamento automático (por exemplo `S` pele, `H` cabelo, `W` tecido branco); a letra minúscula força a sombra; `K` é preto e `.` é transparente. O contorno preto é adicionado sozinho.
+- **Decoração das fases**: lista `decor` de cada fase em `js/levels.js` (oliveiras, ciprestes, carvalhos, ânforas, cortinas, janelas, cristais etc.).
 - **Músicas**: `js/audio.js`. Notas no formato `NOTA+OITAVA.DURAÇÃO` (duração em semicolcheias), por exemplo `E4.2` ou `-.4` (pausa).

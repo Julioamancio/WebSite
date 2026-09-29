@@ -1,10 +1,10 @@
-/* game.js — game states, world, HUD, dialogue, saving, title/story/ending screens */
+/* game.js — game states, levels, dialogue, saving and game logic (drawing lives in render.js) */
 (function (O) {
   'use strict';
-  const T = O.TILE, VY = O.HUD_H, VIEW_H = O.ROWS * T, W = O.W;
+  const T = O.TILE, W = O.W;
   const SOLID = { G: 1, D: 1, B: 1 };
   const SAVE_KEY = 'orpheus_song_of_olympus_v1';
-  const TEXT_W = 28;
+  O.TEXT_W = 27;
 
   /* ---------- Level ---------- */
   class Level {
@@ -15,7 +15,7 @@
       def.build(b);
       this.tiles = b.t; this.w = def.w; this.h = O.ROWS;
       this.pxW = this.w * T; this.pxH = this.h * T;
-      this.canvas = null; this.dirty = true;
+      this.canvas = null; this.front = null; this.dirty = true;
     }
     tile(tx, ty) { return tx < 0 || ty < 0 || tx >= this.w || ty >= this.h ? '.' : this.tiles[ty][tx]; }
     isSolid(tx, ty) {
@@ -25,24 +25,18 @@
     }
     isOneWay(tx, ty) { return this.tile(tx, ty) === 'P'; }
     isHazard(tx, ty) { return this.tile(tx, ty) === 'X'; }
-    setTile(tx, ty, ch) { if (this.tile(tx, ty) !== ch && tx >= 0 && ty >= 0 && tx < this.w && ty < this.h) { this.tiles[ty][tx] = ch; this.dirty = true; } }
+    setTile(tx, ty, ch) {
+      if (tx >= 0 && ty >= 0 && tx < this.w && ty < this.h && this.tiles[ty][tx] !== ch) { this.tiles[ty][tx] = ch; this.dirty = true; }
+    }
     render() {
       if (!this.dirty) return this.canvas;
-      if (!this.canvas) this.canvas = O.makeCanvas(this.pxW, this.pxH);
-      const g = this.canvas.getContext('2d');
-      g.clearRect(0, 0, this.pxW, this.pxH);
-      for (let y = 0; y < this.h; y++) {
-        for (let x = 0; x < this.w; x++) {
-          const ch = this.tiles[y][x];
-          if (ch === '.') continue;
-          const img = O.Tiles.get(this.theme, ch);
-          if (img) g.drawImage(img, x * T, y * T);
-        }
-      }
+      if (!this.canvas) { this.canvas = O.makeCanvas(this.pxW, this.pxH); this.front = O.makeCanvas(this.pxW, this.pxH); }
+      O.renderLevel(this);
       this.dirty = false;
       return this.canvas;
     }
   }
+  O.Level = Level;
 
   function newState() {
     return { hp: 12, maxHp: 12, olives: 0, ambrosia: 0, items: { club: false, sandals: false }, flags: {} };
@@ -56,14 +50,12 @@
       this.t = 0;
       this.state = 'press';
       this.sel = 0;
-      this.cam = 0; this.shake = 0;
+      this.cam = 0; this.shake = 0; this.flash = 0; this.hitstop = 0;
       this.dialog = null; this.trans = null;
       this.player = new O.Player();
-      this.enemies = []; this.npcs = []; this.pickups = []; this.fx = [];
+      this.enemies = []; this.npcs = []; this.pickups = []; this.fx = []; this.amb = [];
       this.st = newState();
       this.hasSave = !!this.readSave();
-      const r = O.rng(5);
-      this.stars = Array.from({ length: 60 }, () => [(r() * 256) | 0, (r() * 240) | 0, r() < 0.2]);
     }
 
     sfx(n) { O.Audio.sfx(n); }
@@ -90,9 +82,7 @@
       this.st.hp = this.st.maxHp;
       this.state = 'play';
       this.loadLevel(d.level, d.spawn);
-      this.fadeIn();
     }
-    // Continue from the last temple save; without one, restart in the village keeping items.
     continueAfterDeath() {
       if (this.hasSave) { this.loadSave(); return; }
       this.st.hp = this.st.maxHp;
@@ -108,14 +98,13 @@
       }
       this.state = 'play';
       this.loadLevel('village', { tx: 5, row: 11 });
-      this.fadeIn();
     }
 
     /* ----- levels ----- */
     loadLevel(id, spawn) {
       const lvl = this.lvl = new Level(id);
       const d = lvl.def;
-      this.enemies = []; this.pickups = []; this.fx = []; this.npcs = [];
+      this.enemies = []; this.pickups = []; this.fx = []; this.npcs = []; this.amb = [];
       this.bossActive = false; this.dialog = null;
       const x = spawn.x !== undefined ? spawn.x : spawn.tx * T + 3;
       const feet = spawn.feet !== undefined ? spawn.feet : spawn.row * T;
@@ -125,7 +114,7 @@
       (d.items || []).forEach((it) => this.pickups.push(new O.Pickup(it.kind, it.tx * T + 4, it.row * T - 8, 0, Infinity)));
       this.music(d.music);
       if (d.onEnter) d.onEnter(this);
-      this.updateCamera(true);
+      this.updateCamera();
       this.banner = 150;
     }
     openDenDoor() {
@@ -135,7 +124,6 @@
       this.sfx('door');
       this.trans = { t: 0, dir: 1, cb: () => this.loadLevel(id, spawn) };
     }
-    fadeIn() { this.trans = { t: 16, dir: -1, cb: null }; }
     toEnding() {
       this.trans = { t: 0, dir: 1, cb: () => { this.state = 'ending'; this.endT = 0; this.music('temple'); } };
     }
@@ -144,7 +132,7 @@
     buildPages(texts, maxLast) {
       const pages = [];
       (Array.isArray(texts) ? texts : [texts]).forEach((txt) => {
-        const lines = O.wrap(txt, TEXT_W);
+        const lines = O.wrap(txt, O.TEXT_W);
         for (let i = 0; i < lines.length; i += 4) pages.push(lines.slice(i, i + 4));
       });
       if (maxLast && pages.length && pages[pages.length - 1].length > maxLast) {
@@ -203,10 +191,24 @@
     }
 
     /* ----- effects ----- */
-    puff(x, y) { this.fx.push({ type: 'puff', x, y, t: 0 }); }
+    puff(x, y) {
+      this.fx.push({ type: 'puff', x, y, t: 0 });
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        this.fx.push({ type: 'star', x, y, vx: Math.cos(a) * 1.6, vy: Math.sin(a) * 1.6 - 0.5, t: 0 });
+      }
+    }
     spark(x, y) { this.fx.push({ type: 'spark', x, y, t: 0 }); }
+    dust(x, y, kind) {
+      if (kind === 0) { this.fx.push({ type: 'dust', x, y: y - 2, vx: 0, t: 0 }); return; }
+      const n = kind === 2 ? 2 : 1;
+      for (let i = 0; i < n; i++) {
+        this.fx.push({ type: 'dust', x: x - 4, y: y - 2, vx: -0.6 - i * 0.3, t: 0 });
+        this.fx.push({ type: 'dust', x: x + 4, y: y - 2, vx: 0.6 + i * 0.3, t: 0 });
+      }
+    }
     debris(x, y) {
-      for (let i = 0; i < 4; i++) this.fx.push({ type: 'bit', x, y, vx: (i - 1.5) * 0.8, vy: -2 - Math.random(), t: 0 });
+      for (let i = 0; i < 5; i++) this.fx.push({ type: 'bit', x, y, vx: (i - 2) * 0.8, vy: -2 - Math.random(), t: 0 });
     }
     popText(x, y, text, color) { this.fx.push({ type: 'text', x, y, text, color, t: 0 }); }
     drop(e) {
@@ -218,8 +220,9 @@
     collect(pk) {
       const st = this.st, p = this.player;
       if (pk.kind === 'olive') { st.olives = Math.min(999, st.olives + 1); this.sfx('olive'); }
-      else if (pk.kind === 'pom') { st.hp = Math.min(st.maxHp, st.hp + 4); this.sfx('life'); this.popText(p.x, p.y - 6, '+4', '#d82800'); }
+      else if (pk.kind === 'pom') { st.hp = Math.min(st.maxHp, st.hp + 4); this.sfx('life'); this.popText(p.x - 2, p.y - 8, '+4', '#fc7050'); }
       else if (pk.kind === 'ambrosia') { st.ambrosia = Math.min(3, st.ambrosia + 1); this.sfx('buy'); }
+      this.fx.push({ type: 'spark', x: pk.x + 4, y: pk.y + 4, t: 2 });
     }
 
     /* ----- events ----- */
@@ -267,6 +270,7 @@
         case 'story': this.updateStory(); break;
         case 'play': this.updatePlay(); break;
         case 'itemget':
+          this.updateAmbient();
           if (--this.itemT <= 0) {
             this.state = 'play';
             const it = O.ITEMS[this.itemKey];
@@ -338,7 +342,9 @@
     }
 
     updatePlay() {
-      if (this.dialog) { this.updateDialog(); return; }
+      if (this.flash > 0) this.flash--;
+      if (this.dialog) { this.updateDialog(); this.updateAmbient(); return; }
+      if (this.hitstop > 0) { this.hitstop--; return; }
       const I = this.I, p = this.player, lvl = this.lvl, st = this.st;
       if (I.pressed.start) { this.state = 'pause'; this.sfx('pause'); return; }
       if (this.banner > 0) this.banner--;
@@ -364,14 +370,17 @@
 
       this.fx.forEach((f) => {
         f.t++;
-        if (f.type === 'bit') { f.x += f.vx; f.y += f.vy; f.vy += 0.2; }
+        if (f.vx !== undefined) f.x += f.vx;
+        if (f.type === 'bit' || f.type === 'star') { f.y += f.vy; f.vy += f.type === 'bit' ? 0.2 : 0.08; }
+        if (f.type === 'dust') { f.y -= 0.15; f.vx *= 0.9; }
         if (f.type === 'text') f.y -= 0.5;
       });
-      this.fx = this.fx.filter((f) => f.t < (f.type === 'puff' ? 20 : f.type === 'spark' ? 8 : 40));
+      const LIFE = { puff: 22, spark: 10, dust: 16, bit: 40, star: 24, text: 40 };
+      this.fx = this.fx.filter((f) => f.t < (LIFE[f.type] || 30));
+      this.updateAmbient();
 
       if (st.hp <= 0) { this.die(); return; }
 
-      // Talk / doors (press UP while standing)
       if (I.pressed.up && p.onGround) {
         const npc = this.npcs.find((n) => n.near(p));
         if (npc && O.TALK[npc.kind]) { O.TALK[npc.kind](this); return; }
@@ -379,7 +388,6 @@
           O.overlap(p, { x: e.tx * T, y: e.ty * T, w: e.tw * T, h: e.th * T }));
         if (ex) { this.goto(ex.to, ex.spawn); return; }
       }
-      // Screen-edge exits
       for (const e of lvl.def.exits || []) {
         if (e.type !== 'edge') continue;
         const atEdge = e.side === 'right' ? p.x + p.w >= lvl.pxW - 0.5 && I.down.right : p.x <= 0.5 && I.down.left;
@@ -392,301 +400,45 @@
         this.goto(e.to, e.spawn);
         return;
       }
-      this.updateCamera(false);
+      this.updateCamera();
+    }
+
+    // Ambient particles: falling leaves, fireflies, embers, cave drips.
+    updateAmbient() {
+      const lvl = this.lvl, kind = lvl.def.ambient, a = this.amb, cam = this.cam;
+      if (kind === 'leaves' && a.length < 10 && Math.random() < 0.05) {
+        a.push({ k: 'leaf', x: cam + Math.random() * 300, y: -4, vx: -0.35 - Math.random() * 0.3, vy: 0.35 + Math.random() * 0.2, t: (Math.random() * 100) | 0 });
+      }
+      if (kind === 'fireflies' && a.length < 14) {
+        a.push({ k: 'fly', x: cam + Math.random() * W, y: 60 + Math.random() * 110, vx: 0, vy: 0, t: (Math.random() * 200) | 0 });
+      }
+      if (kind === 'embers' && a.length < 16 && Math.random() < 0.15) {
+        const L = (lvl.def.lights || []).filter((l) => l.type === 'brazier');
+        if (L.length) {
+          const l = L[(Math.random() * L.length) | 0];
+          a.push({ k: 'ember', x: l.tx * T + 6 + Math.random() * 4, y: l.row * T - 20, vx: (Math.random() - 0.5) * 0.3, vy: -0.4 - Math.random() * 0.4, t: 0 });
+        }
+      }
+      if (kind === 'drips' && a.length < 4 && Math.random() < 0.03) {
+        a.push({ k: 'drip', x: (2 + Math.random() * 16) * T, y: 34, vx: 0, vy: 0, t: 0 });
+      }
+      for (const p of a) {
+        p.t++;
+        if (p.k === 'leaf') { p.x += p.vx + Math.sin(p.t * 0.06) * 0.4; p.y += p.vy; if (p.y > O.ROWS * T) p.dead = true; }
+        else if (p.k === 'fly') {
+          p.vx = O.clamp(p.vx + (Math.random() - 0.5) * 0.06, -0.4, 0.4);
+          p.vy = O.clamp(p.vy + (Math.random() - 0.5) * 0.06, -0.3, 0.3);
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < cam - 40 || p.x > cam + W + 40 || p.y < 30 || p.y > 180) p.dead = true;
+        } else if (p.k === 'ember') { p.x += p.vx + Math.sin(p.t * 0.1) * 0.2; p.y += p.vy; if (p.t > 70) p.dead = true; }
+        else if (p.k === 'drip') { p.vy = Math.min(4, p.vy + 0.15); p.y += p.vy; if (lvl.isSolid(Math.floor(p.x / T), Math.floor(p.y / T))) { p.dead = true; this.fx.push({ type: 'dust', x: p.x, y: p.y - 1, vx: 0, t: 8 }); } }
+      }
+      this.amb = a.filter((p) => !p.dead);
     }
 
     updateCamera() {
       const p = this.player, lvl = this.lvl;
       this.cam = Math.round(O.clamp(p.x + p.w / 2 - W / 2, 0, Math.max(0, lvl.pxW - W)));
-    }
-
-    /* ---------- DRAW ---------- */
-    draw() {
-      const c = this.ctx;
-      c.fillStyle = '#000000';
-      c.fillRect(0, 0, W, O.H);
-      switch (this.state) {
-        case 'press': case 'title': this.drawTitle(c); break;
-        case 'story': this.drawStory(c); break;
-        case 'play': case 'itemget': case 'dying': this.drawWorld(c); this.drawHUD(c); if (this.dialog) this.drawDialog(c); break;
-        case 'pause': this.drawWorld(c); this.drawHUD(c); this.drawPause(c); break;
-        case 'gameover': this.drawGameOver(c); break;
-        case 'ending': this.drawEnding(c); break;
-      }
-      if (this.trans) {
-        const a = Math.min(4, Math.floor(this.trans.t / 4)) / 4;
-        if (a > 0) { c.fillStyle = 'rgba(0,0,0,' + a + ')'; c.fillRect(0, 0, W, O.H); }
-      }
-    }
-
-    drawWorld(c) {
-      const lvl = this.lvl;
-      c.save();
-      c.beginPath(); c.rect(0, VY, W, VIEW_H); c.clip();
-      if (this.shake > 0) c.translate(((this.t >> 1) & 1 ? 2 : -2), ((this.t >> 2) & 1 ? 1 : -1));
-      const bg = O.Tiles.parallax(lvl.theme);
-      const off = Math.floor(this.cam * 0.3) % 512;
-      c.drawImage(bg, -off, VY); c.drawImage(bg, 512 - off, VY);
-      c.drawImage(lvl.render(), this.cam, 0, W, VIEW_H, 0, VY, W, VIEW_H);
-      (lvl.def.decor || []).forEach((d) => {
-        const x = d.tx * T + 4 - this.cam, y = d.row * T - 8 + VY;
-        O.drawSpr(c, 'brazier', x, y);
-        O.drawSpr(c, (this.t >> 3) & 1 ? 'flame1' : 'flame2', x, y - 8);
-      });
-      this.npcs.forEach((n) => n.draw(c, this));
-      this.pickups.forEach((pk) => pk.draw(c, this));
-      this.enemies.forEach((e) => e.draw(c, this));
-      if (this.state === 'dying') this.drawDeath(c);
-      else if (this.state === 'itemget') this.drawItemGet(c);
-      else this.player.draw(c, this);
-      this.drawFx(c);
-      if (this.banner > 0 && this.banner < 140 && !this.dialog) {
-        const name = lvl.name, w = name.length * 8 + 16, x = (W - w) / 2;
-        c.fillStyle = '#000000'; c.fillRect(x, VY + 12, w, 16);
-        O.text(c, name, x + 8, VY + 16, '#f8b800');
-      }
-      const boss = this.enemies.find((e) => e instanceof O.Boar);
-      if (boss && boss.state !== 'wait') {
-        O.text(c, 'BOAR', 8, VY + 194, '#fcfcfc');
-        for (let i = 0; i < boss.maxHp; i++) {
-          c.fillStyle = i < boss.hp ? '#f8b800' : '#503000';
-          c.fillRect(48 + i * 4, VY + 194, 3, 7);
-        }
-      }
-      c.restore();
-    }
-
-    drawItemGet(c) {
-      const p = this.player;
-      const sx = Math.round(p.x - 3 - this.cam), sy = Math.round(p.y + p.h - 24) + VY;
-      O.drawSpr(c, 'heroStand', sx, sy, p.facing < 0);
-      const it = O.ITEMS[this.itemKey];
-      const bob = Math.round(Math.sin(this.t * 0.2) * 2);
-      O.drawSpr(c, it.icon, sx + 4, sy - 12 + bob);
-      if ((this.t >> 2) & 1) {
-        c.fillStyle = '#fcfcfc';
-        c.fillRect(sx + 2, sy - 14, 1, 1); c.fillRect(sx + 13, sy - 8, 1, 1); c.fillRect(sx + 8, sy - 16, 1, 1);
-      }
-    }
-
-    drawDeath(c) {
-      const p = this.player;
-      const sx = Math.round(p.x - 3 - this.cam), sy = Math.round(p.y + p.h - 24) + VY;
-      if (this.dieT < 60) {
-        const faces = [1, -1];
-        O.drawSpr(c, 'heroStand', sx, sy, faces[(this.dieT >> 3) & 1] < 0, (this.dieT >> 1) & 1);
-      } else {
-        O.drawSpr(c, 'heroCrouch', sx, sy + 8, p.facing < 0, false);
-      }
-    }
-
-    drawFx(c) {
-      this.fx.forEach((f) => {
-        const x = Math.round(f.x - this.cam), y = Math.round(f.y) + VY;
-        if (f.type === 'puff') {
-          const r = 3 + f.t * 0.6;
-          c.fillStyle = f.t < 10 ? '#fcfcfc' : '#bcbcbc';
-          for (let i = 0; i < 8; i++) {
-            const a = (i / 8) * Math.PI * 2;
-            c.fillRect(Math.round(x + Math.cos(a) * r) - 1, Math.round(y + Math.sin(a) * r) - 1, 3, 3);
-          }
-        } else if (f.type === 'spark') {
-          c.fillStyle = '#f8b800';
-          c.fillRect(x - 4, y, 9, 1); c.fillRect(x, y - 4, 1, 9);
-          c.fillStyle = '#fcfcfc'; c.fillRect(x - 1, y - 1, 3, 3);
-        } else if (f.type === 'bit') {
-          c.fillStyle = '#7c7c7c'; c.fillRect(x, y, 2, 2);
-        } else if (f.type === 'text') {
-          O.text(c, f.text, x, y, f.color);
-        }
-      });
-    }
-
-    drawHUD(c) {
-      const st = this.st;
-      c.fillStyle = '#000000';
-      c.fillRect(0, 0, W, VY);
-      O.text(c, 'LIFE', 8, 6, '#fcfcfc');
-      for (let i = 0; i < st.maxHp; i++) {
-        c.fillStyle = i < st.hp ? '#d82800' : '#503000';
-        c.fillRect(44 + i * 4, 6, 3, 7);
-      }
-      O.drawSpr(c, 'olive', 152, 5);
-      O.text(c, 'X' + O.pad(st.olives, 3), 162, 6);
-      O.drawSpr(c, 'ambrosia', 152, 17);
-      O.text(c, 'X' + st.ambrosia, 162, 18);
-      O.text(c, this.lvl.name.slice(0, 17), 8, 18, '#f8b800');
-      if (st.items.club) O.drawSpr(c, 'iconClub', 218, 11);
-      if (st.items.sandals) O.drawSpr(c, 'iconSandals', 234, 11);
-      c.fillStyle = '#7c7c7c';
-      c.fillRect(212, 8, 1, 14); c.fillRect(212, 8, 36, 1); c.fillRect(247, 8, 1, 14); c.fillRect(212, 21, 36, 1);
-    }
-
-    drawBox(c, x, y, w, h) {
-      c.fillStyle = '#000000'; c.fillRect(x, y, w, h);
-      c.fillStyle = '#fcfcfc';
-      c.fillRect(x + 2, y + 2, w - 4, 1); c.fillRect(x + 2, y + h - 3, w - 4, 1);
-      c.fillRect(x + 2, y + 2, 1, h - 4); c.fillRect(x + w - 3, y + 2, 1, h - 4);
-      c.fillStyle = '#7c7c7c';
-      c.fillRect(x + 4, y + 4, w - 8, 1); c.fillRect(x + 4, y + h - 5, w - 8, 1);
-      c.fillRect(x + 4, y + 4, 1, h - 8); c.fillRect(x + w - 5, y + 4, 1, h - 8);
-    }
-
-    drawDialog(c) {
-      const d = this.dialog;
-      const x = 8, y = 162, w = 240, h = 72;
-      this.drawBox(c, x, y, w, h);
-      if (d.speaker) {
-        const sw = d.speaker.length * 8 + 8;
-        c.fillStyle = '#000000'; c.fillRect(x + 10, y - 2, sw, 10);
-        O.text(c, d.speaker, x + 14, y - 1, '#f8b800');
-      }
-      const page = d.pages[d.page];
-      let left = d.chars | 0;
-      page.forEach((line, i) => {
-        const shown = line.slice(0, Math.max(0, left));
-        left -= line.length;
-        O.text(c, shown, x + 12, y + 12 + i * 12, '#fcfcfc');
-      });
-      const total = page.join('').length;
-      if (d.chars >= total) {
-        if (d.choice && d.page === d.pages.length - 1) {
-          const oy = y + 12 + 3 * 12;
-          d.choice.options.forEach((o, i) => {
-            const ox = x + 36 + i * 80;
-            if (i === d.choice.sel) O.text(c, '>', ox - 10, oy, '#f8b800');
-            O.text(c, o, ox, oy, i === d.choice.sel ? '#f8b800' : '#fcfcfc');
-          });
-        } else if ((this.t >> 4) & 1) {
-          c.fillStyle = '#fcfcfc';
-          c.fillRect(x + w - 16, y + h - 12, 5, 1); c.fillRect(x + w - 15, y + h - 11, 3, 1); c.fillRect(x + w - 14, y + h - 10, 1, 1);
-        }
-      }
-    }
-
-    drawPause(c) {
-      const st = this.st;
-      this.drawBox(c, 16, 40, 224, 184);
-      O.textCenter(c, '- STATUS -', 52, '#f8b800');
-      O.text(c, 'LIFE', 32, 72); O.text(c, st.hp + '/' + st.maxHp, 128, 72, '#d82800');
-      O.text(c, 'OLIVES', 32, 86); O.text(c, String(st.olives), 128, 86, '#58d854');
-      O.text(c, 'AMBROSIA', 32, 100); O.text(c, st.ambrosia + '/3', 128, 100, '#f8b800');
-      O.text(c, 'TREASURES', 32, 118, '#3cbcfc');
-      let ix = 32;
-      ['club', 'sandals'].forEach((k) => {
-        if (!st.items[k]) return;
-        O.drawSpr(c, O.ITEMS[k].icon, ix, 132);
-        ix += 16;
-      });
-      if (ix === 32) O.text(c, 'NONE', 32, 132, '#7c7c7c');
-      O.text(c, 'QUEST', 32, 150, '#3cbcfc');
-      O.wrap(O.questHint(st), 24).forEach((l, i) => O.text(c, l, 32, 162 + i * 10));
-      if (st.ambrosia > 0) O.text(c, 'B: DRINK AMBROSIA (+8)', 32, 196, st.hp < st.maxHp ? '#fcfcfc' : '#7c7c7c');
-      O.text(c, 'START: RESUME', 32, 208, '#7c7c7c');
-    }
-
-    drawStars(c) {
-      this.stars.forEach((s) => {
-        c.fillStyle = s[2] && ((this.t + s[0]) >> 5) & 1 ? '#fcfcfc' : '#7c7c7c';
-        c.fillRect(s[0], s[1], 1, 1);
-      });
-    }
-
-    drawTitle(c) {
-      this.drawStars(c);
-      for (let y = 24; y < 208; y += 16) {
-        const ch = y === 24 ? 'c' : y === 192 ? 'b' : 'C';
-        c.drawImage(O.Tiles.get('temple', ch), 8, y);
-        c.drawImage(O.Tiles.get('temple', ch), 232, y);
-      }
-      O.textCenter(c, 'ORPHEUS', 28 + 2, '#881400', 3);
-      O.text(c, 'ORPHEUS', (W - 168) / 2, 28, '#f8b800', 3);
-      O.textCenter(c, '- SONG OF OLYMPUS -', 60, '#fcfcfc');
-      for (let x = 96; x < 160; x += 16) c.drawImage(O.Tiles.get('temple', 'B'), x, 124);
-      O.drawSpr(c, 'heroStand', 112, 76, false, false, 2);
-      if (this.state === 'press') {
-        if ((this.t >> 5) & 1) O.textCenter(c, 'PRESS START', 152, '#fcfcfc');
-      } else {
-        const opts = ['NEW GAME', 'CONTINUE'];
-        opts.forEach((o, i) => {
-          const y = 148 + i * 14;
-          const enabled = i === 0 || this.hasSave;
-          O.text(c, o, 96, y, !enabled ? '#7c7c7c' : this.sel === i ? '#f8b800' : '#fcfcfc');
-          if (this.sel === i) O.text(c, '>', 84, y, '#f8b800');
-        });
-      }
-      O.textCenter(c, 'Z:ATTACK  X:JUMP', 180, '#bcbcbc');
-      O.textCenter(c, 'UP:TALK/DOOR', 192, '#bcbcbc');
-      O.textCenter(c, 'ENTER:START  M:MUTE', 204, '#7c7c7c');
-      O.textCenter(c, 'A FAN TRIBUTE - 2026', 222, '#7c7c7c');
-    }
-
-    drawStory(c) {
-      const pg = O.STORY[this.page];
-      const t = this.storyT;
-      const ground = (theme, ch, y) => { for (let x = 0; x < W; x += 16) c.drawImage(O.Tiles.get(theme, ch), x, y); };
-      this.drawStars(c);
-      switch (pg.scene) {
-        case 'orpheus':
-          c.drawImage(O.Tiles.parallax('village'), 0, 60, 256, 88, 0, 60, 256, 88);
-          ground('village', 'G', 132);
-          O.drawSpr(c, 'heroStand', 120, 108);
-          break;
-        case 'lovers':
-          ground('village', 'G', 132);
-          O.drawSpr(c, 'heroStand', 104, 108);
-          O.drawSpr(c, 'eurydice', 136, 108, true);
-          O.drawSpr(c, 'heart', 124, 88 + Math.round(Math.sin(t * 0.08) * 3));
-          break;
-        case 'serpent': {
-          ground('village', 'G', 132);
-          const sx = Math.max(150, 230 - t * 0.5);
-          O.drawSpr(c, 'eurydice', 124, 108, false, t > 170 && (t >> 2) & 1);
-          O.drawSpr(c, (t >> 3) & 1 ? 'snake1' : 'snake2', sx, 124, true);
-          break;
-        }
-        case 'hades':
-          c.fillStyle = '#a81000'; c.fillRect(0, 120, W, 28);
-          for (let x = 0; x < W; x += 8) O.drawSpr(c, ((t >> 3) + x / 8) & 1 ? 'flame1' : 'flame2', x, 112);
-          O.drawSpr(c, 'hades', 112, 64, false, false, 2);
-          if ((t >> 1) & 1) O.drawSpr(c, 'eurydice', 170, 84 + Math.round(Math.sin(t * 0.05) * 3), true, true);
-          break;
-        case 'oath':
-          c.drawImage(O.Tiles.parallax('village'), 100, 40, 256, 108, 0, 40, 256, 108);
-          ground('village', 'G', 132);
-          O.drawSpr(c, 'heroStand', 60, 108);
-          break;
-      }
-      this.drawBox(c, 8, 156, 240, 76);
-      const lines = O.wrap(pg.text, TEXT_W);
-      let left = this.chars | 0;
-      lines.forEach((l, i) => {
-        O.text(c, l.slice(0, Math.max(0, left)), 20, 168 + i * 12);
-        left -= l.length;
-      });
-      if (this.chars >= pg.text.length && (this.t >> 4) & 1) O.text(c, '>', 232, 220, '#f8b800');
-      O.text(c, 'START: SKIP', 164, 8, '#7c7c7c');
-    }
-
-    drawGameOver(c) {
-      this.drawStars(c);
-      O.textCenter(c, 'GAME OVER', 80, '#d82800', 2);
-      O.textCenter(c, 'EURYDICE STILL WAITS...', 110, '#bcbcbc');
-      ['CONTINUE', 'RETURN TO TITLE'].forEach((o, i) => {
-        const y = 144 + i * 16;
-        O.text(c, o, 72, y, this.sel === i ? '#f8b800' : '#fcfcfc');
-        if (this.sel === i) O.text(c, '>', 60, y, '#f8b800');
-      });
-    }
-
-    drawEnding(c) {
-      this.drawStars(c);
-      O.drawSpr(c, 'heroStand', 112, 20, false, false, 2);
-      O.drawSpr(c, 'iconSandals', 124, 8 + Math.round(Math.sin(this.t * 0.1) * 2));
-      O.ENDING.forEach((l, i) => {
-        if (this.endT > i * 40) O.textCenter(c, l.t, 84 + i * 14, l.c);
-      });
-      if (this.endT > O.ENDING.length * 40 + 60 && (this.t >> 5) & 1) O.textCenter(c, 'PRESS START', 216, '#7c7c7c');
     }
   }
 

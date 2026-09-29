@@ -1,9 +1,38 @@
-/* sprites.js — original pixel art (strings -> canvases).
-   Each char maps to a color in O.PAL; '.' is transparent. */
+/* sprites.js — original pixel art. Sources are "fill only" strings:
+   UPPERCASE = material that gets automatic 3-tone shading (light on top, shadow on the back/bottom),
+   lowercase = forced shadow tone of that material, K = black, k = soft dark line, * = white shine,
+   & = glowing red, % = pale glow, . = transparent. A 1px black outline is added automatically. */
 (function (O) {
   'use strict';
 
-  /* ---------- helpers ---------- */
+  // [light, base, shadow]
+  const RAMPS = {
+    S: ['#fcd8a8', '#f0a068', '#b05828'], // skin
+    H: ['#d0783c', '#8c3810', '#501800'], // auburn hair
+    W: ['#fcfcfc', '#d8d8e8', '#9090b0'], // white cloth
+    R: ['#fc7050', '#d82800', '#881000'], // red
+    Y: ['#fcf088', '#f8b800', '#a86000'], // gold
+    B: ['#d89858', '#a06028', '#5c3010'], // leather / wood
+    F: ['#b06840', '#703818', '#381808'], // dark fur / dark wood
+    G: ['#a0e868', '#38a818', '#10600c'], // green
+    E: ['#38a818', '#186c10', '#083808'], // deep green
+    P: ['#b8a0fc', '#7050e0', '#382890'], // purple
+    N: ['#6858b8', '#382878', '#180c40'], // night robe
+    U: ['#80c0fc', '#2870e0', '#103c90'], // blue
+    I: ['#d0ecfc', '#80bcf0', '#3c78c0'], // sky cloth
+    A: ['#e0e0e8', '#a0a0b0', '#585870'], // stone
+    V: ['#ece0fc', '#b8a8e8', '#7060a8'], // pale violet skin
+    Z: ['#fcc8e8', '#f070b8', '#a03070'], // pink
+    C: ['#b0fcfc', '#20c8d0', '#086878'], // cyan
+    T: ['#fcfcf0', '#e8dcb0', '#a89868'], // ivory
+    O: ['#b8d860', '#6c8c28', '#344814'], // olive
+    M: ['#fcfcfc', '#e0dce8', '#a8a0b8'], // white hair / marble
+    X: ['#fcfcfc', '#b8c0d0', '#687088'], // silver
+    Q: ['#f8d078', '#c88830', '#704010']  // bronze
+  };
+  const FIXED = { K: '#000000', k: '#302838', '*': '#fcfcfc', '&': '#fc3800', '%': '#fcf8b0' };
+  O.RAMPS = RAMPS;
+
   function recolor(rows, map) {
     return rows.map((r) => r.split('').map((ch) => (map[ch] !== undefined ? map[ch] : ch)).join(''));
   }
@@ -12,496 +41,436 @@
     Object.keys(patches).forEach((y) => { out[+y] = patches[y]; });
     return out;
   }
-  function setPx(rows, x, y, ch) {
-    const out = rows.slice();
-    out[y] = out[y].slice(0, x) + ch + out[y].slice(x + 1);
-    return out;
-  }
-  // Procedural grid helpers (used for the boss) with automatic black outline.
-  function grid(w, h) { return Array.from({ length: h }, () => new Array(w).fill('.')); }
-  function gSet(g, x, y, c) { if (y >= 0 && y < g.length && x >= 0 && x < g[0].length) g[y][x] = c; }
-  function gRect(g, x, y, w, h, c) { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) gSet(g, i, j, c); }
-  function gEllipse(g, cx, cy, rx, ry, c) {
-    for (let y = 0; y < g.length; y++) {
-      for (let x = 0; x < g[0].length; x++) {
-        const dx = (x - cx) / rx, dy = (y - cy) / ry;
-        if (dx * dx + dy * dy <= 1) g[y][x] = c;
+
+  // Source strings -> shaded, outlined Pix.
+  function build(rows, opt) {
+    const o = opt || {};
+    const pad = o.outline === false ? 0 : 1;
+    const h0 = rows.length, w0 = Math.max.apply(null, rows.map((r) => r.length));
+    const src = (x, y) => (y >= 0 && y < h0 && x >= 0 && x < w0 ? rows[y][x] || '.' : '.');
+    const p = new O.Pix(w0 + pad * 2, h0 + pad * 2);
+    for (let y = 0; y < h0; y++) {
+      for (let x = 0; x < w0; x++) {
+        const ch = src(x, y);
+        if (ch === '.') continue;
+        let c = FIXED[ch];
+        if (!c && RAMPS[ch]) {
+          const r = RAMPS[ch];
+          let tone = 1;
+          if (o.shade !== false) {
+            const up = src(x, y - 1), dn = src(x, y + 1), lf = src(x - 1, y);
+            if (up !== ch && dn !== ch) tone = lf === '.' ? 2 : 1;
+            else if (up !== ch) tone = 0;
+            else if (lf === '.' || dn !== ch) tone = 2;
+          }
+          c = r[tone];
+        } else if (!c && RAMPS[ch.toUpperCase()]) {
+          c = RAMPS[ch.toUpperCase()][2];
+        }
+        if (!c) { console.warn('Unknown sprite char', ch); continue; }
+        p.set(x + pad, y + pad, c);
       }
     }
-  }
-  function gOutline(g) {
-    const h = g.length, w = g[0].length;
-    const out = g.map((r) => r.slice());
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        if (g[y][x] !== '.') continue;
-        const n = (xx, yy) => yy >= 0 && yy < h && xx >= 0 && xx < w && g[yy][xx] !== '.';
-        if (n(x - 1, y) || n(x + 1, y) || n(x, y - 1) || n(x, y + 1)) out[y][x] = 'K';
-      }
-    }
-    return out.map((r) => r.join(''));
+    if (o.outline !== false) p.outline('#000000');
+    return p;
   }
 
-  /* ---------- ORPHEUS (16x24, faces right) ---------- */
-  const HERO_TOP = [
-    '................',
-    '......KKKK......',
-    '....KKHHHHK.....',
-    '...KHHHHHHHK....',
-    '...KRRRRRRRRK...',
-    '...KHHSSSSKSK...',
-    '...KHSSSSSKSK...',
-    '...KHSSSSSSSK...',
-    '....KHSSSSSK....',
-    '.....KKSSKK.....'
+  /* ================= ORPHEUS (source 14 wide) ================= */
+  const HEAD = [
+    '.....HHHH.....',
+    '...HHHHHHHH...',
+    '..HHHHHHHHHH..',
+    '.RRRRRRRRRRR..',
+    '.RHHHSSSSSSS..',
+    'R.HHSSSSSKSS..',
+    '..HHSSSSSKSSS.',
+    '..HHHSSSSSSS..',
+    '...HHSSSSSsS..',
+    '....HSSSSSS...',
+    '......SSS.....'
   ];
-  const HERO_BODY = [
-    '....KWWWWWWK....',
-    '...KSWWWWWWSK...',
-    '..KSKWWWWWWKSK..',
-    '..KSKWWWWWWKSK..',
-    '..KSKRRRRRRKSK..',
-    '...KKWWWWWWKK...',
-    '....KWWwWWWK....',
-    '....KWwwwwWK....'
+  const TORSO = [
+    '...WWWWWWWW...',
+    '..WWWWWWWWWW..',
+    '..SWWWWWWWWS..',
+    '..SWWwWWWWWS..',
+    '..SWWwWWWWWS..',
+    '..SBBBBYBBBS..',
+    '..SWWWWWWwWS..',
+    '..SWWWwWWwWS..',
+    '..SWWWwWWWWS..',
+    '...WWWWWWWWW..'
   ];
-  const HERO_BODY_ATK = [
-    '....KWWWWWWKKK..',
-    '...KSWWWWWWSSSK.',
-    '..KSKWWWWWWKKK..',
-    '..KSKWWWWWWK....',
-    '..KSKRRRRRRK....',
-    '...KKWWWWWWK....',
-    '....KWWwWWWK....',
-    '....KWwwwwWK....'
+  const TORSO_ATK = [
+    '...WWWWWWWW...',
+    '..WWWWWWWWWSSS',
+    '..SWWWWWWWW...',
+    '..SWWwWWWWW...',
+    '..SWWwWWWWW...',
+    '..SBBBBYBBB...',
+    '..SWWWWWWwW...',
+    '..SWWWwWWwW...',
+    '..SWWWwWWWW...',
+    '...WWWWWWWWW..'
   ];
   const LEGS = {
     stand: [
-      '.....KSK.KSK....',
-      '.....KSK.KSK....',
-      '.....KSK.KSK....',
-      '.....KBK.KBK....',
-      '....KBBK.KBBK...',
-      '....KKKK.KKKK...'
+      '...SSS..SSS...',
+      '...SSS..SSS...',
+      '...SSS..SSS...',
+      '...BSB..BSB...',
+      '...SBS..SBS...',
+      '...BSB..BSB...',
+      '...BBB..BBB...',
+      '...BBBB.BBBB..'
     ],
-    walk1: [
-      '....KSK...KSK...',
-      '...KSK.....KSK..',
-      '...KSK.....KSK..',
-      '..KBK.......KBK.',
-      '..KBBK......KBBK',
-      '..KKKK......KKKK'
+    walkA: [
+      '...SSS..SSS...',
+      '..SSS....SSS..',
+      '..SSS....SSS..',
+      '.BSB......BSB.',
+      '.SBS......SBS.',
+      '.BSB......BSB.',
+      '.BBB......BBB.',
+      'BBBB......BBBB'
     ],
-    walk2: [
-      '.....KSKSK......',
-      '.....KSKSK......',
-      '.....KSKSK......',
-      '.....KBKBK......',
-      '....KBBKBBK.....',
-      '....KKKKKKK.....'
+    walkB: [
+      '....SSSSS.....',
+      '....SSSSS.....',
+      '....SSS.SS....',
+      '....BSB.BSB...',
+      '....SBS..SBS..',
+      '....BSB..BSB..',
+      '....BBB..BBB..',
+      '....BBBB.BBBB.'
     ],
     jump: [
-      '....KSK..KSK....',
-      '....KSSK..KSK...',
-      '.....KSSK..KSK..',
-      '......KBK...KBK.',
-      '......KBBK..KBBK',
-      '.......KKK...KKK'
+      '...SSS.SSS....',
+      '...SSSS.SSS...',
+      '....SSSS.SSS..',
+      '.....BSB..BSB.',
+      '.....SBS..SBS.',
+      '.....BBB..BBBB',
+      '..............',
+      '..............'
     ]
   };
-  const HERO_CROUCH = [
-    '......KKKK......',
-    '....KKHHHHK.....',
-    '...KHHHHHHHK....',
-    '...KRRRRRRRRK...',
-    '...KHHSSSSKSK...',
-    '...KHSSSSSKSK...',
-    '....KHSSSSSK....',
-    '.....KKSSKK.....',
-    '...KSWWWWWWSK...',
-    '..KSKWWWWWWKSK..',
-    '..KSKRRRRRRKSK..',
-    '..KKWWWWWWWWKK..',
-    '..KSSSSKKSSSSK..',
-    '..KBBBK..KBBBK..',
-    '.KBBBBK..KBBBBK.',
-    '.KKKKKK..KKKKKK.'
+  const CROUCH_TORSO = [TORSO[0], TORSO[1], TORSO[2], TORSO[5], TORSO[9]];
+  const CROUCH_TORSO_ATK = [TORSO_ATK[0], TORSO_ATK[1], TORSO_ATK[2], TORSO_ATK[5], TORSO_ATK[9]];
+  const CROUCH_LEGS = [
+    '...SSSSSSSSS..',
+    '..BSB....SSS..',
+    '..BBB....BSB..',
+    '.BBBB...BBBB..'
   ];
-  const HERO_CROUCH_ATK = patch(HERO_CROUCH, {
-    8: '...KSWWWWWWKKK..',
-    9: '..KSKWWWWWWSSSK.',
-    10: '..KSKRRRRRRKKK..'
-  });
+  const HERO = {
+    heroStand: HEAD.concat(TORSO, LEGS.stand),
+    heroWalk1: HEAD.concat(TORSO, LEGS.walkA),
+    heroWalk2: HEAD.concat(TORSO, LEGS.walkB),
+    heroJump: HEAD.concat(TORSO, LEGS.jump),
+    heroAtk: HEAD.concat(TORSO_ATK, LEGS.stand),
+    heroJumpAtk: HEAD.concat(TORSO_ATK, LEGS.jump),
+    heroCrouch: HEAD.concat(CROUCH_TORSO, CROUCH_LEGS),
+    heroCrouchAtk: HEAD.concat(CROUCH_TORSO_ATK, CROUCH_LEGS)
+  };
 
-  const CLUB = [
-    '.........KKKK.',
-    'KKKKKKKKKBBBBK',
-    'BBBBBBBBBBBBBK',
-    'KKKKKKKKKBBBBK',
-    '.........KKKK.'
-  ];
-
-  /* ---------- ENEMIES ---------- */
-  const SNAKE1 = [
-    '..........KKKK..',
-    '.........KGGKGK.',
-    '..KKK....KGGGGKR',
-    '.KGGGK..KGGYYK.R',
-    'KGYYYGKKGYYGK...',
-    'KGK.KGGGGYGK....',
-    '.K...KGGGGK.....',
-    '......KKKK......'
-  ];
-  const SNAKE2 = [
-    '..........KKKK..',
-    '.........KGGKGK.',
-    '.........KGGGGKR',
-    '..KKKK..KGGYYK.R',
-    '.KGYYGKKGYYGK...',
-    'KGGK.KGGGGGK....',
-    'KGK...KGGGK.....',
-    '.K.....KKK......'
-  ];
-  const BAT1 = [
-    '.K............K.',
-    'KPK..........KPK',
-    'KPPK..K..K..KPPK',
-    'KPPPKKPKKPKKPPPK',
-    '.KPPPPPPPPPPPPK.',
-    '..KPPPRPPRPPPK..',
-    '...KKPPPPPPKK...',
-    '.....KPWWPK.....',
-    '......KKKK......',
-    '................'
-  ];
-  const BAT2 = [
-    '................',
-    '......K..K......',
-    '.....KPKKPK.....',
-    '....KPPPPPPK....',
-    '..KKPPRPPRPPKK..',
-    '.KPPPPPPPPPPPPK.',
-    'KPPPKPPPPPPKPPPK',
-    'KPPK.KPWWPK.KPPK',
-    'KPK...KKKK...KPK',
-    '.K............K.'
-  ];
-  const BAT_HANG = [
-    '.......KK.......',
-    '......KPPK......',
-    '.....KPPPPK.....',
-    '....KPPPPPPK....',
-    '....KPWPPWPK....',
-    '....KPRPPRPK....',
-    '....KPPPPPPK....',
-    '.....KPPPPK.....',
-    '......KKKK......',
-    '................'
-  ];
-  const SATYR_TOP = [
-    '...K......K.....',
-    '...KwK...KwK....',
-    '....KwKKKwK.....',
-    '....KHHHHHK.....',
-    '...KHHSSSSSK....',
-    '...KHSSSSKSK....',
-    '...KHSSSSSSSK...',
-    '....KHHSSSSK....',
-    '....KHHHHHK.....',
-    '...KSKHHHKSK....',
-    '..KSSSKKKSSSK...',
-    '..KSKSSSSSKSK...',
-    '..KSKSSSSSKSK...',
-    '..KKKHHHHHKKK...',
-    '....KHHHHHHK....',
-    '....KHHHHHHK....',
-    '....KHHKKHHK....'
-  ];
-  const SATYR_LEGS1 = [
-    '....KHHK.KHHK...',
-    '.....KHHK.KHHK..',
-    '.....KHHK.KHHK..',
-    '....KHHK.KHHK...',
-    '....KHK..KHK....',
-    '...KKKK.KKKK....',
-    '...KKK..KKK.....'
-  ];
-  const SATYR_LEGS2 = [
-    '...KHHK...KHHK..',
-    '..KHHK.....KHHK.',
-    '..KHHK.....KHHK.',
-    '...KHHK...KHHK..',
-    '...KHK.....KHK..',
-    '..KKKK....KKKK..',
-    '..KKK.....KKK...'
-  ];
-
-  // Erymanthian Boar (32x24) generated from shapes, then outlined.
-  function boar(phase, stunned) {
-    const g = grid(32, 24);
-    gEllipse(g, 14, 12, 11.5, 7.5, 'H');
-    gEllipse(g, 13, 7, 9, 3, 'h');
-    for (let x = 6; x <= 20; x += 3) gSet(g, x, 5 + ((x / 3) % 2), 'B');
-    gEllipse(g, 24, 13, 5, 5, 'H');
-    gRect(g, 27, 13, 3, 4, 'S');
-    gSet(g, 29, 14, 'K');
-    gRect(g, 22, 6, 2, 3, 'H');
-    gSet(g, 25, 11, stunned ? 'W' : 'R');
-    gSet(g, 30, 15, 'W'); gSet(g, 30, 14, 'W'); gSet(g, 29, 17, 'W'); gSet(g, 28, 17, 'W');
-    const legs = phase ? [6, 11, 17, 21] : [4, 12, 15, 22];
-    legs.forEach((lx) => { gRect(g, lx, 18, 3, 4, 'h'); gRect(g, lx, 21, 3, 1, 'K'); });
-    gSet(g, 2, 9, 'h'); gSet(g, 1, 8, 'h'); gSet(g, 1, 7, 'h');
-    return gOutline(g);
-  }
-
-  /* ---------- NPCs ---------- */
+  /* ================= NPC templates ================= */
   const ROBE = [
-    '................',
-    '......KKKK......',
-    '....KKwwwwK.....',
-    '...KwwwwwwwK....',
-    '...KwwSSSSSK....',
-    '...KwSSSSKSK....',
-    '...KwSSSSSSSK...',
-    '...KwWWWWWWK....',
-    '....KWWWWWWK....',
-    '....KWWWWWK.....',
-    '...KBBKWWKBBK...',
-    '..KBBBBKKBBBBK..',
-    '..KBBBBBBBBSBK..',
-    '..KSKBBBBBBSKK..',
-    '..KKKBBBBBBBK...',
-    '....KBBBBBBK....',
-    '....KBBBBBBK....',
-    '....KBBBBBBK....',
-    '....KBBBBBBK....',
-    '...KBBBBBBBBK...',
-    '...KBBBBBBBBK...',
-    '...KBBBBBBBBK...',
-    '...KKSKKKKSKK...',
-    '....KKK..KKK....'
+    '....MMMMM....Y',
+    '..MMMMMMMMM..Y',
+    '..MMMMMMMMMM.F',
+    '..MMMSSSSSSS.F',
+    '..MMSSSSSKSS.F',
+    '..MMSSSSSKSSSF',
+    '..MMMSSSSSSS.F',
+    '..MMMMMMMMMM.F',
+    '...MMMMMMMMM.F',
+    '....MMMMMMM..F',
+    '.....MMMMM...F',
+    '...BBBMMMBBB.F',
+    '..BBBBBMBBBBSF',
+    '..BBBBBBBBBBSF',
+    '..SBBBBBBBBB.F',
+    '..BBYYYYYYBB.F',
+    '..BBBBBBBBBB.F',
+    '..BBBBbBBBBB.F',
+    '..BBBBbBBBBB.F',
+    '..BBBBbBBBBB.F',
+    '.BBBBBbBBBBB.F',
+    '.BBBBBbBBBBB.F',
+    '.BBBBBbBBBBB.F',
+    '.BBBBBBBBBBB.F',
+    '.YYYYYYYYYYY.F',
+    '..SSS...SSS..F',
+    '..BBBB..BBBB.F'
   ];
   const WOMAN = [
-    '................',
-    '......KKKK......',
-    '....KKHHHHK.....',
-    '...KHHHHHHHK....',
-    '..KHHZSSSSSK....',
-    '..KHHSSSSKSK....',
-    '..KHHSSSSSSSK...',
-    '..KHHKSSSSSK....',
-    '..KHHHKSSSK.....',
-    '..KHHKWWWWWK....',
-    '..KHKSWWWWWSK...',
-    '..KKSKWWWWWKSK..',
-    '...KSKWWWWWKSK..',
-    '...KKKYYYYYKKK..',
-    '....KWWWWWWWK...',
-    '....KWWWWWWWK...',
-    '...KWWWWWWWWK...',
-    '...KWWWWWWWWK...',
-    '...KWWWWWWWWWK..',
-    '..KWWWWWWWWWWK..',
-    '..KWWWWWWWWWWK..',
-    '..KWWWWWWWWWWWK.',
-    '..KKKSKKKKSKKKK.',
-    '....KKK..KKK....'
+    '.....HHHH.....',
+    '...HHHHHHHH...',
+    '..HHHHHHHHHH..',
+    '.HHHZSSSSSSS..',
+    '.HHHSSSSSKSS..',
+    '.HHHSSSSSKSSS.',
+    '.HHHHSSSSSS...',
+    '.HHHHHSSSSs...',
+    '.HHHHH.SSS....',
+    '.HHHHWWWWWWW..',
+    '.HHHHWWWWWWWS.',
+    '.HHHHWWWWWWWS.',
+    '..HHHWWWWWWWS.',
+    '...YYYYYYYYYS.',
+    '...WWWWWWWWW..',
+    '...WWWWwWWWW..',
+    '..WWWWWwWWWW..',
+    '..WWWWWwWWWW..',
+    '..WWWWWwWWWWW.',
+    '..WWWWwWWWWWW.',
+    '..WWWWwWWWWWW.',
+    '.WWWWWwWWWWWW.',
+    '.WWWWWwWWWWWW.',
+    '.WWWWwWWWWWWWW',
+    '.WWWWWWWWWWWWW',
+    '..SSS...SSS...',
+    '..BBBB..BBBB..'
   ];
 
-  const HERO_STAND = HERO_TOP.concat(HERO_BODY, LEGS.stand);
+  /* ================= enemies ================= */
+  const SATYR_TOP = [
+    '..T.....T.....',
+    '..TT...TT.....',
+    '...TFFFTFF....',
+    '..FFFFFFFFF...',
+    '..FFFSSSSSSS..',
+    '..FFSSSSS&SS..',
+    '..FFSSSSS&SSS.',
+    '..FFFSSSSSSS..',
+    '..FFFFFFsFFF..',
+    '...FFFFFFFF...',
+    '....FFFFFF....',
+    '...SSSSSSSS...',
+    '..SSSSSSSSSS..',
+    '..SSsSSSSsSS..',
+    '..SSSSSSSSSS..',
+    '..SSSsSSsSSS..',
+    '..SSSSSSSSSS..',
+    '..SFFFFFFFFS..',
+    '...FFFFFFFF...'
+  ];
+  const SATYR_L1 = [
+    '...FFFF.FFFF..',
+    '...FFFF.FFFF..',
+    '....FFF..FFF..',
+    '...FFF..FFF...',
+    '..FFF..FFF....',
+    '..FF...FF.....',
+    '...FF...FF....',
+    '...FF...FF....',
+    '...KKK..KKK...'
+  ];
+  const SATYR_L2 = [
+    '...FFFF.FFFF..',
+    '..FFFF...FFFF.',
+    '..FFF.....FFF.',
+    '.FFF.....FFF..',
+    'FFF.....FFF...',
+    'FF.....FF.....',
+    '.FF.....FF....',
+    '.FF.....FF....',
+    '.KKK....KKK...'
+  ];
 
-  const DATA = {
-    heroStand: HERO_STAND,
-    heroWalk1: HERO_TOP.concat(HERO_BODY, LEGS.walk1),
-    heroWalk2: HERO_TOP.concat(HERO_BODY, LEGS.walk2),
-    heroJump: HERO_TOP.concat(HERO_BODY, LEGS.jump),
-    heroAtk: HERO_TOP.concat(HERO_BODY_ATK, LEGS.stand),
-    heroJumpAtk: HERO_TOP.concat(HERO_BODY_ATK, LEGS.jump),
-    heroCrouch: HERO_CROUCH,
-    heroCrouchAtk: HERO_CROUCH_ATK,
-    club: CLUB,
-
-    snake1: SNAKE1, snake2: SNAKE2,
-    bat1: BAT1, bat2: BAT2, batHang: BAT_HANG,
-    satyr1: SATYR_TOP.concat(SATYR_LEGS1),
-    satyr2: SATYR_TOP.concat(SATYR_LEGS2),
-    boar1: boar(0, false), boar2: boar(1, false), boarStun: boar(0, true),
-
+  const DATA = Object.assign({}, HERO, {
+    club: [
+      '.......BBBB.',
+      'BBBBBBBBBBBB',
+      'BBBBBBBBBBBB',
+      '.......BBBB.'
+    ],
     elder: ROBE,
-    zeus: patch(recolor(ROBE, { B: 'W', w: 'W' }), {
-      1: '....KYKYKYK.....',
-      2: '...KYYYYYYK.....',
-      13: '..KSKYYYYYYSKK..'
+    zeus: patch(recolor(ROBE, { B: 'W', b: 'w', F: 'Y' }), {
+      0: '...Y.Y.Y.Y...Y',
+      1: '..YYYYYYYYY..Y'
     }),
-    hades: setPx(setPx(recolor(ROBE, { w: 'P', W: 'P', B: 'p', S: 'V' }), 9, 5, 'R'), 7, 3, 'P'),
-    merchant: recolor(WOMAN, { H: 'h', W: 'u', Z: 'Y' }),
-    villager: recolor(WOMAN, { H: 'K', W: 'Z', Z: 'W' }),
+    hades: patch(recolor(ROBE, { M: 'N', S: 'V', B: 'P', b: 'p', Y: 'R', F: 'X' }), {
+      0: '....NNNNN...XX',
+      4: '..NNVVVVV&VV.X',
+      5: '..NNVVVVV&VVVX'
+    }),
     eurydice: recolor(WOMAN, { H: 'Y', Z: 'R' }),
-    hermes: patch(recolor(HERO_STAND, { R: 'Y', W: 'u', w: 'U' }), {
-      2: '.WW.KKHHHHK.....',
-      3: 'WWWKHHHHHHHK....'
+    merchant: recolor(WOMAN, { H: 'F', W: 'I', w: 'i', Z: 'Y' }),
+    villager: recolor(WOMAN, { H: 'N', W: 'Z', w: 'z', Z: 'W' }),
+    hermes: patch(recolor(HERO.heroStand, { R: 'Y', W: 'I', w: 'i', B: 'Y' }), {
+      1: 'W..HHHHHHHH...',
+      2: 'WWHHHHHHHHHH..',
+      3: '.WYYYYYYYYYY..',
+      4: '..HHHSSSSSSS..',
+      5: '..HHSSSSSKSS..'
     }),
+    snake1: [
+      '...........GGG..',
+      '..........GGKGG.',
+      '..........GGGGGR',
+      '.GGG.....GGYYG.R',
+      'GGYGG...GGYYG...',
+      'GYYYGG.GGYYG....',
+      '.GYYYGGGGYG.....',
+      '..GGYYYYGG......'
+    ],
+    snake2: [
+      '...........GGG..',
+      '..........GGKGG.',
+      '..........GGGGG.',
+      '...GGG...GGYYG..',
+      '..GGYGG.GGYYG...',
+      '.GGYYYGGGYYG....',
+      'GGYYGGGGYYG.....',
+      'GGGG..GGGG......'
+    ],
+    bat1: [
+      'P..............P',
+      'PP............PP',
+      'PPP..P....P..PPP',
+      'PPPP.PPPPPP.PPPP',
+      '.PPPPP&PP&PPPPP.',
+      '..PPPPPPPPPPPP..',
+      '....PPPPPPPP....',
+      '......T..T......',
+      '................',
+      '................'
+    ],
+    bat2: [
+      '................',
+      '.....P....P.....',
+      '.....PPPPPP.....',
+      '....PP&PP&PP....',
+      '..PPPPPPPPPPPP..',
+      '.PPPPPPPPPPPPPP.',
+      'PPPP.PPPPPP.PPPP',
+      'PPP...T..T...PPP',
+      'PP............PP',
+      'P..............P'
+    ],
+    batHang: [
+      '.......PP.......',
+      '......PPPP......',
+      '.....PPPPPP.....',
+      '.....PPPPPP.....',
+      '.....PPPPPP.....',
+      '.....P&PP&P.....',
+      '......PPPP......',
+      '.......PP.......',
+      '................',
+      '................'
+    ],
+    satyr1: SATYR_TOP.concat(SATYR_L1),
+    satyr2: SATYR_TOP.concat(SATYR_L2),
 
-    /* ---------- items / icons (8x8) ---------- */
-    olive: [
-      '....KK..',
-      '...KEK..',
-      '..KKKK..',
-      '.KGGGGK.',
-      'KGLGGGGK',
-      'KGGGGGGK',
-      '.KGGGGK.',
-      '..KKKK..'
-    ],
-    ambrosia: [
-      '..KKKK..',
-      '.KWWWWK.',
-      '..KYYK..',
-      '.KYYYYK.',
-      'KYYWYYYK',
-      'KYYYYYYK',
-      'KYYYYYYK',
-      '.KKKKKK.'
-    ],
-    pom: [
-      '...KK...',
-      '..KEK...',
-      '.KKRKK..',
-      'KRRRRRK.',
-      'KRWRRRK.',
-      'KRRRRRK.',
-      '.KRRRK..',
-      '..KKK...'
-    ],
-    rock: [
-      '..KKKK..',
-      '.KAAAAK.',
-      'KAAwAAAK',
-      'KAwAAAAK',
-      'KAAAAAAK',
-      'KAAAAKAK',
-      '.KAAAAK.',
-      '..KKKK..'
-    ],
-    iconClub: [
-      '.....KK.',
-      '....KBBK',
-      '...KBBBK',
-      '..KBBBK.',
-      '.KBBK...',
-      'KBBK....',
-      'KBK.....',
-      '.K......'
-    ],
-    iconSandals: [
-      'W......W',
-      'WW....WW',
-      '.WKKKKW.',
-      '.KYYYYK.',
-      'KYYYYYYK',
-      'KYYYYYYK',
-      'KKKKKKKK',
-      '........'
-    ],
-    heart: [
-      '.KK.KK..',
-      'KRRKRRK.',
-      'KRRRRRK.',
-      'KRRRRRK.',
-      '.KRRRK..',
-      '..KRK...',
-      '...K....',
-      '........'
-    ],
-    arrowUp: [
-      '...WW...',
-      '..WWWW..',
-      '.WWWWWW.',
-      '...WW...',
-      '...WW...',
-      '........'
-    ],
-    bolt: [
-      '....YYY.',
-      '...YYY..',
-      '..YYY...',
-      '.YYYYYY.',
-      '....YYY.',
-      '...YYY..',
-      '..YYY...',
-      '.YYY....',
-      '.YY.....',
-      'Y.......'
-    ],
-    flame1: [
-      '...R....',
-      '..RYR...',
-      '..RYR...',
-      '.RYWYR..',
-      '.RYWYR..',
-      'RYYWYYR.',
-      '.RYYYR..',
-      '..RRR...'
-    ],
-    flame2: [
-      '....R...',
-      '...RYR..',
-      '..RYYR..',
-      '.RYWYR..',
-      '.RYWYYR.',
-      'RYYWYYR.',
-      '.RYYYR..',
-      '..RRR...'
-    ],
-    brazier: [
-      'KKKKKKKK',
-      'KYYYYYYK',
-      '.KYYYYK.',
-      '..KBBK..',
-      '...KK...',
-      '...KK...',
-      '..KBBK..',
-      '.KKKKKK.'
-    ]
+    /* ---------- items & icons ---------- */
+    olive: ['....G.', '...GG.', '..OOO.', '.OO*OO', '.OOOOO', '.OOOOO', '..OOO.'],
+    ambrosia: ['..WW..', '.YYYY.', '..YY..', '.YYYY.', 'YYYYYY', 'YY*YYY', 'YYYYYY', '.YYYY.'],
+    pom: ['..R.R.', '..RRR.', '.RRRRR', 'RR*RRR', 'RRRRRR', 'RRRRRR', '.RRRR.'],
+    heart: ['.RR.RR.', 'RRRRRRR', 'RR*RRRR', 'RRRRRRR', '.RRRRR.', '..RRR..', '...R...'],
+    iconClub: ['.....BB', '....BBB', '...BBB.', '..BBB..', '.BB....', 'BB.....'],
+    iconSandals: ['W......', 'WW.....', 'WWYY...', '.YYYYYY', 'YYYYYYY'],
+    lyre: ['YY....YY', 'YYYYYYYY', '.YW.W.Y.', '.YW.W.Y.', '.YW.W.Y.', '.YYYYYY.', '..YYYY..'],
+    bolt: ['....YYY', '...YYY.', '..YYY..', '.YYYYYY', '....YY.', '...YY..', '..YY...', '.YY....', 'Y......'],
+    arrowUp: ['..WW..', '.WWWW.', 'WWWWWW', '..WW..', '..WW..'],
+    rock: ['..AAAA..', '.AAAAAA.', 'AAAAAAAA', 'AAAaAAAA', 'AAAAAaAA', '.AAAAAA.', '..AAAA..']
+  });
+
+  const NO_OUTLINE = {
+    flame1: ['...R....', '..RYR...', '..RYR...', '.RY%YR..', '.RY%YR..', 'RYY%YYR.', '.RYYYR..', '..RRR...'],
+    flame2: ['....R...', '...RYR..', '..RYYR..', '.RY%YR..', '.RY%YYR.', 'RYY%YYR.', '.RYYYR..', '..RRR...']
   };
+
+  /* ---------- procedural sprites ---------- */
+  const BOAR_BODY = ['#b06838', '#783c18', '#3c1808'];
+  const BOAR_MANE = ['#6c3818', '#40200c', '#1c0c04'];
+  const BOAR_SNOUT = ['#fcc0b0', '#e08878', '#a05048'];
+  function boar(phase, stunned) {
+    const p = new O.Pix(48, 34);
+    const legs = phase === 1 ? [[9, 0], [15, 1], [27, 0], [33, 1]] : phase === 2 ? [[11, 1], [13, 0], [29, 1], [31, 0]] : [[10, 0], [15, 0], [28, 0], [33, 0]];
+    legs.forEach((l, i) => {
+      const x = l[0], lift = l[1] * 2;
+      p.rect(x, 22 - lift, 4, 7, BOAR_BODY[i % 2 ? 2 : 1]);
+      p.rect(x, 28 - lift, 4, 2, '#1c0c04');
+    });
+    p.ball(22, 17, 16, 10, BOAR_BODY);
+    p.ball(18, 11, 12, 6, BOAR_MANE);
+    for (let x = 9; x < 30; x += 2) p.line(x, 6 + ((x >> 1) & 1), x - 2, 3 + ((x >> 1) & 1), BOAR_MANE[1]);
+    p.ball(37, 18, 8, 8, BOAR_BODY);
+    p.ball(43, 20, 3, 4, BOAR_SNOUT);
+    p.set(44, 19, '#602828'); p.set(44, 21, '#602828');
+    p.ellipse(33, 10, 2, 3, BOAR_MANE[1]);
+    if (stunned) {
+      p.set(38, 15, '#fcfcfc'); p.set(39, 16, '#fcfcfc'); p.set(40, 15, '#fcfcfc'); p.set(38, 17, '#fcfcfc'); p.set(40, 17, '#fcfcfc');
+    } else {
+      p.rect(38, 15, 2, 2, '#fc3800'); p.set(38, 15, '#fcf8b0');
+    }
+    const T = RAMPS.T;
+    [[41, 25], [42, 24], [43, 23], [44, 22], [44, 21]].forEach((q, i) => p.set(q[0], q[1], i < 2 ? T[1] : T[0]));
+    [[40, 25], [41, 24], [42, 23]].forEach((q) => p.set(q[0], q[1] + 1, T[2]));
+    p.set(6, 12, BOAR_BODY[1]); p.set(5, 11, BOAR_BODY[1]); p.set(4, 12, BOAR_BODY[1]); p.set(4, 13, BOAR_BODY[1]);
+    p.outline('#000000');
+    return p;
+  }
+  function swipe() {
+    const p = new O.Pix(18, 22);
+    for (let a = -1.3; a <= 1.3; a += 0.02) {
+      for (let r = 7; r <= 9; r++) {
+        const x = 2 + Math.cos(a) * r * 1.5, y = 11 + Math.sin(a) * r;
+        p.set(x, y, r === 9 ? '#f8b800' : '#fcfcfc');
+      }
+    }
+    return p;
+  }
+  function brazier() {
+    const p = new O.Pix(14, 14);
+    const Q = RAMPS.Q;
+    p.rect(1, 0, 12, 2, Q[0]); p.rect(2, 2, 10, 2, Q[1]); p.rect(3, 4, 8, 1, Q[2]);
+    p.rect(6, 5, 2, 6, Q[1]); p.set(6, 5, Q[0]);
+    p.line(6, 10, 2, 13, Q[2]); p.line(7, 10, 11, 13, Q[2]); p.rect(6, 11, 2, 3, Q[2]);
+    p.outline('#000000');
+    return p;
+  }
 
   O.SPR = {};
   O.SPRITE_DATA = DATA;
 
-  function compile(name, rows) {
-    const h = rows.length;
-    const w = Math.max.apply(null, rows.map((r) => r.length));
+  function register(name, pix) {
+    const w = pix.w, h = pix.h;
+    const n = pix.canvas();
     const mk = () => O.makeCanvas(w, h);
-    const n = mk(), f = mk(), wn = mk(), wf = mk();
-    const gn = n.getContext('2d'), gf = f.getContext('2d'), gwn = wn.getContext('2d'), gwf = wf.getContext('2d');
-    gwn.fillStyle = gwf.fillStyle = '#fcfcfc';
-    for (let y = 0; y < h; y++) {
-      for (let x = 0; x < w; x++) {
-        const ch = rows[y][x] || '.';
-        if (ch === '.') continue;
-        const col = O.PAL[ch];
-        if (!col) { console.warn('Unknown sprite color', ch, 'in', name); continue; }
-        gn.fillStyle = gf.fillStyle = col;
-        gn.fillRect(x, y, 1, 1);
-        gf.fillRect(w - 1 - x, y, 1, 1);
-        gwn.fillRect(x, y, 1, 1);
-        gwf.fillRect(w - 1 - x, y, 1, 1);
-      }
-    }
-    O.SPR[name] = { w, h, n, f, wn, wf };
+    const f = mk(), wn = mk(), wf = mk();
+    const gf = f.getContext('2d');
+    gf.translate(w, 0); gf.scale(-1, 1); gf.drawImage(n, 0, 0);
+    const white = new O.Pix(w, h);
+    for (let i = 0; i < pix.d.length; i++) if (pix.d[i]) white.d[i] = '#fcfcfc';
+    const wc = white.canvas();
+    wn.getContext('2d').drawImage(wc, 0, 0);
+    const gwf = wf.getContext('2d');
+    gwf.translate(w, 0); gwf.scale(-1, 1); gwf.drawImage(wc, 0, 0);
+    O.SPR[name] = { w, h, n, f, wn, wf, pix };
   }
+  O.registerSprite = register;
 
   O.initSprites = function () {
-    Object.keys(DATA).forEach((k) => compile(k, DATA[k]));
+    Object.keys(DATA).forEach((k) => register(k, build(DATA[k])));
+    Object.keys(NO_OUTLINE).forEach((k) => register(k, build(NO_OUTLINE[k], { outline: false, shade: false })));
+    register('boar0', boar(0, false));
+    register('boar1', boar(1, false));
+    register('boar2', boar(2, false));
+    register('boarStun', boar(0, true));
+    register('swipe', swipe());
+    register('brazier', brazier());
+    // Marble statue made from the hero's silhouette.
+    const statue = build(recolor(HERO.heroStand, { H: 'M', S: 'M', s: 'm', R: 'M', W: 'M', w: 'm', B: 'M', Y: 'M', K: 'm' }));
+    register('statue', statue);
   };
 
-  // Draw a sprite. flip = mirror horizontally; white = hit flash silhouette.
-  O.drawSpr = function (ctx, name, x, y, flip, white, scale) {
+  O.drawSpr = function (ctx, name, x, y, flip, white) {
     const s = O.SPR[name];
     if (!s) return;
-    const img = white ? (flip ? s.wf : s.wn) : (flip ? s.f : s.n);
-    const k = scale || 1;
-    if (k === 1) ctx.drawImage(img, Math.round(x), Math.round(y));
-    else ctx.drawImage(img, Math.round(x), Math.round(y), s.w * k, s.h * k);
+    ctx.drawImage(white ? (flip ? s.wf : s.wn) : (flip ? s.f : s.n), Math.round(x), Math.round(y));
   };
 })(window.OLY);

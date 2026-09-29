@@ -18,14 +18,14 @@
   };
 
   O.ENDING = [
-    { t: 'WITH THE SANDALS OF HERMES,', c: '#fcfcfc' },
-    { t: 'ORPHEUS LEFT ARCADIA BEHIND.', c: '#fcfcfc' },
+    { t: 'WITH THE GIFT OF HERMES,', c: '#fcfcfc' },
+    { t: 'ORPHEUS LEFT ARCADIA.', c: '#fcfcfc' },
     { t: '', c: '#fcfcfc' },
-    { t: 'MANY TRIALS STILL AWAIT HIM', c: '#fcfcfc' },
-    { t: 'BEFORE THE GATES OF TARTARUS.', c: '#fcfcfc' },
+    { t: 'MANY TRIALS STILL AWAIT', c: '#fcfcfc' },
+    { t: 'BEFORE TARTARUS.', c: '#fcfcfc' },
     { t: '', c: '#fcfcfc' },
     { t: 'END OF PART 1', c: '#f8b800' },
-    { t: 'THANK YOU FOR PLAYING!', c: '#3cbcfc' }
+    { t: 'THANK YOU FOR PLAYING!', c: '#80c0fc' }
   ];
 
   O.questHint = function (st) {

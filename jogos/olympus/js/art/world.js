@@ -103,7 +103,7 @@
     const w = tw * T, h = th * T, N = w * h;
     const W = { theme, tw, th, w, h, P: PAL[theme] || PAL.village };
     // arched niches behind statues standing against temple walls
-    W.niches = ((def && def.statues) || []).map((st) => ({ cx: st.tx * T + 8, y1: st.row * T - (st.lift || 0), y0: st.row * T - (st.lift || 0) - 50, hw: 13 }));
+    W.niches = ((def && def.statues) || []).map((st) => { const y1 = st.row * T - (st.lift || 0) - (PED_H - 12); return { cx: st.tx * T + 8, y1, y0: y1 - 50, hw: 13 }; });
     W.tl = (x, y) => tileAt(x < 0 ? 0 : x >= tw ? tw - 1 : x, y < 0 ? 0 : y >= th ? th - 1 : y);
     W.tp = (x, y) => W.tl(Math.floor(x / T), Math.floor(y / T));
     W.solidT = (x, y) => SOLID[W.tl(x, y)] === 1;
@@ -204,7 +204,7 @@
       for (let ty = 0; ty < th; ty++) for (let tx = 0; tx < tw; tx++) {
         if (tileAt(tx, ty) !== 'B' || !open(tx, ty - 1)) continue;
         for (let px = 0; px < T; px++) {
-          const x = tx * T + px, b = block(W, x, ty * T, 10, 8, 24, 41);
+          const x = tx * T + px, b = ruinBlock(W, x, ty * T);
           const r = hh(b.id, 9, 9);
           let cutD = r < 0.14 ? 10 : r < 0.3 ? 2 + Math.floor(r * 8) : 0;
           if (b.lx === 0 || b.lx === b.bw - 1) cutD = Math.max(cutD, 1);
@@ -214,6 +214,20 @@
       }
     }
 
+    // Ruins: the exposed side faces lose a few block corners (no ruler-straight edges)
+    if (W.stoneStyle === 'ruin') {
+      for (let ty = 0; ty < th; ty++) for (let tx = 0; tx < tw; tx++) {
+        if (tileAt(tx, ty) !== 'B') continue;
+        [[-1, 0], [1, 15]].forEach(([d, ex]) => {
+          if (!open(tx + d, ty)) return;
+          for (let py = 0; py < T; py++) {
+            const y = ty * T + py, b = ruinBlock(W, tx * T + ex, y), r0 = hh(b.id, 11, 9);
+            const cut = r0 < 0.25 ? 2 + Math.floor(r0 * 8) : (b.ly === b.bh - 1 ? 1 : 0);
+            for (let k = 0; k < cut; k++) mask[y * w + tx * T + (d < 0 ? k : 15 - k)] = 0;
+          }
+        });
+      }
+    }
     // Forest ruins: a doorway cut into the wall is part of the wall mass (no seams around the arch).
     if (W.stoneStyle === 'ruin') {
       for (let ty = 0; ty < th; ty++) for (let tx = 0; tx < tw; tx++) {
@@ -356,6 +370,24 @@
     return base + Math.floor(vnoise(x * 0.31, 0.5, 5) * 3.2) + (hh(x, 0, 8) < 0.13 ? 2 : 0) + (hh(x >> 1, 0, 9) < 0.08 ? 1 : 0);
   }
 
+  // Per-pixel smoothed top of the earth column (average over +-11 px of the columns that are earth at this
+  // height), so depth shading flows across steps instead of restarting on every tile.
+  function earthTopS(W) {
+    if (W.eTopS) return W.eTopS;
+    const w = W.w, h = W.h, out = new Float32Array(w * h), R = 26;
+    const sum = new Float64Array(w + 1), cnt = new Int32Array(w + 1);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = y * w + x, ok = W.eUp[i] > 0 || (W.mask[i] && (W.tp(x, y) === 'G' || W.tp(x, y) === 'D'));
+        sum[x + 1] = sum[x] + (ok ? y - W.eUp[i] : 0); cnt[x + 1] = cnt[x] + (ok ? 1 : 0);
+      }
+      for (let x = 0; x < w; x++) {
+        const a = Math.max(0, x - R), b = Math.min(w, x + R + 1), n = cnt[b] - cnt[a];
+        out[y * w + x] = n ? (sum[b] - sum[a]) / n : y;
+      }
+    }
+    return (W.eTopS = out);
+  }
   function earthPx(W, x, y) {
     const i = y * W.w + x, P = W.P, g = P.grass, d = P.dirt;
     const u = W.eUp[i], l = W.dL[i], r = W.dR[i], dn = W.dDn[i];
@@ -382,20 +414,18 @@
     // Shadow cast by the grass mat onto the soil just below it.
     if (grassy && u === gt) return r === 1 ? d[5] : d[4];
     if (grassy && u === gt + 1) return r === 1 ? d[5] : d[3];
-    // Soil: flat depth bands measured only from the open air above (never a 2D blob).
-    const dd = u - gt;
-    const wob = Math.floor(vnoise(x * 0.05, 0.5, 61) * 5);
-    let k = dd < 9 + wob ? 1 : dd < 21 + wob ? 2 : dd < 37 + wob ? 3 : 4;
-    // clustered texture: horizontal clods (darker) and clay flecks (lighter), 2-4 px each
-    const n = vnoise(x * 0.19, y * 0.34, 71) * 0.8 + vnoise(x * 0.5, y * 0.7, 72) * 0.2;
-    if (n > 0.74) k++;
-    else if (n < 0.2 && k > 1) k--;
-    // broken strata ledges: dark seam with a lit lip beneath
-    const sy = y + vnoise(x * 0.035, 0.5, 77) * 7;
-    const sl = Math.floor(sy) % 11;
-    if (dd > 5 && vnoise(x * 0.09, Math.floor(sy / 11) * 1.7, 78) > 0.68) {
+    // Soil: depth bands measured from a horizontally smoothed surface (no seams where a step meets a
+    // taller pillar), band borders jittered and offset from the tile rows; flat bands between a few
+    // clustered wavy strata (dark line with a lit line directly above).
+    const topS = earthTopS(W)[i];
+    const dd = Math.max(0, y - topS - 5);
+    const jit = (vnoise(x * 0.085, y * 0.05, 61) - 0.5) * 9 + (vnoise(x * 0.3, y * 0.2, 62) - 0.5) * 2;
+    const de = dd + jit;
+    let k = de < 11 ? 1 : de < 27 ? 2 : de < 45 ? 3 : 4;
+    const sy = y + (vnoise(x * 0.035, 0.5, 77) - 0.5) * 12, L = Math.floor(sy / 13), sl = Math.floor(sy) - L * 13;
+    if (dd > 5 && vnoise(x * 0.075, L * 3.1, 78) > 0.56) {
       if (sl === 0) k++;
-      else if (sl === 1 && k > 1) k--;
+      else if (sl === 12 && k > 1) k--;
     }
     // side faces: lit left rim, shaded right face, darker at the bottom
     if (l === 0) return d[clamp(k - 1, 0, 3)];
@@ -432,24 +462,43 @@
     return { lx: x - st, ly: yy - ci * courseH, bw: idw & 255, bh: courseH, id: (idw >> 8) * 131 + ci * 7919, ci };
   }
 
-  /* ---- stone: forest ruins (big weathered blocks, moss on the tops, dark joints) ---- */
+  /* ---- stone: forest ruins. Courses of varied height (7-13 px) with random block widths, soft low-contrast
+     mortar (bottom/right only, lit top lip), weathering at the block scale instead of light rectangles, a
+     dark outline on every exposed face, moss on the tops and creeping into a few joints ---- */
+  function ruinCourse(W, y) {
+    if (!W.ruinC) {
+      const n = W.h + 32, st = new Int16Array(n), hs = new Int8Array(n), ids = new Int16Array(n);
+      let yy = 0, c = 0;
+      while (yy < n) { const h = 7 + Math.floor(hh(c, 5, 421) * 7); for (let k = 0; k < h && yy + k < n; k++) { st[yy + k] = yy; hs[yy + k] = h; ids[yy + k] = c; } yy += h; c++; }
+      W.ruinC = { st, hs, ids };
+    }
+    const yy = clamp(y, 0, W.h + 31);
+    return { ly: yy - W.ruinC.st[yy], bh: W.ruinC.hs[yy], ci: W.ruinC.ids[yy] };
+  }
+  function ruinBlock(W, x, y) {
+    const c = ruinCourse(W, y), cs = courseStarts(W, 'ruin', c.ci, 10, 26, 41);
+    const idw = cs.ids[clamp(x, 0, W.w - 1)];
+    return { lx: x - cs.start[clamp(x, 0, W.w - 1)], ly: c.ly, bw: idw & 255, bh: c.bh, id: (idw >> 8) * 131 + c.ci * 7919, ci: c.ci };
+  }
   function ruinPx(W, x, y, face) {
     const i = y * W.w + x, P = W.P, s = P.stone, m = P.moss;
     const u = face ? 99 : W.dUp[i], l = face ? 99 : W.dL[i], r = face ? 99 : W.dR[i], dn = face ? 99 : W.dDn[i];
-    if (r === 0 || dn === 0) return P.out;
-    const b = block(W, x, y, 10, 8, 24, 41);
+    if (r === 0 || dn === 0 || l === 0) return P.out;
+    const b = ruinBlock(W, x, y);
     const tone = hh(b.id, 1, 2);
-    let k = tone < 0.45 ? 1 : 2;
-    // soft weathering clusters inside each block
-    const tex = vnoise(x * 0.16, y * 0.2, (b.id & 1023) + 7);
-    if (tex > 0.74) k++;
+    let k = tone < 0.3 ? 1 : tone < 0.8 ? 2 : 3;
+    // weathering: one soft darker patch per block, a few pits
+    const wx = b.lx / b.bw, wy = b.ly / b.bh, cxw = hh(b.id, 6, 2), cyw = hh(b.id, 7, 2);
+    if (hh(b.id, 8, 2) < 0.35 && (wx - cxw) * (wx - cxw) * 2 + (wy - 0.75) * (wy - 0.75) < 0.05 + vnoise(x * 0.3, y * 0.3, 44) * 0.05) k++;
+    else if (wx + wy > 1.45) k++;                                          // lower-right corner turns away from the light
+    void cyw;
+    if (hh(x, y, 45) < 0.025 && b.ly > 1) k++;
     // rain streaks running down from the joints
-    if (hh(x, b.ci, 49) < 0.06 && b.ly > 1) k++;
-    // bevel: lit top edge, shaded bottom, dark joint
-    if (b.ly === 0) k = Math.max(0, k - 1);
-    if (b.ly === b.bh - 2 && b.lx < b.bw - 1) k++;
+    if (hh(x, b.ci, 49) < 0.05 && b.ly > 1) k++;
+    // bevel: 1 px lit top lip, soft mortar on the bottom and right
+    if (b.ly === 0 && b.lx < b.bw - 1) k = Math.max(0, k - 1);
     let c = s[clamp(k, 0, 4)];
-    if (b.ly === b.bh - 1 || b.lx === b.bw - 1) c = s[4];
+    if (b.ly === b.bh - 1 || b.lx === b.bw - 1) c = s[Math.min(5, Math.max(k + 1, 3))];
     // chipped block corners
     if ((b.lx <= 1 && b.ly <= 1 && hh(b.id, 2, 3) < 0.4) || (b.lx >= b.bw - 3 && b.ly >= b.bh - 3 && hh(b.id, 4, 3) < 0.3)) c = s[4];
     // moss: cap on exposed tops, creeping into a few joints
@@ -458,8 +507,7 @@
     if (u < mt + 7 && b.lx === b.bw - 1 && hh(b.id, 5, 55) < 0.45) return m[3];
     const mossy = vnoise(x * 0.07, y * 0.09, 53);
     if (b.ly <= 1 && mossy > 0.7 && hh(x >> 1, y, 57) < 0.7) return m[b.ly === 0 ? 2 : 3];
-    if (l === 0) return s[3];
-    if (l < 2 && c !== s[5]) return sh(c, 0.12);
+    if (l === 1) return s[1];
     if (r < 3) return sh(c, -0.2);
     return c;
   }
@@ -660,77 +708,95 @@
     return OUT;
   };
 
-  /* ---- spikes: 3-4 forged iron stakes of varied height on a broken, blood-stained footing (drawn in POST) ---- */
+  /* ---- spikes: 3 heavy, tilted iron stakes (wide bases, only the tips bright, a hot red rim on the right
+     face so they keep a danger accent under the cool night grade), rising from a dark blood pool that
+     spills over the ground, with a skull or bones among them (drawn in POST) ---- */
   PX.X = function () { return null; };
-  const STEEL = ['#fbfcff', '#d8dce8', '#aeb0c8', '#7f7c9c', '#5a5470', '#3a3450'];
+  const IRON = ['#d9d2c0', '#8e8a96', '#5a5468', '#372f45'];  // tip, lit face, body, shade
   POST.push(function spikes(W) {
     for (let ty = 0; ty < W.th; ty++) for (let tx = 0; tx < W.tw; tx++) {
       if (W.tl(tx, ty) !== 'X') continue;
-      const p = new O.Pix(18, 16), X0 = tx * T - 1, Y0 = ty * T;
-      const n = hh(tx, ty, 601) < 0.5 ? 3 : 4;
-      const xs = n === 3 ? [3.5, 8.5, 13.5] : [2.5, 6.5, 10.5, 14.5];
-      // footing: chunky broken stone/iron base with an irregular top
-      const BASE = ['#9a8fa6', '#6f6680', '#4e4560', '#342c42'];
-      for (let x = 0; x < 18; x++) {
-        const bt = 12 + (hh((tx * 16 + x) >> 1, ty, 602) < 0.4 ? 1 : 0) + (x < 2 || x > 15 ? 1 : 0);
-        for (let y = bt; y < 16; y++) {
-          const joint = hh((tx * 16 + x) >> 2, y >> 1, 611) < 0.18 && y > bt;
-          p.set(x, y, joint ? BASE[3] : y === bt ? BASE[0] : y === bt + 1 ? BASE[1] : BASE[2]);
-        }
+      const p = new O.Pix(20, 20), X0 = tx * T - 2, Y0 = ty * T - 1;  // canvas y+1 = tile y; tile bottom = 16
+      const nL = W.tl(tx - 1, ty) === 'X', nR = W.tl(tx + 1, ty) === 'X';
+      // blood / rust pool on the ground, spilling over the tile edge
+      for (let x = 0; x < 20; x++) {
+        const wx = X0 + x, edge = (x < 3 && !nL) || (x > 16 && !nR);
+        if (edge && hh(wx, ty, 612) < 0.6) continue;
+        const depth = 1 + (hh(wx >> 1, ty, 613) < 0.5 ? 1 : 0) + (edge ? 0 : 1) + (hh(wx >> 2, ty, 620) < 0.25 ? 1 : 0);
+        for (let k = 0; k < depth; k++) p.set(x, 16 + k, k === 0 ? (hh(wx, ty, 614) < 0.3 ? '#8a2a36' : '#6a1f2a') : '#3e1420');
+        if (!edge && hh(wx, ty, 615) < 0.5) p.set(x, 15, '#3e1420');
       }
-      // spikes: lit left face (2 tones), dark right face, bright tip
-      xs.forEach((cx, k) => {
-        cx += Math.round((hh(tx, k, 604) - 0.5) * 1.4);
-        const hgt = 7 + Math.floor(hh(tx * 5 + k, ty, 605) * 6), hw = hh(tx, k, 606) < 0.5 ? 2.6 : 3.1;
-        const top = 12 - hgt, lean = (hh(tx, k, 607) - 0.5) * 1.2;
-        for (let y = top; y < 13; y++) {
-          const t = (y - top + 0.5) / hgt, c = cx + lean * (1 - t), half = Math.max(0.5, hw * Math.pow(t, 0.8));
-          for (let x = Math.floor(c - half); x <= Math.ceil(c + half); x++) {
+      // stakes: 3 per tile, base 5-6 px, tilted about 10 degrees, heights 9-13
+      const xs = [4, 9.5, 15];
+      xs.forEach((bx, k) => {
+        bx += (hh(tx, k, 604) - 0.5) * 1.6;
+        const hgt = 9 + Math.floor(hh(tx * 5 + k, ty, 605) * 5), hw = 2.6 + hh(tx, k, 606) * 0.5;
+        const tilt = (hh(tx, k, 607) < 0.5 ? -1 : 1) * (0.12 + hh(tx, k, 609) * 0.08);
+        const top = 16 - hgt;
+        for (let y = top; y < 16; y++) {
+          const t = (y - top + 0.5) / hgt, c = bx + tilt * (16 - y), half = Math.max(0.45, hw * Math.pow(t, 0.9));
+          let xmax = -99;
+          for (let x = Math.floor(c - half - 1); x <= Math.ceil(c + half + 1); x++) {
             const dx = x + 0.5 - c;
             if (Math.abs(dx) > half + 0.05) continue;
-            let col;
-            if (y <= top + 1) col = STEEL[0];
-            else if (dx < -half * 0.45) col = STEEL[1];
-            else if (dx < 0.1) col = STEEL[2];
-            else if (dx < half * 0.6) col = STEEL[4];
-            else col = STEEL[5];
-            p.set(x, y, col);
+            let col = y < top + 2 ? IRON[0] : dx < -half * 0.3 ? IRON[1] : dx < half * 0.4 ? IRON[2] : IRON[3];
+            if (y >= top + 2 && y < top + 4 && dx < 0.3) col = IRON[1];
+            p.set(x, y, col); xmax = x;
           }
+          if (xmax > -99 && y >= top + 3 && half > 1) p.set(xmax, y, '#c0404a');   // hot red rim on the right face
         }
-        // dried blood running down from the tip on some stakes
-        if (k === Math.floor(hh(tx, ty, 608) * 6)) for (let y = top + 3; y < top + 3 + Math.floor(hgt * 0.45); y++) { const x = Math.round(cx + lean * (1 - (y - top) / hgt) - 0.3); if (p.get(x, y)) p.set(x, y, y % 3 ? '#8a2a38' : '#b43a3e'); }
+        // blood running down from the tip of one stake
+        if (k === Math.floor(hh(tx, ty, 608) * 3)) for (let y = top + 2; y < top + 2 + Math.floor(hgt * 0.45); y++) { const x = Math.round(bx + tilt * (16 - y) - 0.5); if (p.get(x, y) && p.get(x, y) !== '#c0404a') p.set(x, y, y % 3 ? '#7a2230' : '#a8323c'); }
       });
-      // rust / blood stain on the footing
-      for (let x = 2; x < 16; x++) if (hh(tx * 16 + x, ty, 609) < 0.3) { const y = p.get(x, 12) ? 12 : 13; p.set(x, y, '#7a2f3a'); if (hh(x, ty, 610) < 0.5) p.set(x, y + 1, '#5a2232'); }
+      // a skull or a bone lying in the pool
+      const sk = hh(tx, ty, 616);
+      if (sk < 0.45) {
+        const sx = 5 + Math.floor(hh(tx, ty, 617) * 8), SK = ['.AAB.', 'AxAxB', 'AABBC', '.t.t.'], SC = { A: '#e8e0cc', B: '#c8bcae', C: '#9a8e88', x: '#2a1a24', t: '#b8aca0' };
+        SK.forEach((row, dy) => { for (let dx = 0; dx < 5; dx++) if (row[dx] !== '.') p.set(sx + dx, 12 + dy, SC[row[dx]]); });
+      } else if (sk < 0.75) {
+        const sx = 4 + Math.floor(hh(tx, ty, 618) * 9);
+        [[0, 0, '#e8e0cc'], [0, 1, '#c8bcae'], [1, 1, '#e8e0cc'], [2, 1, '#d8d0c0'], [3, 1, '#d8d0c0'], [4, 1, '#c8bcae'], [5, 0, '#e8e0cc'], [5, 1, '#9a8e88'], [1, 2, '#9a8e88'], [2, 2, '#9a8e88'], [3, 2, '#9a8e88']].forEach(([dx, dy, c]) => p.set(sx + dx, 13 + dy, c));
+      }
+      // wet glints on the pool
+      for (let x = 2; x < 18; x += 5) if (hh(X0 + x, ty, 619) < 0.6 && p.get(x, 16) && !p.get(x, 15)) p.set(x, 16, '#b0404a');
       p.selout(OUT);
-      for (let y = 0; y < 16; y++) for (let x = 0; x < 18; x++) { const c = p.get(x, y); if (c) W.over.set(X0 + x, Y0 + y, c); }
+      for (let y = 0; y < 20; y++) for (let x = 0; x < 20; x++) {
+        const c = p.get(x, y);
+        if (!c) continue;
+        const wx = X0 + x, wy = Y0 + y;
+        if (c === OUT && y >= 16 && W.solidPx(wx, wy)) continue;          // no outline across the ground
+        W.over.set(wx, wy, c);
+      }
     }
   });
 
   /* ---- background: whitewashed stucco ---- */
-  function stuccoBase(W, x, y) {
-    const n = vnoise(x * 0.06, y * 0.08, 41), n2 = vnoise(x * 0.25, y * 0.3, 43);
+  // Whitewash: flat base with 2-3 large, soft vertical washes per wall (slightly cooler), a faint damp band
+  // near the ground and a sparse lime grain. No blotches.
+  function stuccoBase(W, x, y, x0, y1) {
+    const wash = vnoise((x - x0) * 0.045 + x0 * 0.13, 0.5, 41) + (vnoise(x * 0.3, y * 0.02, 42) - 0.5) * 0.08;
     let k = 1;
-    if (n > 0.64) k = 2;
-    if (n > 0.64 && n2 > 0.7) k = 3;
-    if (n < 0.28 && n2 > 0.55) k = 0;
+    if (wash > 0.64) k = 2;
+    else if (wash < 0.24) k = 0;
+    if (y1 - y < 12 && vnoise(x * 0.12, y * 0.3, 44) + (12 - (y1 - y)) * 0.03 > 0.72) k = Math.max(k, 2);
+    if (hh(x, y, 43) < 0.012) k = k === 1 ? 2 : 1;
     return k;
   }
   PX.H = function (W, x, y, tx, ty, px, py) {
     const S = STUCCO;
-    let k = stuccoBase(W, x, y);
     const c = W.comp(tx, ty);
     const x0 = c ? c.x0 * T : tx * T, x1 = c ? c.x1 * T + 15 : tx * T + 15;
     const y1 = c ? c.y1 * T + 15 : ty * T + 15;
+    let k = stuccoBase(W, x, y, x0, y1);
     const above = W.tl(tx, ty - 1);
-    // flat 3 px cast shadow under the eaves
+    // cast shadow under the eaves, scalloped under each barrel tile's rounded lip
     if (above === 'r' || above === '(' || above === ')') {
+      const cov = ((x - x0 + 1) % 6 + 6) % 6 < 4;
       if (py < 2) return S[5];
       if (py < 3) return S[4];
-      if (py < 4) k = Math.max(k, 3);
+      if (py < 4) { if (cov) return S[4]; k = Math.max(k, 3); }
+      if (py < 5 && cov && ((x - x0 + 1) % 6 + 6) % 6 > 0 && ((x - x0 + 1) % 6 + 6) % 6 < 3) k = Math.max(k, 3);
     }
-    // hairline crack
-    if (hh(x >> 2, y, 47) < 0.01) k = 3;
     // blue-grey painted plinth at the base
     if (y1 - y < 4 && W.solidT(tx, c ? c.y1 + 1 : ty + 1)) {
       const q = y1 - y;
@@ -750,33 +816,61 @@
     return S[clamp(k, 0, 5)];
   };
 
-  // Wall details that break up the long whitewashed facades: a small arched niche with a painted plate
-  // and a wrought-iron wall lantern beside the door.
+  // House layouts, seeded by the house's position, so two houses never look alike.
+  function houseLayout(W, c) {
+    W._hl = W._hl || {};
+    if (W._hl[c.id]) return W._hl[c.id];
+    const v = ((c.x0 * 7 + c.y0) & 1);
+    const L = v === 0
+      ? { door: 16, bigWin: [64, 15], smallWin: [38, 5], niche: [48, 36], lantern: [35, 32, 1], pot: 7, bench: null, boug: 'left', patch: [68, 42], steps: null }
+      : { door: 64, bigWin: [18, 14], smallWin: [52, 4], niche: null, lantern: [58, 32, -1], pot: 88, bench: [11, 42], boug: 'right', patch: null, steps: [84, 3] };
+    return (W._hl[c.id] = L);
+  }
+  function drawSmallWindow(W, wx, wy) {
+    const B = BLUE, S = STUCCO, O2 = W.over;
+    for (let y = 0; y < 10; y++) for (let x = 0; x < 9; x++) {
+      let c;
+      if (x === 0 || y === 0) c = S[3];
+      else if (x === 8 || y === 9) c = S[1];
+      else if (x === 1 || y === 1) c = '#f4f0f4';
+      else if (x === 7 || y === 8) c = '#a49cb4';
+      else if (x === 4) c = '#ece8ef';
+      else c = y < 4 && x < 4 ? '#1f1a31' : '#2e2744';
+      O2.set(wx + x, wy + y, c);
+    }
+    // a single blue shutter swung open to the right, sill below
+    for (let y = 1; y < 9; y++) for (let x = 9; x < 13; x++) O2.set(wx + x, wy + y, x === 9 || x === 12 || y === 1 || y === 8 ? B[4] : (y & 1 ? B[2] : B[3]));
+    for (let y = 2; y < 10; y++) O2.set(wx + 13, wy + y, S[4]);
+    for (let x = -1; x < 10; x++) { O2.set(wx + x, wy + 10, x < 1 ? S[1] : S[0]); O2.set(wx + x, wy + 11, S[4]); }
+  }
   function houseExtras(W, c, r) {
-    const O2 = W.over, S = STUCCO;
-    let door = -1;
-    for (let tx = c.x0; tx <= c.x1; tx++) if (W.tl(tx, c.y1) === 'd') door = tx;
-    const yB = (c.y1 + 1) * T;
-    if (door >= 0) {
-      // lantern: bracket from the wall, hanging lamp with warm glass
-      const lx = door * T + 20, ly = yB - 30;
-      for (let k = 0; k < 5; k++) O2.set(lx + k, ly, k === 0 ? '#2a2438' : '#3a3448');
-      O2.set(lx + 1, ly - 1, '#3a3448'); O2.set(lx + 2, ly - 2, '#3a3448'); O2.set(lx, ly + 1, '#2a2438');
-      O2.set(lx + 4, ly + 1, '#3a3448');
-      const L = ['#2a2438', '#fff0b0', '#ffc860', '#d98a3a'];
+    const O2 = W.over, S = STUCCO, L = houseLayout(W, c);
+    const x0 = c.x0 * T, yT = c.y0 * T, yB = (c.y1 + 1) * T;
+    // door (base layer: it is part of the wall)
+    const dx0 = x0 + L.door, dy0 = yB - 32;
+    for (let ly = 0; ly < 32; ly++) for (let px = 0; px < 16; px++) { const col = doorPix(px, ly, 32); if (col) W.base.set(dx0 + px, dy0 + ly, col); }
+    drawVillageWindow(W, x0 + L.bigWin[0], yT + L.bigWin[1]);
+    if (L.smallWin) drawSmallWindow(W, x0 + L.smallWin[0], yT + L.smallWin[1]);
+    if (L.lantern) {
+      // wrought-iron bracket and a hanging lamp with warm glass
+      const s0 = L.lantern[2], lx = x0 + L.lantern[0], ly = yT + L.lantern[1];
+      for (let k = 0; k < 5; k++) O2.set(lx + k * s0, ly, k === 0 ? '#2a2438' : '#3a3448');
+      O2.set(lx + s0, ly - 1, '#3a3448'); O2.set(lx + 2 * s0, ly - 2, '#3a3448'); O2.set(lx, ly + 1, '#2a2438');
+      O2.set(lx + 4 * s0, ly + 1, '#3a3448');
+      const Lc = ['#2a2438', '#fff0b0', '#ffc860', '#d98a3a'], cx = lx + 4 * s0;
       for (let y = 0; y < 7; y++) for (let x = -2; x <= 2; x++) {
         const w2 = y === 0 || y === 6 ? 1 : 2;
         if (Math.abs(x) > w2) continue;
-        let col = Math.abs(x) === w2 || y === 0 || y === 6 ? L[0] : y < 3 ? L[1] : x < 1 ? L[2] : L[3];
-        if (y === 1 && x === 0) col = L[0];
-        O2.set(lx + 4 + x, ly + 2 + y, col);
+        let col = Math.abs(x) === w2 || y === 0 || y === 6 ? Lc[0] : y < 3 ? Lc[1] : x < 1 ? Lc[2] : Lc[3];
+        if (y === 1 && x === 0) col = Lc[0];
+        O2.set(cx + x, ly + 2 + y, col);
       }
-      O2.set(lx + 4, ly + 9, L[0]);
-      for (let y = ly + 3; y < ly + 8; y++) O2.set(lx + 7, y, S[3]); // soft shadow on the wall
+      O2.set(cx, ly + 9, Lc[0]);
+      for (let y = ly + 3; y < ly + 8; y++) O2.set(cx + 3, y, S[3]);             // soft shadow on the wall
     }
-    // arched niche with a blue-and-white plate (on the house's left bay, away from the door)
-    const nx = c.x0 * T + 10, ny = c.y0 * T + 38;
-    if (door >= 0 && door * T > nx + 8) {
+    if (L.niche) {
+      // arched niche with a blue-and-white plate
+      const nx = x0 + L.niche[0], ny = yT + L.niche[1];
       for (let y = 0; y < 11; y++) for (let x = 0; x < 8; x++) {
         const dx = x + 0.5 - 4, top = y < 4 ? Math.sqrt(Math.max(0, 16 - (4 - y - 0.5) * (4 - y - 0.5))) : 4;
         if (Math.abs(dx) > top) continue;
@@ -785,21 +879,72 @@
         if (edgeL && y < 10) col = S[5];
         O2.set(nx + x, ny + y, col);
       }
-      // plate
       const PL = ['#f4f1f6', '#3a64b8', '#24468c'];
       for (let y = 0; y < 5; y++) for (let x = 0; x < 5; x++) {
         const d = Math.hypot(x - 2, y - 2);
         if (d > 2.4) continue;
-        O2.set(nx + 2 + x - 0, ny + 3 + y, d > 1.6 ? PL[1] : d > 0.7 ? PL[0] : PL[2]);
+        O2.set(nx + 2 + x, ny + 3 + y, d > 1.6 ? PL[1] : d > 0.7 ? PL[0] : PL[2]);
       }
     }
-    void r;
+    if (L.bench) {
+      // blue-washed masonry bench with two pots of basil on it
+      const bx0 = x0 + L.bench[0], bx1 = x0 + L.bench[1], by = yB - 8;
+      for (let x = bx0; x <= bx1; x++) {
+        O2.set(x, by, x === bx0 ? '#b9c8dc' : '#dfe8f2'); O2.set(x, by + 1, '#8fa2c2'); O2.set(x, by + 2, '#4f587a');
+        for (let y = by + 3; y < yB; y++) if (x < bx0 + 3 || x > bx1 - 3) O2.set(x, y, x === bx1 ? '#66759a' : x < bx0 + 1 ? '#dfe8f2' : '#b9c8dc');
+        else O2.set(x, y, y === by + 3 ? '#8f98b4' : STUCCO[3]);
+      }
+      [bx0 + 5, bx1 - 8].forEach((px, k) => {
+        for (let y = 0; y < 4; y++) for (let x = 0; x < 5 - (y > 2 ? 2 : 0); x++) O2.set(px + x + (y > 2 ? 1 : 0), by - 4 + y, y === 0 ? TERRA[0] : x === 0 ? TERRA[1] : x > 2 ? TERRA[3] : TERRA[2]);
+        for (let q = 0; q < 10; q++) { const a = r() * Math.PI, d = r() * 3.2; O2.set(Math.round(px + 2 + Math.cos(a) * d * 1.2), Math.round(by - 6 - Math.sin(a) * d), q % 4 === 0 && k ? '#ff4d5e' : q % 2 ? '#6fb34f' : '#4a8f44'); }
+      });
+    }
+    if (L.steps) {
+      // two whitewashed steps in front of the door
+      const sx = x0 + L.steps[0] - 20, sw = 22;
+      for (let y = 0; y < 6; y++) for (let x = 0; x < sw + (y >= 3 ? 3 : 0); x++) {
+        const yy = yB - 6 + y, xx = sx + x - (y >= 3 ? 1 : 0);
+        O2.set(xx, yy, y === 0 || y === 3 ? '#f4f0f4' : x === 0 ? STUCCO[1] : y === 2 || y === 5 ? STUCCO[4] : STUCCO[2]);
+      }
+      O2.set(sx - 1, yB - 6, OUT); O2.set(sx + sw, yB - 6, OUT);
+    }
+    if (L.patch) {
+      // a deliberate patch of fallen plaster showing the rubble stones beneath, outlined
+      const px0 = x0 + L.patch[0], py0 = yT + L.patch[1], pw = 12, ph = 7;
+      const inP = (xx, yy) => { const dx = (xx + 0.5 - px0 - pw / 2) / (pw / 2), dy = (yy + 0.5 - py0 - ph / 2) / (ph / 2); return dx * dx + dy * dy + (hh(xx, yy, 71) - 0.5) * 0.3 < 1; };
+      for (let yy = py0 - 1; yy <= py0 + ph; yy++) for (let xx = px0 - 1; xx <= px0 + pw; xx++) {
+        if (!inP(xx, yy)) { if (inP(xx - 1, yy - 1) || inP(xx - 1, yy) || inP(xx, yy - 1)) O2.set(xx, yy, STUCCO[0]); continue; }
+        if (!inP(xx - 1, yy) || !inP(xx, yy - 1)) { O2.set(xx, yy, '#7a6a72'); continue; }
+        const row = Math.floor((yy - py0) / 3), sx = (xx - px0 + (row % 2) * 2) % 5, sy = (yy - py0) % 3;
+        O2.set(xx, yy, sy === 2 || sx === 4 ? '#8e7c7a' : sy === 0 && sx < 2 ? '#e6d4c0' : (row + Math.floor((xx - px0) / 5)) % 3 ? '#cdb8a0' : '#bda48c');
+      }
+    }
+    // terracotta pot with a flowering plant
+    {
+      const px = x0 + L.pot, py = yB - 1;
+      for (let yy = 0; yy < 6; yy++) for (let xx = -3; xx <= 3; xx++) {
+        const wdt = yy < 1 ? 3 : yy < 5 ? 3 - (yy > 3 ? 1 : 0) : 2;
+        if (Math.abs(xx) > wdt) continue;
+        let col = xx < -1 ? TERRA[1] : xx < 2 ? TERRA[2] : TERRA[3];
+        if (yy === 0) col = TERRA[0];
+        if (yy === 1) col = TERRA[4];
+        if (Math.abs(xx) === wdt) col = OUT;
+        O2.set(px + xx, py - 5 + yy, col);
+      }
+      O2.set(px - 2, py, OUT); O2.set(px + 2, py, OUT);
+      const lv = ['#86cf52', '#4f9c43', '#2c6a3c'];
+      for (let k = 0; k < 26; k++) {
+        const a = r() * Math.PI, d = r() * 5;
+        const xx = Math.round(px + Math.cos(a) * d * 1.1), yy = Math.round(py - 7 - Math.sin(a) * d);
+        O2.set(xx, yy, k % 5 === 0 ? (L.boug === 'left' ? '#ffffff' : '#ff4d5e') : lv[xx < px ? 0 : 1]);
+      }
+    }
   }
   // Village window (drawn into the overlay so it can spill over the neighbouring wall tiles):
   // 10x12 opening with a white frame and cross mullion, dark interior with a warm lamp hint,
   // open slatted blue shutters with hinges, stone sill and a terracotta box spilling geraniums.
-  function drawVillageWindow(W, tx, ty) {
-    const B = BLUE, S = STUCCO, p = new O.Pix(26, 24), ox = tx * T - 5, oy = ty * T - 1;
+  function drawVillageWindow(W, wx, wy) {
+    const B = BLUE, S = STUCCO, p = new O.Pix(26, 24), ox = wx - 5, oy = wy - 1, tx = wx >> 4, ty = wy >> 4;
     const P0 = (x, y, c) => p.set(x + 5, y + 1, c); // tile-local coords
     // shutters (open, flat against the wall); left one lit, right one in shade
     const shutter = (x0, lit) => {
@@ -854,27 +999,21 @@
   }
   PX.w = function (W, x, y, tx, ty, px, py) { return PX.H(W, x, y, tx, ty, px, py); };
 
-  PX.d = function (W, x, y, tx, ty, px, py) {
+
+  // Blue arched door, 16x32, painted by the house layout (so the two houses differ); the 'd' tiles are wall.
+  function doorPix(px, ly, hgt) {
     const S = STUCCO, B = BLUE;
-    let y0 = ty; while (W.tl(tx, y0 - 1) === 'd') y0--;
-    let y1 = ty; while (W.tl(tx, y1 + 1) === 'd') y1++;
-    const ly = y - y0 * T, hgt = (y1 - y0 + 1) * T;
-    const top = 4, r = 6;
-    // stone surround (arched), then reveal, then the door leaves
-    const cx = 7.5, cy = top + r;
+    const top = 4, r = 6, cx = 7.5, cy = top + r;
     const inArch = (xx, yy, rad) => (yy >= cy ? Math.abs(xx - cx) <= rad : (xx - cx) * (xx - cx) + (yy - cy) * (yy - cy) <= rad * rad);
     if (ly >= hgt - 2) {
-      // threshold step
-      if (px < 1 || px > 14) return PX.H(W, x, y, tx, ty, px, py);
-      return ly === hgt - 2 ? '#d7d0dc' : '#8d87a0';
+      if (px < 1 || px > 14) return null;
+      return ly === hgt - 2 ? '#d7d0dc' : '#8d87a0';                               // threshold step
     }
-    if (!inArch(px, ly, r + 1.6)) return PX.H(W, x, y, tx, ty, px, py);
-    if (!inArch(px, ly, r + 0.6)) return ly < cy ? S[0] : (px < cx ? S[0] : S[3]);
+    if (!inArch(px, ly, r + 1.6)) return null;
+    if (!inArch(px, ly, r + 0.6)) return ly < cy ? S[0] : (px < cx ? S[0] : S[3]);   // stone surround
     if (!inArch(px, ly, r - 0.4)) return OUT;
-    // inside: deep reveal on the left/top (shadow), leaves
     const ix = px - (cx - r) - 1;
-    if (ix <= 0 || (ly < cy && !inArch(px, ly, r - 1.4))) return B[5];
-    // planks
+    if (ix <= 0 || (ly < cy && !inArch(px, ly, r - 1.4))) return B[5];              // deep reveal
     const plank = (px - 2) % 3;
     let k = plank === 0 ? 3 : plank === 1 ? 1 : 2;
     if (px === 3) k = 0;
@@ -882,21 +1021,22 @@
     if (ly === 12 || ly === 23) k = Math.max(1, k - 1);
     if ((ly === 14 || ly === 25) && k < 4) k = Math.min(4, k + 1);
     if ((ly === 13 || ly === 24) && px % 3 === 1) return '#9aa3b8';
-    // gold ring handle
-    if ((px === 10 || px === 11) && (ly === 17 || ly === 19)) return GOLD[1];
+    if ((px === 10 || px === 11) && (ly === 17 || ly === 19)) return GOLD[1];       // ring handle
     if ((px === 9 || px === 12) && ly === 18) return GOLD[2];
     if (px >= 12) k = Math.min(5, k + 1);
     return B[k];
-  };
+  }
+  PX.d = function (W, x, y, tx, ty, px, py) { return PX.H(W, x, y, tx, ty, px, py); };
 
-  // terracotta barrel-tile roof (hipped, 45 degree ends), ridge caps on top
+  // Terracotta barrel-tile roof (hipped, 45 degree ends): alternate courses offset by half a tile, each
+  // tile with its own small value shift, a few darker replaced / broken tiles, ridge caps on top and a
+  // dark eave lip at the bottom (the wall gets a scalloped drip shadow under it).
   function roofPx(W, x, y, tx, ty, px, py, ch) {
     if (ch === '(' && px + py < 15) return null;
     if (ch === ')' && px > py) return null;
     const c = W.comp(tx, ty);
     const x0 = c.x0 * T, y0 = c.y0 * T, y1 = c.y1 * T + 15;
     const R = TERRA;
-    // distance to the sloped edge (for the plaster trim)
     let edge = 99;
     if (ch === '(') edge = px + py - 15;
     if (ch === ')') edge = py - px;
@@ -906,33 +1046,33 @@
     const ry = y - y0;
     if (ry === 0 && ch === 'r') return OUT;
     if (ry <= 3 && ch === 'r' && W.tl(tx, ty - 1) !== 'r') {
-      // ridge caps
-      const ph = (x - x0) % 6;
+      const ph = (x - x0) % 6;                                             // ridge caps
       if (ry === 1) return ph === 0 ? R[3] : R[1];
       if (ry === 2) return ph === 0 ? R[4] : ph < 3 ? R[1] : R[2];
       return R[4];
     }
-    if (y === y1) return R[5];
-    if (y === y1 - 1) return ((x - x0) % 6 < 4) ? R[3] : R[5];
-    // pan-and-cover barrel tiles: continuous convex covers, dark pans, rounded lips at each course
-    const cp = (x - x0 + 1) % 6, rp = (y - y0 - 4 + 50) % 6;
-    const col = Math.floor((x - x0 + 1) / 6), course = Math.floor((y - y0 - 4 + 50) / 6);
-    const age = hh(col, course, 17);
+    // eave: 2 px dark lip
+    if (y === y1) return OUT;
+    if (y === y1 - 1) return ((x - x0 + 1 + (Math.floor((y1 - 1 - y0 - 4) / 6) & 1) * 3) % 6 + 6) % 6 < 4 ? R[4] : R[5];
+    const cy = y - y0 - 4 + 60, course = Math.floor(cy / 6), rp = cy % 6;
+    const cx = x - x0 + 1 + (course & 1) * 3, cp = ((cx % 6) + 6) % 6, col = Math.floor(cx / 6);
+    const age = hh(col, course, 17), age2 = hh(col, course, 18);
+    const broken = age2 < 0.04;
     let k;
     if (cp < 4) {
-      k = [2, 0, 1, 2][cp];
-      if (cp === 3) k = 3;
-      if (rp === 5) k = cp === 0 ? 3 : cp === 3 ? 4 : 1;       // lit rounded lip
-      else if (rp === 0) k = cp === 3 ? 5 : 4;                  // shadow under the lip
+      k = [2, 0, 1, 3][cp];
+      if (rp === 5) k = cp === 0 ? 3 : cp === 3 ? 4 : 1;                    // lit rounded lip
+      else if (rp === 0) k = cp === 3 ? 5 : 4;                              // shadow under the lip
       else if (rp === 1 && cp > 0) k = Math.min(5, k + 1);
-      if (age < 0.12 && rp > 1 && rp < 5) k = Math.min(5, k + 1); // older, darker tile
+      if (rp > 0 && rp < 5) { if (age < 0.09) k = Math.min(5, k + 1); else if (age > 0.91) k = Math.max(0, k - 1); }
+      if (broken && rp > 0 && rp < 5) k = Math.min(5, k + 2);
     } else {
       k = rp === 0 || rp === 1 ? 5 : 4;
     }
     if (edge === 3) k = Math.max(k, 4);
     if (ch === ')') k = Math.min(5, k + 1);
-    // a few lichen spots
-    if (cp > 0 && cp < 3 && age > 0.93 && rp === 3) return '#c9c07a';
+    if (y >= y1 - 3 && cp >= 4) k = 5;                                    // deeper shade just above the eave
+    if (cp > 0 && cp < 3 && age > 0.95 && rp === 3) return '#c9c07a';        // lichen
     return R[clamp(k, 0, 5)];
   }
   PX.r = roofPx; PX['('] = roofPx; PX[')'] = roofPx;
@@ -1179,36 +1319,27 @@
     // reveals: the right one faces the light
     if (frameR && lx > wdt - 8) return lx === wdt - 6 ? '#8f86a8' : lx === wdt - 7 ? '#6d6488' : '#4d4666';
     if (ly < 8) return ly === 6 ? '#0c0913' : '#141020';
-    // dark cella in flat bands (no dithering): deepest under the lintel, a little light on the floor
-    const g = ['#2e2440', '#241c33', '#1b1528', '#140f1f', '#0f0b18'];
+    // dark cella: flat near-black, one diagonal warm beam from the upper-left falling on the floor, and a
+    // small lit marble cult statue standing in it
     const fy = hgt - 2; // floor line
-    let k = ly < 12 ? 4 : ly < fy - 14 ? 3 : 2;
-    if (frameL && lx < 7) k = 4;
     if (ly >= fy) return ly === hgt - 1 ? '#3b3350' : '#2a2338';
+    let col = (frameL && lx < 7) || ly < 12 ? '#1b1426' : '#231a2c';
     if (!touchesEdge) {
-      // a shaft of warm light falling from the top of the door, in 3 flat steps, onto a cult statue
-      const cx = x0 + wdt / 2, dx = Math.abs(x + 0.5 - cx), wv = wdt * 0.2 + (ly - 8) * 0.16;
-      const inFig = (sx, sy) => Math.hypot(sx, (sy - 20.5) * 1.1) < 2.5 ||                         // head
-        (sy >= 18 && sy < 19 && Math.abs(sx) < 1.2) ||                                                  // neck
-        (sy >= 4 && sy < 18 && Math.abs(sx) < (sy > 14 ? 3.6 : 2.6 + (sy - 4) * 0.06)) ||                // robed body, shoulders
-        (sy >= 0 && sy < 4 && Math.abs(sx) < 5);                                                          // plinth
-      const sx = x + 0.5 - cx, sy = fy - 1 - ly;
-      if (inFig(sx, sy)) {
-        const plinth = sy < 4;
-        if (!inFig(sx, sy + 1)) return plinth ? '#b07a52' : '#e0a468';                               // lit top edges
-        if (plinth) return sy === 3 ? '#7a5446' : '#3a2a34';
-        if (!inFig(sx - 1, sy) || !inFig(sx - 1, sy + 1)) return '#8a5c48';                          // warm rim on the left
-        return sx > 1 ? '#1f1726' : '#2a1e2c';
+      const cx = Math.round(wdt / 2), sx = lx - cx, sy = fy - 1 - ly;
+      const FIG = ['...ab..', '..abc..', '...bc..', '..abcc.', '.aabbcd', '.aabc.d', '..abc.d', '..abc.d', '..a.c.d', '..a.c..', '..a.c..', '.aaaccc', 'abbbccc'];
+      const fr = FIG[FIG.length - 1 - sy];
+      const fc = fr && sx + 3 >= 0 && sx + 3 < 7 ? fr[sx + 3] : '.';
+      if (fc && fc !== '.') return { a: '#f0d8b0', b: '#c8b8c4', c: '#7a6a88', d: '#a89878' }[fc];
+      const t = lx - 8 - (ly - 8) * 0.55;                 // position across the beam
+      const bw = wdt * 0.38;
+      if (ly >= 8 && t > 0 && t < bw) {
+        const edge = t < 1 || t > bw - 1;
+        col = edge ? (bay(x, y) < 0.5 ? '#3a2834' : col) : '#3a2834';
+        if (!edge && t > bw * 0.3 && t < bw * 0.75) col = '#4e3538';
+        if (ly >= fy - 2 && !edge) col = '#6e4a44';
       }
-      if (ly >= 8 && dx < wv) {
-        const t = dx / wv;
-        if (t < 0.4 && ly > 16) return '#7a5244';
-        if (t < 0.72 && ly > 11) return '#573c3a';
-        return '#3a2a34';
-      }
-      if (ly >= fy - 3 && dx < wv + 4) return '#2e2236';
     }
-    return g[k];
+    return col;
   };
 
   // Cave back wall: big bulging rock masses (40-90 px) from a low-frequency height field, each lit from the
@@ -1221,7 +1352,16 @@
     const r = (a) => hh(i, j, 170 + a);
     return { x: (i + 0.5) * MGX + (r(1) - 0.5) * 30, y: (j + 0.5) * MGY + (r(2) - 0.5) * 18, rx: 28 + r(3) * 24, ry: 15 + r(4) * 11, z: r(5), id: i * 977 + j * 131 };
   }
+  const MO = new Map();
   function massOwner(x, y) {
+    const key = (y + 64) * 65536 + x + 64;
+    if (MO.has(key)) return MO.get(key);
+    const res = massOwner0(x, y);
+    if (MO.size > 400000) MO.clear();
+    MO.set(key, res);
+    return res;
+  }
+  function massOwner0(x, y) {
     const gi = Math.floor(x / MGX), gj = Math.floor(y / MGY);
     let best = null, bz = -1, bdx = 0, bdy = 0;
     for (let j = gj - 1; j <= gj + 1; j++) for (let i = gi - 1; i <= gi + 1; i++) {
@@ -1297,46 +1437,31 @@
   /* =====================================================================================
      Post passes: pebbles, cracks, overlay details (grass blades, lips, roots, eaves...)
      ===================================================================================== */
-  // Pebbles embedded in earth: small groups of 2-4 stones lying along a stratum line (not confetti).
+  // Pebbles embedded in earth: scattered one by one (about 1 per 300 px^2), 2x2 to 4x3, lit top-left
+  // pixel, darker lower-right, dark soil outline under/right.
   POST.push(function pebbles(W) {
     if (W.theme !== 'village' && W.theme !== 'forest') return;
-    const P = W.P, pe = P.peb;
-    const stone = (x, y, rx, ry, dark) => {
-      for (let yy = Math.floor(y - ry - 1); yy <= Math.ceil(y + ry + 1); yy++) for (let xx = Math.floor(x - rx - 1); xx <= Math.ceil(x + rx + 1); xx++) {
-        const j = yy * W.w + xx;
-        if (xx < 0 || yy < 0 || xx >= W.w || yy >= W.h || !W.mask[j] || W.dL[j] < 2 || W.dR[j] < 3 || W.dDn[j] < 2) continue;
-        const dx = (xx + 0.5 - x) / rx, dy = (yy + 0.5 - y) / ry, d = dx * dx + dy * dy;
-        let c = null;
-        if (d <= 1) {
-          const n = -(dx * 0.6 + dy * 0.8);
-          c = n > 0.3 ? pe[0] : n < -0.3 ? pe[2] : pe[1];
-          if (d > 0.6 && dx + dy > 0.7) c = pe[3];
-        } else {
-          const dx2 = (xx - 0.5 - x) / rx, dy2 = (yy - 0.5 - y) / ry;
-          if (dx2 * dx2 + dy2 * dy2 <= 1) c = P.dirt[5];
-        }
-        if (c) W.base.set(xx, yy, dark ? mx(c, P.dirt[4], 0.45) : c);
-      }
-    };
-    for (let cx = 0; cx < W.w; cx += 22) for (let cy = 0; cy < W.h; cy += 11) {
-      if (hh(cx, cy, 201) > 0.13) continue;
-      let x = cx + Math.floor(hh(cx, cy, 202) * 14);
-      // snap to the local stratum line used by the soil painter
-      let y = cy + 1;
-      for (let k = 0; k < 11; k++) { const yy = cy + k, sy = yy + vnoise(x * 0.035, 0.5, 77) * 7; if (Math.floor(sy) % 11 === 0) { y = yy; break; } }
+    const P = W.P, pe = P.peb, C = 17;
+    for (let cy = 0; cy < W.h; cy += C) for (let cx = 0; cx < W.w; cx += C) {
+      if (hh(cx, cy, 201) > 0.85) continue;
+      const x = cx + Math.floor(hh(cx, cy, 202) * (C - 4)), y = cy + Math.floor(hh(cx, cy, 203) * (C - 3));
       const i = y * W.w + x;
       if (!W.mask[i]) continue;
       const ch = W.tp(x, y);
       if (ch !== 'G' && ch !== 'D') continue;
-      if (W.eUp[i] < grassThick(x, W.theme) + 5) continue;
-      const n = 1 + Math.floor(hh(cx, cy, 203) * 3), dark = W.eUp[i] > 30;
-      for (let k = 0; k < n; k++) {
-        const big = k === 0 && hh(cx, cy, 206) < 0.5;
-        const rx = big ? 2.8 + hh(cx, k, 204) * 0.9 : 1.5 + hh(cx + k, cy, 204) * 0.8;
-        const ry = Math.max(1.2, rx * (0.6 + hh(cx, cy + k, 205) * 0.15));
-        stone(x, y - (big ? 1 : 0) + (hh(k, cx, 207) < 0.5 ? 0 : 1), rx, big ? ry + 0.4 : ry, dark);
-        x += Math.ceil(rx) + 1 + Math.floor(hh(cx, k, 208) * 3);
+      if (W.eUp[i] < grassThick(x, W.theme) + 4 || W.dL[i] < 3 || W.dR[i] < 5 || W.dDn[i] < 4) continue;
+      const pw = 2 + Math.floor(hh(cx, cy, 204) * 3), ph = pw === 2 ? 2 : 2 + (hh(cx, cy, 205) < 0.5 ? 1 : 0);
+      const dark = W.eUp[i] > 34;
+      const col = (c) => (dark ? mx(c, P.dirt[4], 0.4) : c);
+      for (let yy = 0; yy < ph; yy++) for (let xx = 0; xx < pw; xx++) {
+        if (pw > 2 && ph > 2 && (xx === 0 || xx === pw - 1) && (yy === 0 || yy === ph - 1) && (xx + yy) % 2 === 0 && !(xx === 0 && yy === 0)) continue;
+        let c = pe[1];
+        if (xx === 0 && yy === 0) c = pe[0];
+        else if (yy === ph - 1 || xx === pw - 1) c = pe[2];
+        W.base.set(x + xx, y + yy, col(c));
       }
+      for (let xx = 0; xx <= pw; xx++) W.base.set(x + xx, y + ph, P.dirt[5]);
+      for (let yy = 1; yy < ph; yy++) W.base.set(x + pw, y + yy, P.dirt[5]);
     }
   });
 
@@ -1595,10 +1720,9 @@
       if (c.grp === 'house') {
         const x0 = c.x0 * T, x1 = (c.x1 + 1) * T - 1, yT = c.y0 * T, yB = (c.y1 + 1) * T;
         const r = rngOf(c.id * 31 + c.x0);
-        for (let ty = c.y0; ty <= c.y1; ty++) for (let tx = c.x0; tx <= c.x1; tx++) if (W.tl(tx, ty) === 'w') drawVillageWindow(W, tx, ty);
         houseExtras(W, c, r);
         // bougainvillea draping from the eave on one corner (blobby shaded clusters)
-        const right = (c.x0 % 2 === 1) !== (r() < 0.2);
+        const right = houseLayout(W, c).boug === 'right';
         const fl = ['#ffb3e6', '#ff6fc8', '#e0409c', '#a82577', '#6e1a55'];
         const lv = ['#86cf52', '#4f9c43', '#2c6a3c'];
         const blobs = [];
@@ -1627,44 +1751,6 @@
         for (let yy = 4; yy < 36; yy++) { const xx = Math.round(bx0 - ox + Math.sin(yy * 0.5) * 1.2); if (!tmp.get(xx, yy)) tmp.set(xx, yy, yy % 5 ? '#6b4a3a' : '#8a6448'); }
         tmp.selout(fl[4]);
         O2.pix(tmp, ox, oy);
-        // one patch of fallen plaster exposing the stones beneath
-        if (r() < 0.75) {
-          const pw = 9 + Math.floor(r() * 5), ph = 5 + Math.floor(r() * 3);
-          let px0 = x0 + 6 + Math.floor(r() * (x1 - x0 - 12 - pw));
-          const py0 = yT + 14 + Math.floor(r() * Math.max(1, yB - yT - 34));
-          let ok = true;
-          for (let yy = py0 - 1; yy < py0 + ph + 1; yy++) for (let xx = px0 - 1; xx < px0 + pw + 1; xx++) if (W.tp(xx, yy) !== 'H') ok = false;
-          if (ok) {
-            const inP = (xx, yy) => { const dx = (xx + 0.5 - px0 - pw / 2) / (pw / 2), dy = (yy + 0.5 - py0 - ph / 2) / (ph / 2); return dx * dx + dy * dy + (hh(xx, yy, 71) - 0.5) * 0.35 < 1; };
-            for (let yy = py0 - 1; yy <= py0 + ph; yy++) for (let xx = px0 - 1; xx <= px0 + pw; xx++) {
-              if (!inP(xx, yy)) { if (inP(xx - 1, yy - 1)) O2.set(xx, yy, STUCCO[0]); continue; }
-              if (!inP(xx - 1, yy) || !inP(xx, yy - 1)) { O2.set(xx, yy, '#a8958f'); continue; }
-              const row = Math.floor((yy - py0) / 3), sx = (xx - px0 + (row % 2) * 2) % 5, sy = (yy - py0) % 3;
-              O2.set(xx, yy, sy === 2 || sx === 4 ? '#9a847c' : sy === 0 && sx < 2 ? '#ead6bb' : (row + Math.floor((xx - px0) / 5)) % 3 ? '#d1b797' : '#c2a386');
-            }
-          }
-        }
-        // terracotta pot with a basil/geranium plant beside the door
-        let dx = -1;
-        for (let tx = c.x0; tx <= c.x1; tx++) if (W.tl(tx, c.y1) === 'd') dx = tx;
-        if (dx >= 0) {
-          const px = dx * T + 18, py = yB - 1;
-          for (let yy = 0; yy < 6; yy++) for (let xx = -3; xx <= 3; xx++) {
-            const wdt = yy < 1 ? 3 : yy < 5 ? 3 - (yy > 3 ? 1 : 0) : 2;
-            if (Math.abs(xx) > wdt) continue;
-            let col = xx < -1 ? TERRA[1] : xx < 2 ? TERRA[2] : TERRA[3];
-            if (yy === 0) col = TERRA[0];
-            if (yy === 1) col = TERRA[4];
-            if (Math.abs(xx) === wdt) col = OUT;
-            O2.set(px + xx, py - 5 + yy, col);
-          }
-          O2.set(px - 2, py, OUT); O2.set(px + 2, py, OUT);
-          for (let k = 0; k < 26; k++) {
-            const a = r() * Math.PI, d = r() * 5;
-            const xx = Math.round(px + Math.cos(a) * d * 1.1), yy = Math.round(py - 7 - Math.sin(a) * d);
-            O2.set(xx, yy, k % 5 === 0 ? '#ff4d5e' : lv[xx < px ? 0 : 1]);
-          }
-        }
       }
     });
   });
@@ -1877,79 +1963,132 @@
     wood: ['#e0b183', '#b27f58', '#845a43', '#5b3e37', '#37262a']
   };
 
-  // Olive foliage: thin horizontal wispy layers (not spheres), silver-green, darker undersides,
-  // leaf texture from 2x1 angled dashes, ragged spray tips on the edges.
-  const OLV = ['#d2d9b4', '#9fae88', '#6c7e68', '#46554f'];
-  function olivePad(p, cx, cy, rx, ry, seed, back) {
-    const sh1 = back ? 1 : 0;
-    // a layer = several overlapping flat lobes -> irregular, cloud-like but horizontal
-    const n = Math.max(2, Math.round(rx / 4.5)), subs = [];
-    for (let i = 0; i < n; i++) {
-      const t = (i + 0.5) / n;
-      subs.push([cx - rx + 2 * rx * t + (hh(i, seed, 1) - 0.5) * 3, cy + (hh(i, seed, 2) - 0.5) * 2 - Math.sin(t * Math.PI) * ry * 0.35, (rx / n) * 1.55, ry * (0.65 + hh(i, seed, 3) * 0.45)]);
-    }
-    const x0 = Math.floor(cx - rx - 4), x1 = Math.ceil(cx + rx + 4), y0 = Math.floor(cy - ry * 2 - 2), y1 = Math.ceil(cy + ry + 2);
-    const inside = (x, y) => subs.some(([sx, sy, a, b]) => {
-      const dx = (x + 0.5 - sx) / a, dy = (y + 0.5 - sy) / b;
-      return dx * dx + dy * dy <= 1 + (vnoise(x * 0.7, y * 0.5, seed) - 0.5) * 0.45;
-    });
-    for (let x = x0; x <= x1; x++) {
-      let top = -1, bot = -1;
-      for (let y = y0; y <= y1; y++) if (inside(x, y)) { if (top < 0) top = y; bot = y; }
-      if (top < 0) continue;
-      const dxn = (x + 0.5 - cx) / rx;
-      for (let y = top; y <= bot; y++) {
-        if (!inside(x, y)) continue;
-        const a = y - top, b = bot - y;
-        let k = a < 2 ? 0 : a < 4 ? 1 : 2;
-        if (b < 2) k = 3; else if (b < 3 && k < 2) k = 2;
-        if (k === 0 && dxn > 0.55) k = 1;
-        if (dxn > 0.85 && k < 3) k++;
-        // leaf texture: 2x1 angled dashes of the neighbouring tone
-        const q = x + (y & 1) * 2;
-        if (hh(q >> 2, y, seed + 7) < 0.45 && (q & 3) < 2) k = k === 1 ? 0 : k === 2 ? 1 : k;
-        p.set(x, y, OLV[Math.min(3, k + sh1)]);
+  // Olive trees: 4 authored archetypes (split trunk with a see-through hollow, a single twisted trunk
+  // leaning left, a squat trunk with a broad crown, an old stump with a new trunk). Trunks carry spiral
+  // fissures and a lit left ridge; crowns are rounded, irregular clumps in a silver-green ramp with
+  // up-left leaf dashes, silver glints and ragged spray tips.
+  const OLIVE_R = ['#c9d1b0', '#9fae8a', '#74866c', '#4f5f52', '#33403c'];
+  function oliveTrunk(p, segs, B, seed, twist) {
+    const t = new O.Pix(p.w, p.h);
+    segs.forEach(([a, b, r0, r1]) => t.capsule(a[0], a[1], b[0], b[1], r0, r1, B));
+    for (let y = 0; y < t.h; y++) {
+      let run = -1;
+      for (let x = 0; x <= t.w; x++) {
+        const on = x < t.w && t.get(x, y);
+        if (on && run < 0) run = x;
+        if (!on && run >= 0) {
+          const wdt = x - run;
+          for (let xx = run; xx < x; xx++) {
+            let c = t.get(xx, y);
+            if (xx === run && wdt > 2) c = B[0];                                            // lit left ridge
+            else if (xx === run + 1 && wdt > 4) c = B[1];
+            else if (wdt > 3 && xx > run + 1 && xx < x - 1 && (((xx + Math.floor(y * twist) + seed) % 5 + 5) % 5) === 0) c = B[4];   // spiral fissures
+            else if (wdt > 3 && xx > run + 1 && xx < x - 1 && (((xx + Math.floor(y * twist) + seed) % 5 + 5) % 5) === 1) c = B[1];   // lit lip beside each fissure
+            p.set(xx, y, c);
+          }
+          run = -1;
+        }
       }
-      // spray tips poking out above the lit top and below
-      if (hh(x, top, seed + 3) < 0.2) p.set(x + (dxn < 0 ? -1 : 1), top - 1, OLV[Math.min(3, 1 + sh1)]);
-      if (hh(x, bot, seed + 4) < 0.15) p.set(x, bot + 1, OLV[3]);
     }
   }
-  DECOR.olive = function (r, th, seed) {
-    const p = new O.Pix(64, 64), B = BARK.olive, bx = 32;
-    const J = () => Math.round((r() - 0.5) * 4);
-    const lean = seed % 2 ? 1 : -1;
-    // gnarled double trunk with a hollow, roots, twisted limbs reaching into the layers
-    limb(p, [bx - 7, 63], [bx - 2, 57], 1.4, 2.6, B);
-    limb(p, [bx + 9, 63], [bx + 3, 57], 1.4, 2.6, B);
-    limb(p, [bx - 2, 63], [bx - 4 + lean, 47], 3.8, 3.0, B);
-    limb(p, [bx + 3, 63], [bx + 2 + lean, 45], 3.4, 2.8, B);
-    limb(p, [bx - 4 + lean, 47], [bx + 1, 35], 2.9, 2.2, B);
-    limb(p, [bx + 2 + lean, 45], [bx + 10, 34], 2.6, 1.8, B);
-    const tA = [bx + 2 + J(), 17 + J()], tB = [bx - 13 + J(), 27 + J()], tC = [bx + 19 + J(), 26 + J()];
-    limb(p, [bx + 1, 35], tB, 1.9, 1.0, B);
-    limb(p, [bx + 1, 36], tA, 1.8, 1.0, B);
-    limb(p, [bx + 10, 34], tC, 1.6, 0.9, B);
-    limb(p, [bx - 4 + lean, 47], [bx - 18, 37], 1.6, 0.9, B);
-    limb(p, [bx + 10, 34], [bx + 12, 29], 1.1, 0.7, B);
-    p.ellipse(bx, 52, 1.2, 2.2, B[4]); p.set(bx - 1, 50, B[3]);
-    [[bx - 3, 58], [bx + 4, 53], [bx - 1, 42]].forEach(([x, y]) => p.set(x, y, B[3]));
-    // layers: 1-2 big masses and 3-4 small tufts, back ones darker
-    const s0 = seed * 13 + 1;
-    olivePad(p, tB[0] + 1, tB[1] - 5, 9, 3.2, s0 + 1, true);
-    olivePad(p, tA[0] + 6, tA[1] - 6, 9, 3.4, s0 + 8, true);
-    olivePad(p, bx - 19, 36, 6 + (seed % 3), 2.8, s0 + 2, false);
-    olivePad(p, tC[0], tC[1] - 1, 8, 3.6, s0 + 3, false);
-    olivePad(p, tA[0] - 2, tA[1], 15, 5.5, s0 + 4, false);
-    olivePad(p, tB[0] + 2, tB[1] + 1, 11 + (seed % 2) * 2, 4.6, s0 + 5, false);
-    olivePad(p, bx + 12, 32, 5, 2.6, s0 + 6, false);
-    if (seed % 3 !== 1) olivePad(p, tA[0] - 4, tA[1] - 8, 6, 2.8, s0 + 7, false);
-    // a few dark olives hanging under the layers
-    for (let k = 0, n = 0; k < 60 && n < 7; k++) {
-      const x = 8 + Math.floor(r() * 48), y = 12 + Math.floor(r() * 26);
-      if (p.get(x, y) === OLV[3] && !p.get(x, y + 1)) { p.set(x, y + 1, '#4a2e52'); p.set(x, y + 2, '#2e1d36'); n++; }
+  function oliveCrown(p, masses, seed, holes) {
+    const RIM = '#e6ecd2';
+    const cn = canopy(masses, p.w, p.h, OLIVE_R.slice(0, 4), { seed: seed * 7 + 3, cell: 4, holes, rim: RIM });
+    const K = (x, y) => { const c = cn.get(x, y); return c ? (c === RIM ? 0 : OLIVE_R.indexOf(c)) : -1; };
+    const out = new O.Pix(p.w, p.h);
+    for (let y = 0; y < p.h; y++) for (let x = 0; x < p.w; x++) {
+      let k = K(x, y);
+      if (k < 0) continue;
+      if (K(x, y + 1) < 0 && k >= 2) k = 4;                                        // leafy undersides go deepest
+      else if (K(x, y + 2) < 0 && k === 3) k = 4;
+      out.set(x, y, cn.get(x, y) === RIM && hh(x >> 1, y, seed) < 0.7 ? RIM : OLIVE_R[k]);
     }
-    p.selout('#2c3134');
+    // leaf texture: short 2 px dashes angled up-left, one tone lighter, on the lit half of each clump
+    for (let y = 1; y < p.h; y++) for (let x = 1; x < p.w; x++) {
+      const k = K(x, y);
+      if (k < 1 || k > 3 || K(x - 1, y - 1) < 0) continue;
+      if (hh(x >> 1, y, seed + 41) < (k === 1 ? 0.3 : 0.2) && ((x + y * 2) % 4) === 0) {
+        out.set(x, y, OLIVE_R[k - 1]); out.set(x - 1, y - 1, OLIVE_R[k - 1]);
+        if (K(x + 1, y + 1) >= k) out.set(x + 1, y + 1, OLIVE_R[Math.min(4, k + 1)]);
+      }
+    }
+    // ragged spray tips poking out of the silhouette (up-left on top, drooping below)
+    for (let y = 1; y < p.h - 1; y++) for (let x = 1; x < p.w - 1; x++) {
+      const k = K(x, y);
+      if (k < 0) continue;
+      if (K(x, y - 1) < 0 && hh(x, y, seed + 43) < 0.16) { out.set(x, y - 1, OLIVE_R[Math.max(0, k)]); if (hh(x, y, seed + 44) < 0.5) out.set(x - 1, y - 2, OLIVE_R[Math.max(0, k)]); }
+      if (K(x, y + 1) < 0 && hh(x, y, seed + 45) < 0.12) out.set(x + 1, y + 1, OLIVE_R[4]);
+    }
+    // silver glints on the top-left of the crown
+    for (let y = 1; y < p.h; y++) for (let x = 1; x < p.w; x++) if (K(x, y) === 0 && K(x - 1, y) >= 0 && hh(x, y, seed + 47) < 0.09) out.set(x, y, '#eef2dc');
+    p.blit(out, 0, 0);
+  }
+  DECOR.olive = function (r, th, seed) {
+    const v = seed % 4, B = BARK.olive, p = new O.Pix(72, 64), bx = 36, base = 63;
+    const J = () => (r() - 0.5) * 3;
+    const wide = 44 + ((seed * 7) % 17);                       // overall crown width 44-60 px
+    const sx = wide / 52;                                       // horizontal scale of the authored layout
+    const X = (dx) => bx + dx * sx;
+    let segs, masses, holes = [];
+    if (v === 0) {        // split trunk with a see-through hollow
+      segs = [[[bx - 8, base], [bx - 3, base - 6], 1.4, 2.6], [[bx + 9, base], [bx + 3, base - 6], 1.2, 2.4],
+        [[bx - 4, base], [bx - 5, base - 10], 3.2, 2.8], [[bx + 3, base], [bx + 4, base - 10], 3, 2.6],
+        [[bx - 5, base - 10], [bx - 1, base - 20], 2.8, 2.6], [[bx + 4, base - 10], [bx + 1, base - 20], 2.6, 2.6],
+        [[bx, base - 20], [X(-12), 30], 2.4, 1.2], [[bx, base - 21], [X(8), 26], 2.2, 1.1], [[bx + 1, base - 19], [X(19), 34], 1.8, 0.9]];
+      masses = [{ x: X(-16) + J(), y: 28, rx: 9 * sx + 2, ry: 6, back: true }, { x: X(14) + J(), y: 22, rx: 10 * sx + 2, ry: 7, back: true },
+        { x: X(-8), y: 20, rx: 10 * sx + 2, ry: 7 }, { x: X(20), y: 32, rx: 6 * sx + 2, ry: 5 }, { x: X(-22), y: 34, rx: 6 * sx + 1, ry: 4.5 },
+        { x: X(4) + J(), y: 12, rx: 8 * sx + 1, ry: 6, lift: 0.1 }, { x: X(8), y: 29, rx: 5 * sx + 1, ry: 4 }];
+      holes = [[X(0), 30, 2.4], [X(-14), 35, 1.6], [X(13), 32, 1.8]];
+    } else if (v === 1) { // single twisted trunk leaning left
+      segs = [[[bx - 6, base], [bx - 1, base - 5], 1.3, 2.4], [[bx + 7, base], [bx + 2, base - 5], 1.2, 2.2],
+        [[bx, base], [bx - 4, base - 12], 3.4, 3], [[bx - 4, base - 12], [bx - 2, base - 22], 3, 2.6], [[bx - 2, base - 22], [X(-8), 30], 2.6, 1.8],
+        [[X(-8), 30], [X(-18), 26], 1.8, 1], [[bx - 2, base - 21], [X(10), 30], 2, 1], [[X(-8), 31], [X(-2), 18], 1.6, 0.9]];
+      masses = [{ x: X(-22) + J(), y: 30, rx: 7 * sx + 2, ry: 5, back: true }, { x: X(13) + J(), y: 30, rx: 8 * sx + 2, ry: 6, back: true },
+        { x: X(-12), y: 21, rx: 11 * sx + 2, ry: 7.5 }, { x: X(9), y: 23, rx: 8 * sx + 2, ry: 6 }, { x: X(-1) + J(), y: 12, rx: 8 * sx + 1, ry: 6, lift: 0.1 },
+        { x: X(20), y: 31, rx: 5 * sx + 1, ry: 4 }];
+      holes = [[X(-3), 28, 2.2], [X(-18), 31, 1.5], [X(6), 32, 1.6]];
+    } else if (v === 2) { // squat trunk with a broad crown
+      segs = [[[bx - 9, base], [bx - 3, base - 5], 1.4, 2.8], [[bx + 9, base], [bx + 3, base - 5], 1.4, 2.8],
+        [[bx, base], [bx + 1, base - 12], 4.4, 3.8], [[bx + 1, base - 12], [X(-16), 36], 2.8, 1.3], [[bx + 1, base - 13], [X(17), 34], 2.6, 1.2],
+        [[bx + 1, base - 13], [X(2), 28], 2.4, 1.2]];
+      masses = [{ x: X(-20) + J(), y: 35, rx: 8 * sx + 2, ry: 5.5, back: true }, { x: X(21) + J(), y: 33, rx: 8 * sx + 2, ry: 5.5, back: true },
+        { x: X(-10), y: 28, rx: 11 * sx + 2, ry: 7 }, { x: X(11), y: 27, rx: 11 * sx + 2, ry: 7 }, { x: X(0) + J(), y: 20, rx: 11 * sx + 1, ry: 6.5, lift: 0.1 },
+        { x: X(-24), y: 30, rx: 5 * sx + 1, ry: 4 }];
+      holes = [[X(-2), 35, 2.4], [X(14), 36, 1.7], [X(-14), 36, 1.5]];
+    } else {              // old stump with a new trunk and a young shoot
+      segs = [[[bx - 3, base], [bx - 7, base - 13], 4, 3.4], [[bx + 4, base], [bx + 3, base - 6], 1.6, 2.2],
+        [[bx + 1, base], [bx + 4, base - 16], 2.6, 2.2], [[bx + 4, base - 16], [X(10), 30], 2.2, 1.4], [[bx + 4, base - 16], [X(-4), 26], 1.8, 1],
+        [[X(10), 30], [X(18), 28], 1.4, 0.8]];
+      masses = [{ x: X(-6) + J(), y: 24, rx: 9 * sx + 2, ry: 7, back: true }, { x: X(18) + J(), y: 29, rx: 8 * sx + 2, ry: 6, back: true },
+        { x: X(8), y: 22, rx: 11 * sx + 2, ry: 8 }, { x: X(-2), y: 15, rx: 8 * sx + 1, ry: 6, lift: 0.1 }, { x: X(19), y: 22, rx: 5 * sx + 1, ry: 4 }];
+      holes = [[X(3), 27, 2], [X(14), 29, 1.5]];
+    }
+    oliveTrunk(p, segs, B, seed, v === 1 ? 0.6 : 0.45);
+    if (v === 0) {
+      // see-through hollow between the split halves, dark inner rim on its lit side
+      for (let y = base - 15; y <= base - 4; y++) for (let x = bx - 3; x <= bx + 3; x++) {
+        const dx = (x + 0.5 - bx) / 2.2, dy = (y + 0.5 - (base - 9)) / 5.2;
+        if (dx * dx + dy * dy <= 1) p.set(x, y, null);
+        else if (dx * dx + dy * dy <= 1.7 && p.get(x, y) && dx < 0.4) p.set(x, y, B[4]);
+      }
+    }
+    if (v === 3) {
+      // the old stump: cut top showing grey heartwood and rings, a young shoot with a few leaves
+      const sx0 = bx - 7, sy0 = base - 14;
+      for (let x = sx0 - 3; x <= sx0 + 3; x++) { p.set(x, sy0, x < sx0 ? '#e6dccb' : '#bcae98'); p.set(x, sy0 + 1, B[3]); }
+      p.set(sx0, sy0, '#8f806e');
+      p.line(sx0 - 1, sy0, sx0 - 3, sy0 - 5, B[1]); p.line(sx0 - 2, sy0, sx0 - 4, sy0 - 5, B[2]);
+    }
+    masses.forEach((m) => { m.y += 4; m.rx += 1.5; m.ry += 1.5; });
+    holes.forEach((h) => { h[1] += 4; });
+    oliveCrown(p, masses, seed, holes);
+    if (v === 3) { [[-5, -5], [-3, -6], [-6, -7], [-4, -8], [-2, -5], [-5, -9]].forEach(([dx, dy], k) => { const x = bx - 7 + dx, y = base - 14 + dy; p.set(x, y, OLIVE_R[k % 2 ? 0 : 1]); p.set(x + 1, y + 1, OLIVE_R[3]); }); }
+    // a few dark olives hanging under the clumps
+    for (let k = 0, n = 0; k < 80 && n < 6; k++) {
+      const x = 6 + Math.floor(r() * 60), y = 10 + Math.floor(r() * 36);
+      if (p.get(x, y) === OLIVE_R[4] && !p.get(x, y + 1)) { p.set(x, y + 1, '#4a2e52'); p.set(x, y + 2, '#2e1d36'); n++; }
+    }
+    p.selout('#262c2e');
     return p;
   };
 
@@ -1994,7 +2133,7 @@
       const fx = gx - Math.floor(gx) - 0.5, fy = gy - Math.floor(gy) - 0.5;
       const clump = (0.25 - (fx * fx + fy * fy)) * 0.9 - (fx * 0.6 + fy * 0.8) * 0.45;
       let v = -(bd[0] * 0.62 + bd[1] * 0.78) * 0.95 + clump * 0.55 + (m.lift || 0);
-      v += (vnoise(x * 0.18, y * 0.18, (o.seed || 1) + 3) - 0.5) * 0.35;
+      v += (vnoise(x * 0.18, y * 0.18, (o.seed || 1) + 3) - 0.5) * (o.crescent ? 0.16 : 0.35);
       let k = v > 0.5 ? 0 : v > 0.02 ? 1 : v > -0.5 ? 2 : 3;
       if (m.back) k = Math.min(3, k + 1);
       c.set(x, y, k);
@@ -2015,13 +2154,27 @@
     }
     // leaf-cluster texture: small 2-3 px sprays of the next lighter band, only in the lit zone
     const sd = o.seed || 1;
-    for (let gy = 0; gy < H2; gy += 4) for (let gx = -4; gx < W2; gx += 5) {
-      const x = gx + ((gy >> 2) & 1 ? 2 : 0) + Math.floor(hh(gx, gy, sd + 31) * 3), y = gy + Math.floor(hh(gx, gy, sd + 32) * 2);
-      const k = out.get(x, y);
-      if (k === null || k < 1 || k > 2 || hh(gx, gy, sd + 33) > (k === 1 ? 0.8 : 0.35)) continue;
-      const kk = k - 1;
-      [[0, 0], [1, 0], [-1, 1], [0, 1]].forEach(([dx, dy]) => { const q = out.get(x + dx, y + dy); if (q !== null && q >= k) out.set(x + dx, y + dy, kk); });
-      const q = out.get(x + 1, y + 1); if (q !== null && q === k) out.set(x + 1, y + 1, Math.min(3, k + 1));
+    if (o.crescent) {
+      // leaf clusters as little crescents (a lit pair over two mid pixels, a shadow tick under the right),
+      // only on the upper-left half of each mass
+      for (let gy = 0; gy < H2; gy += 4) for (let gx = -4; gx < W2; gx += 5) {
+        const x = gx + ((gy >> 2) & 1 ? 2 : 0) + Math.floor(hh(gx, gy, sd + 31) * 3), y = gy + Math.floor(hh(gx, gy, sd + 32) * 2);
+        const k = out.get(x, y);
+        if (k === null || k < 1 || k > 2) continue;
+        const m = masses[own[y * W2 + x]];
+        if (!m || (x + 0.5 - m.x) / m.rx + (y + 0.5 - m.y) / m.ry > 0.25 || hh(gx, gy, sd + 33) > 0.75) continue;
+        const kk = k - 1;
+        [[0, 0, kk], [1, 0, kk], [-1, 1, k], [0, 1, k], [2, 1, Math.min(3, k + 1)]].forEach(([dx, dy, v]) => { const q = out.get(x + dx, y + dy); if (q !== null && q >= kk && own[(y + dy) * W2 + x + dx] === own[y * W2 + x]) out.set(x + dx, y + dy, v); });
+      }
+    } else {
+      for (let gy = 0; gy < H2; gy += 4) for (let gx = -4; gx < W2; gx += 5) {
+        const x = gx + ((gy >> 2) & 1 ? 2 : 0) + Math.floor(hh(gx, gy, sd + 31) * 3), y = gy + Math.floor(hh(gx, gy, sd + 32) * 2);
+        const k = out.get(x, y);
+        if (k === null || k < 1 || k > 2 || hh(gx, gy, sd + 33) > (k === 1 ? 0.8 : 0.35)) continue;
+        const kk = k - 1;
+        [[0, 0], [1, 0], [-1, 1], [0, 1]].forEach(([dx, dy]) => { const q = out.get(x + dx, y + dy); if (q !== null && q >= k) out.set(x + dx, y + dy, kk); });
+        const q = out.get(x + 1, y + 1); if (q !== null && q === k) out.set(x + 1, y + 1, Math.min(3, k + 1));
+      }
     }
     // see-through gaps: irregular holes; the foliage just above a gap is leaf underside (darkest band)
     (o.holes || []).forEach(([hx, hy, hr]) => {
@@ -2042,85 +2195,87 @@
       if (o.rim) {
         const openUL = out.get(x - 1, y) === null || out.get(x, y - 1) === null || out.get(x - 1, y - 1) === null;
         const m = masses[own[y * W2 + x]];
-        if (openUL && !m.back && k <= 1 && (x + 0.5 - m.x) / m.rx + (y + 0.5 - m.y) / m.ry < -0.35 && y < (o.rimY || H2)) col = o.rim;
+        const gap = o.rimBroken && hh(Math.floor((x + y * 0.5) / 4), m.x | 0, 37) < 0.4;
+        if (openUL && !gap && !m.back && k <= 1 && (x + 0.5 - m.x) / m.rx + (y + 0.5 - m.y) / m.ry < -0.35 && y < (o.rimY || H2)) col = o.rim;
       }
       res.set(x, y, col);
     }
     return res;
   }
 
+  // Oaks: 6 archetypes, and half of the instances use the mirrored layout (the geometry is mirrored, the
+  // light still comes from the upper-left), so 11 oaks in the forest never visibly repeat. Branches taper
+  // into the crown and vanish under a shadow pocket; leaf clusters are small crescents on the lit half of
+  // each mass; the moon rim is broken into short segments.
   DECOR.oak = function (r, th, seed) {
     const night = th === 'forest';
     const WD = 88, HT = 98, p = new O.Pix(WD, HT);
     const B = night ? ['#8d8698', '#665e72', '#4a4256', '#342c3f', '#261f2e'] : BARK.oak;
     const ramp = night ? ['#7fa592', '#4f7a6c', '#34544f', '#22343f'] : ['#d6ea8a', '#86bd5a', '#4f8a4a', '#2f5c43'];
-    const v = seed % 4, bx = 44 + (v === 2 ? -4 : 0), base = HT - 1;
+    const v = seed % 6, flip = hh(seed, 3, 91) < 0.5, bx = 44 + (v === 2 ? -4 : 0), base = HT - 1;
     const J = () => (r() - 0.5) * 4;
-    let masses, holes, trunkTop, limbs;
+    let masses, trunkTop, limbs, trunkR = 6;
     if (v === 1) { // tall and narrow
       trunkTop = [bx + 1, 54];
-      masses = [
-        { x: bx - 11 + J(), y: 54, rx: 13, ry: 11, back: true },
-        { x: bx + 12 + J(), y: 46, rx: 12, ry: 11, back: true },
-        { x: bx + 1 + J(), y: 44, rx: 18, ry: 15 },
-        { x: bx + 7, y: 33, rx: 12, ry: 10 },
-        { x: bx - 3 + J(), y: 23, rx: 15, ry: 14, lift: 0.1 }
-      ];
-      holes = [[bx - 7, 57, 2.4], [bx + 8, 52, 2]];
-      limbs = [[[bx, 66], [bx - 11, 52], 2.6, 1.2], [[bx + 1, 64], [bx + 12, 47], 2.4, 1.1], [[bx, 58], [bx - 2, 32], 2.8, 1.2]];
+      masses = [{ x: bx - 11 + J(), y: 54, rx: 13, ry: 11, back: true }, { x: bx + 12 + J(), y: 46, rx: 12, ry: 11, back: true },
+        { x: bx + 1 + J(), y: 44, rx: 18, ry: 15 }, { x: bx + 7, y: 33, rx: 12, ry: 10 }, { x: bx - 3 + J(), y: 23, rx: 15, ry: 14, lift: 0.1 }];
+      limbs = [[[bx, 66], [bx - 11, 54], 2.6, 1.2], [[bx + 1, 64], [bx + 12, 49], 2.4, 1.1], [[bx, 58], [bx - 2, 36], 2.8, 1.2]];
     } else if (v === 2) { // wide and leaning
       trunkTop = [bx + 8, 58];
-      masses = [
-        { x: bx - 23 + J(), y: 52, rx: 15, ry: 10, back: true },
-        { x: bx + 28 + J(), y: 46, rx: 15, ry: 11, back: true },
-        { x: bx - 2 + J(), y: 46, rx: 23, ry: 14 },
-        { x: bx - 18, y: 41, rx: 13, ry: 10 },
-        { x: bx + 17, y: 36, rx: 18, ry: 13, lift: 0.1 }
-      ];
-      holes = [[bx - 12, 56, 2.6], [bx + 19, 51, 2.2]];
-      limbs = [[[bx + 5, 68], [bx - 21, 50], 3, 1.2], [[bx + 7, 64], [bx + 27, 46], 2.8, 1.2], [[bx + 8, 60], [bx + 12, 38], 2.6, 1.2]];
+      masses = [{ x: bx - 23 + J(), y: 52, rx: 15, ry: 10, back: true }, { x: bx + 28 + J(), y: 46, rx: 15, ry: 11, back: true },
+        { x: bx - 2 + J(), y: 46, rx: 23, ry: 14 }, { x: bx - 18, y: 41, rx: 13, ry: 10 }, { x: bx + 17, y: 36, rx: 18, ry: 13, lift: 0.1 }];
+      limbs = [[[bx + 5, 68], [bx - 21, 53], 3, 1.2], [[bx + 7, 64], [bx + 27, 49], 2.8, 1.2], [[bx + 8, 60], [bx + 12, 42], 2.6, 1.2]];
     } else if (v === 3) { // broken top: two crowns, a dead snag between them
       trunkTop = [bx, 58];
-      masses = [
-        { x: bx - 16 + J(), y: 50, rx: 16, ry: 12, back: true },
-        { x: bx + 18 + J(), y: 52, rx: 15, ry: 11, back: true },
-        { x: bx + 15, y: 43, rx: 15, ry: 12 },
-        { x: bx - 12, y: 40, rx: 17, ry: 13, lift: 0.1 }
-      ];
-      holes = [[bx - 8, 55, 2.4], [bx + 9, 56, 2.2]];
-      limbs = [[[bx, 68], [bx - 15, 46], 3, 1.3], [[bx, 64], [bx + 16, 46], 2.8, 1.2], [[bx, 58], [bx + 2, 20], 2.6, 0.8], [[bx + 2, 28], [bx + 8, 21], 1, 0.6]];
+      masses = [{ x: bx - 16 + J(), y: 50, rx: 16, ry: 12, back: true }, { x: bx + 18 + J(), y: 52, rx: 15, ry: 11, back: true },
+        { x: bx + 15, y: 43, rx: 15, ry: 12 }, { x: bx - 12, y: 40, rx: 17, ry: 13, lift: 0.1 }];
+      limbs = [[[bx, 68], [bx - 15, 49], 3, 1.3], [[bx, 64], [bx + 16, 49], 2.8, 1.2], [[bx, 58], [bx + 2, 20], 2.6, 0.7], [[bx + 2, 28], [bx + 8, 21], 1, 0.5]];
+    } else if (v === 4) { // twin trunks from one root, two crowns merging
+      trunkTop = [bx - 7, 56]; trunkR = 4.6;
+      masses = [{ x: bx - 20 + J(), y: 46, rx: 14, ry: 11, back: true }, { x: bx + 22 + J(), y: 40, rx: 14, ry: 12, back: true },
+        { x: bx - 11, y: 38, rx: 17, ry: 14 }, { x: bx + 13, y: 32, rx: 16, ry: 13 }, { x: bx + 1 + J(), y: 22, rx: 13, ry: 11, lift: 0.12 }];
+      limbs = [[[bx + 2, base - 4], [bx + 11, 44], 4.2, 2.6], [[bx + 11, 44], [bx + 14, 30], 2.6, 1.2], [[bx - 7, 58], [bx - 20, 46], 2.6, 1.1], [[bx - 7, 58], [bx - 8, 36], 2.4, 1.1]];
+    } else if (v === 5) { // young slender oak, crown swept to one side with a low side branch
+      trunkTop = [bx - 2, 50]; trunkR = 4.4;
+      masses = [{ x: bx + 16 + J(), y: 60, rx: 12, ry: 8, back: true }, { x: bx - 16 + J(), y: 40, rx: 13, ry: 11, back: true },
+        { x: bx - 3, y: 36, rx: 17, ry: 14 }, { x: bx + 18, y: 57, rx: 11, ry: 8 }, { x: bx + 5 + J(), y: 24, rx: 13, ry: 11, lift: 0.1 }];
+      limbs = [[[bx, 76], [bx + 18, 60], 2.4, 1.1], [[bx - 2, 52], [bx - 14, 42], 2.2, 1], [[bx - 2, 52], [bx + 4, 30], 2.4, 1.1]];
     } else { // broad classic crown
       trunkTop = [bx, 56];
-      masses = [
-        { x: bx - 20 + J(), y: 50, rx: 15, ry: 11, back: true },
-        { x: bx + 21 + J(), y: 46, rx: 15, ry: 11, back: true },
-        { x: bx + 2 + J(), y: 42, rx: 25, ry: 17 },
-        { x: bx + 14, y: 29, rx: 14, ry: 11, lift: 0.05 },
-        { x: bx - 9, y: 27, rx: 17, ry: 13, lift: 0.12 }
-      ];
-      holes = [[bx - 13, 54, 2.6], [bx + 14, 51, 2.2]];
-      limbs = [[[bx, 66], [bx - 19, 48], 3.2, 1.3], [[bx + 1, 64], [bx + 20, 44], 3, 1.2], [[bx, 58], [bx + 2, 34], 3, 1.3]];
+      masses = [{ x: bx - 20 + J(), y: 50, rx: 15, ry: 11, back: true }, { x: bx + 21 + J(), y: 46, rx: 15, ry: 11, back: true },
+        { x: bx + 2 + J(), y: 42, rx: 25, ry: 17 }, { x: bx + 14, y: 29, rx: 14, ry: 11, lift: 0.05 }, { x: bx - 9, y: 27, rx: 17, ry: 13, lift: 0.12 }];
+      limbs = [[[bx, 66], [bx - 19, 50], 3.2, 1.3], [[bx + 1, 64], [bx + 20, 47], 3, 1.2], [[bx, 58], [bx + 2, 36], 3, 1.3]];
     }
-    // roots and trunk (slight lean towards trunkTop), limbs spreading into the crown
-    limb(p, [bx - 10, base], [bx - 3, base - 9], 1.4, 3.4, B);
-    limb(p, [bx + 11, base], [bx + 4, base - 9], 1.4, 3.4, B);
-    limb(p, [bx + 1, base], trunkTop, 6, 4.2, B);
+    if (flip) {
+      const F = (pt) => [WD - 1 - pt[0], pt[1]];
+      trunkTop = F(trunkTop);
+      limbs = limbs.map(([a, b2, r0, r1]) => [F(a), F(b2), r0, r1]);
+      masses.forEach((m) => { m.x = WD - 1 - m.x; });
+    }
+    const tx0 = flip ? WD - 1 - bx : bx;
+    // roots and trunk, limbs tapering into the crown
+    limb(p, [tx0 - 10, base], [tx0 - 3, base - 9], 1.4, 3.4, B);
+    limb(p, [tx0 + 11, base], [tx0 + 4, base - 9], 1.4, 3.4, B);
+    limb(p, [tx0 + 1, base], trunkTop, trunkR, trunkR * 0.7, B);
     limbs.forEach(([a, b2, r0, r1]) => limb(p, a, b2, r0, r1, B));
-    // bark: vertical fissures in 2-3 px clusters, a knot hole in the darkest bark tone
-    for (let y = trunkTop[1] + 8; y < base - 2; y++) for (let x = bx - 6; x <= bx + 7; x++) {
+    // bark: vertical fissures in 2-3 px clusters
+    for (let y = trunkTop[1] + 8; y < base - 2; y++) for (let x = tx0 - 7; x <= tx0 + 8; x++) {
       const c = p.get(x, y);
       if (!c || c === B[0]) continue;
       if (vnoise(x * 0.9, y * 0.12, seed + 21) > 0.72) p.set(x, y, c === B[1] ? B[2] : B[3]);
     }
-    const ky = base - 24 - (seed % 3) * 5, kx = bx + (v === 2 ? 3 : 1);
-    p.ellipse(kx, ky, 1.3, 2, B[4]); p.set(kx - 1, ky - 2, B[3]); p.set(kx + 1, ky + 2, B[1]); p.set(kx + 2, ky + 1, B[2]);
     if (night) for (let k = 0; k < 5; k++) { // cool moss clusters on the shaded side
-      const y = base - 6 - Math.floor(r() * 30), x = bx + 2 + Math.floor(r() * 4);
+      const y = base - 6 - Math.floor(r() * 30), x = tx0 + 2 + Math.floor(r() * 4);
       if (p.get(x, y)) { p.set(x, y, '#4c6b60'); p.set(x + 1, y, '#3b574f'); p.set(x, y + 1, '#3b574f'); }
     }
-    // twigs crossing the see-through gaps (hidden by leaves everywhere else)
-    holes.forEach((h) => { h[2] += 1.2; const [hx, hy, hr] = h; limb(p, [hx - hr * 1.8, hy + hr * 0.9], [hx + hr * 1.6, hy - hr * 1.1], 1.1, 0.6, B); p.line(hx, hy, hx + 1, hy + hr + 1, B[3]); });
-    const cn = canopy(masses, WD, HT, ramp, { seed: seed * 7 + 5, holes, rim: night ? '#a9c2e6' : '#f4f8c0', rimY: 40 });
+    const cn = canopy(masses, WD, HT, ramp, { seed: seed * 7 + 5, rim: night ? '#a9c2e6' : '#f4f8c0', rimY: 60, crescent: true, rimBroken: true });
+    // shadow pocket where the limbs disappear into the crown: the lowest canopy rows above wood go darkest
+    for (let x = 0; x < WD; x++) for (let y = HT - 2; y > 0; y--) {
+      if (!cn.get(x, y) || cn.get(x, y + 1)) continue;
+      let wood = false;
+      for (let q = 1; q <= 3; q++) if (p.get(x, y + q)) wood = true;
+      if (wood) for (let q = 0; q < 3; q++) if (cn.get(x, y - q)) cn.set(x, y - q, ramp[q < 2 ? 3 : 2]);
+    }
     p.blit(cn, 0, 0);
     p.selout(OUT);
     return p;
@@ -2196,44 +2351,48 @@
     return p;
   };
 
-  // Faceted boulders (low-poly look), moss/grass at the foot.
-  function boulder(p, cx, cy, rx, ry, ramp, seed) {
-    const nF = 6, off = hh(seed, 1, 1) * 6.28;
-    const lx = cx - rx * 0.28, ly = cy - ry * 0.32;
-    for (let y = Math.floor(cy - ry - 1); y <= cy + ry + 1; y++) for (let x = Math.floor(cx - rx - 1); x <= cx + rx + 1; x++) {
+  // Faceted boulders: a flat top plane (tone 1), a left face (tone 2) and a right face (tone 3), a lit
+  // ridge where the top meets the left face, a crease between the side faces, darker toward the ground.
+  // The brightest tone is capped per theme so rocks never glow against the ground; moss caps in the forest.
+  function boulder(p, cx, cy, rx, ry, ramp, seed, moss) {
+    const off = hh(seed, 1, 1) * 6.28, tilt = (hh(seed, 2, 1) - 0.5) * 0.5, split = -0.05 + (hh(seed, 3, 1) - 0.5) * 0.35;
+    const inside = (x, y) => {
+      const dx = (x + 0.5 - cx) / rx, dy = (y + 0.5 - cy) / ry, ang = Math.atan2(dy, dx);
+      const bump = 1 + 0.1 * Math.cos(ang * 3 + off) + 0.05 * Math.cos(ang * 5 + off * 2);
+      return dx * dx + dy * dy <= bump * bump && y <= cy + ry * 0.75;
+    };
+    const plane = (x, y) => {
       const dx = (x + 0.5 - cx) / rx, dy = (y + 0.5 - cy) / ry;
-      const ang = Math.atan2(dy, dx);
-      const bump = 1 + 0.12 * Math.cos(ang * 3 + off) + 0.06 * Math.cos(ang * 5 + off * 2);
-      if (dx * dx + dy * dy > bump * bump || y > cy + ry * 0.75) continue;
-      const tx = (x + 0.5 - lx) / rx, ty = (y + 0.5 - ly) / ry, td = Math.sqrt(tx * tx + ty * ty);
-      let v;
-      if (td < 0.42) v = 0.75;
-      else {
-        const fa = Math.floor(((Math.atan2(ty, tx) + off + 6.28) % 6.28) / (6.28 / nF));
-        const fc = fa * (6.28 / nF) + 3.14 / nF - off;
-        v = -(Math.cos(fc) * 0.6 + Math.sin(fc) * 0.8) * 0.8 + 0.05 + (hh(fa, seed, 3) - 0.5) * 0.25;
-      }
-      const n = ramp.length;
-      const idx = clamp(Math.round((0.75 - v) / 1.6 * (n - 1)), 0, n - 1);
-      p.set(x, y, ramp[idx]);
+      if (dy < -0.28 + dx * tilt) return 0;
+      return dx < split + dy * 0.25 ? 1 : 2;
+    };
+    for (let y = Math.floor(cy - ry - 1); y <= cy + ry + 1; y++) for (let x = Math.floor(cx - rx - 1); x <= cx + rx + 1; x++) {
+      if (!inside(x, y)) continue;
+      const pl = plane(x, y), dy = (y + 0.5 - cy) / ry, dx = (x + 0.5 - cx) / rx;
+      let k = pl === 0 ? 1 : pl === 1 ? 2 : 3;
+      if (pl === 0 && inside(x, y + 1) && plane(x, y + 1) === 1) k = 0;                // lit ridge
+      else if (pl === 1 && inside(x + 1, y) && plane(x + 1, y) === 2) k = 4;           // crease
+      else if (pl === 0 && (!inside(x, y - 1) || !inside(x - 1, y)) && dx < 0.2) k = 0; // lit rim of the top
+      if (pl > 0 && dy > 0.45) k = Math.min(ramp.length - 1, k + 1);                   // darker toward the ground
+      if (pl === 2 && dx > 0.7) k = Math.min(ramp.length - 1, k + 1);
+      if (moss && pl === 0 && (!inside(x, y - 2) || !inside(x, y - 1)) && hh(x, y, seed + 5) < 0.85) { p.set(x, y, !inside(x, y - 1) ? moss[1] : moss[2]); continue; }
+      p.set(x, y, ramp[k]);
     }
   }
   DECOR.rocks = function (r, th, seed) {
-    const ramp = th === 'cave' ? ['#f6c894', '#d99b69', '#b27652', '#875643', '#5f3b38', '#412632']
-      : th === 'forest' ? ['#d9dde6', '#a8aec1', '#7c8299', '#565b74', '#3c3f56', '#282a3d']
-        : ['#fbf4e6', '#ddd1c2', '#b3a5a3', '#857885', '#5f5569', '#403a4d'];
+    const ramp = th === 'cave' ? ['#cdb39c', '#b39a86', '#9d847b', '#806a6e', '#5e4a58', '#3a2c40']
+      : th === 'forest' ? ['#aab2c2', '#8b92a8', '#6c728c', '#50556e', '#3a3d54', '#282a3d']
+        : ['#e8e0d2', '#cbc0b4', '#a89c9e', '#817585', '#5f5569', '#403a4d'];
+    const moss = th === 'forest' ? PAL.forest.moss : null;
     const p = new O.Pix(30, 15);
     const big = 6.5 + r() * 2.5, v = seed % 3;
-    boulder(p, v === 2 ? 15 : 10, 14 - big * 0.8, big, big * 0.75, ramp, seed * 3 + 1);
-    if (v !== 2) boulder(p, 21 + Math.round(r() * 2), 10.5, 4.5 + r() * 2.5, 4, ramp, seed * 3 + 2);
-    if (v !== 1) boulder(p, v === 2 ? 25 : 15, 12.5, 2.5 + r() * 2, 2.4, ramp, seed * 3 + 3);
-    if (v === 2) boulder(p, 5, 12.5, 3, 2.4, ramp, seed * 3 + 4);
+    boulder(p, v === 2 ? 15 : 10, 14 - big * 0.8, big, big * 0.75, ramp, seed * 3 + 1, moss);
+    if (v !== 2) boulder(p, 21 + Math.round(r() * 2), 10.5, 4.5 + r() * 2.5, 4, ramp, seed * 3 + 2, moss);
+    if (v !== 1) boulder(p, v === 2 ? 25 : 15, 12.5, 2.5 + r() * 2, 2.4, ramp, seed * 3 + 3, null);
+    if (v === 2) boulder(p, 5, 12.5, 3, 2.4, ramp, seed * 3 + 4, null);
     p.selout(th === 'cave' ? '#1c1119' : '#211b2c');
     const g = th === 'forest' ? PAL.forest.moss : th === 'cave' ? null : PAL.village.grass;
-    if (g) {
-      for (let x = 1; x < 29; x++) if (r() < 0.45) { const h = 1 + Math.floor(r() * 3); for (let j = 0; j < h; j++) p.set(x, 14 - j, j === h - 1 ? g[1] : g[2]); }
-      for (let k = 0; k < 6; k++) { const x = 3 + Math.floor(r() * 22), y = 3 + Math.floor(r() * 4); if (p.get(x, y) && p.get(x, y) !== '#211b2c') { p.set(x, y, g[1]); p.set(x + 1, y, g[2]); } }
-    }
+    if (g) for (let x = 1; x < 29; x++) if (r() < 0.45) { const h = 1 + Math.floor(r() * 3); for (let j = 0; j < h; j++) p.set(x, 14 - j, j === h - 1 ? g[1] : g[2]); }
     return p;
   };
 
@@ -2511,88 +2670,118 @@
     return p;
   };
 
+  // Pedestal (24x22): moulded base, a die with a carved Greek key or an inscription, a gold fillet
+  // under the cap cornice. Marble lit from the left.
   DECOR.pedestal = function (r, th, seed) {
-    const p = new O.Pix(24, 12), M = MARBLE, alt = (seed | 0) % 2 === 1;
-    const slab = (x, y, w, h) => { p.rect(x, y, w, h, M[1]); p.rect(x, y, w, 1, M[0]); p.rect(x, y + h - 1, w, 1, M[3]); p.rect(x + w - 1, y, 1, h, M[3]); p.set(x, y, M[0]); };
-    slab(1, 0, 22, 3);
-    slab(3, 3, 18, 6);
-    if (alt) { for (let x = 4; x < 20; x++) { const on = O.KEY[1][x % 6] === 'X', on2 = O.KEY[3][x % 6] === 'X'; p.set(x, 5, on ? M[3] : M[1]); p.set(x, 6, on2 ? M[3] : M[1]); } p.rect(4, 7, 16, 1, GOLD[2]); }
-    else { p.rect(4, 5, 16, 1, GOLD[1]); p.rect(4, 6, 16, 1, GOLD[3]); for (let x = 6; x < 18; x += 3) p.set(x, 7, M[3]); }
-    p.rect(3, 4, 1, 4, M[0]); p.rect(19, 4, 2, 5, M[3]); p.rect(18, 4, 1, 5, M[2]);
-    slab(0, 9, 24, 3);
-    if (r && r() < 0.6) { const cx = 2 + Math.floor(r() * 18); p.set(cx, 9, M[3]); p.set(cx + 1, 10, M[4]); } // chipped edge
-    p.selout(OUT);
-    return p;
+    const WD = 24, HT = PED_H, p = new O.Pix(WD, HT), M = MARBLE, alt = (seed | 0) % 2 === 1;
+    // cap cornice (3 px, full width): lit top, shadowed underside
+    for (let x = 0; x < WD; x++) {
+      p.set(x, 0, x === WD - 1 ? M[3] : M[0]);
+      p.set(x, 1, x < 2 ? M[0] : x > WD - 3 ? M[3] : M[1]);
+      p.set(x, 2, x > WD - 3 ? M[5] : M[4]);
+    }
+    // gold fillet
+    for (let x = 2; x < WD - 2; x++) p.set(x, 3, x > WD - 5 ? GOLD[3] : x < 5 ? GOLD[0] : GOLD[1]);
+    // die (16 px, 20 wide): lit left column, shaded right flank, faint vertical veins
+    for (let y = 4; y < 20; y++) for (let x = 2; x < WD - 2; x++) {
+      let c = M[1];
+      if (x === 2) c = M[0];
+      else if (x >= WD - 4) c = x === WD - 3 ? M[4] : M[3];
+      else if (y === 4) c = M[4];                                   // shadow under the fillet
+      else if (Math.abs(vnoise(x * 0.3 + y * 0.12, y * 0.2, 311 + (seed | 0)) - 0.5) < 0.04) c = M[2];
+      p.set(x, y, c);
+    }
+    if (alt) {
+      // carved meander band
+      for (let x = 4; x < WD - 5; x++) for (let j = 0; j < 6; j++) {
+        const on = O.KEY[j][x % 6] === 'X';
+        if (on) p.set(x, 7 + j, j === 0 || x % 6 === 0 ? M[3] : M[4]);
+      }
+      for (let x = 4; x < WD - 5; x++) { p.set(x, 6, M[2]); p.set(x, 13, M[0]); }
+    } else {
+      // recessed panel with an inscription line and a laurel wreath
+      for (let y = 7; y < 17; y++) for (let x = 5; x < WD - 6; x++) {
+        const edge = y === 7 || x === 5 ? M[3] : y === 16 || x === WD - 7 ? M[0] : M[2];
+        p.set(x, y, edge);
+      }
+      for (let x = 7; x < WD - 8; x++) if (x % 2 || hh(x, seed, 3) < 0.4) p.set(x, 14, M[4]);
+      [[9, 11], [10, 10], [11, 9], [12, 9], [13, 10], [14, 11], [9, 12], [14, 12]].forEach(([x, y]) => p.set(x, y, GOLD[2]));
+      p.set(11, 12, GOLD[3]); p.set(12, 12, GOLD[3]);
+    }
+    // moulded base (3 px, full width): torus lit on top, dark foot
+    for (let x = 0; x < WD; x++) {
+      p.set(x, 19, x === WD - 1 ? M[3] : x < 3 ? M[0] : M[1]);
+      p.set(x, 20, x > WD - 3 ? M[4] : M[2]);
+      p.set(x, 21, M[4]);
+    }
+    if (r && r() < 0.6) { const cx = 3 + Math.floor(r() * 16); p.set(cx, 19, M[3]); p.set(cx + 1, 20, M[4]); } // chipped edge
+    const q = new O.Pix(WD + 2, HT + 2);
+    q.blit(p, 1, 1);
+    q.selout(OUT);
+    return q;
   };
 
-  // Marble statue of a hoplite, hand-authored 24x38 pixel map: Corinthian helmet with a tall horsehair
-  // crest, round shield in 3/4 view (drawn first, behind the body), leaf-bladed spear, contrapposto
-  // (weight on the far leg, near knee bent forward, heel raised, hips tilted). Tones 1..5 run from a warm
-  // highlight to a cool violet shadow; only the outer silhouette gets the outline.
-  const STATUE_MAP = [
-    '.........1222.......1...',
-    '.......12334443.....13..',
-    '......1343434344...124..',
-    '......24345555544..224..',
-    '......34441112233...34..',
-    '......44431122233.......',
-    '.......4531223555.......',
-    '........432233452.......',
-    '.........43234353.......',
-    '........44334434........',
-    '..........5334..........',
-    '.........23334..........',
-    '........211222323.......',
-    '........2112223423......',
-    '........3122443423......',
-    '.........122243423......',
-    '.........1232334223.....',
-    '.........2233434.44.....',
-    '.........3233434........',
-    '.........3344445........',
-    '.........12132344.......',
-    '.........1213244........',
-    '.........3334223........',
-    '..........3341223.......',
-    '..........2341223.......',
-    '..........2344123.......',
-    '..........23441223......',
-    '..........234.1223......',
-    '..........234..113......',
-    '..........234.123.......',
-    '..........234.124.......',
-    '..........234123........',
-    '..........234123........',
-    '..........234124........',
-    '..........23423.........',
-    '..........23332.........',
-    '.........33444234.......',
-    '........................'
+  // Marble statue of a hoplite (28x42 canvas, drawn with a 2 px margin so the sel-out reaches every edge):
+  // heroic ~7-head proportions, Corinthian helmet with a separate curved horsehair crest and an eye-slit,
+  // round shield in 3/4 view behind the body, spear arm on a 45 degree diagonal to the fist, 12 px torso with
+  // a pectoral line, 16 px legs with a clear gap and a contrapposto weight shift, and a thin carved plinth.
+  // Cool marble ramp with a thin warm highlight on the upper-left edges.
+  const PED_H = 22;                                   // pedestal decor height (engine lifts the statue 12 px)
+  const STAT_M = ['#f0e0c0', '#e8e1e8', '#cfc6d8', '#b8b0c8', '#8a82a0', '#645c80'];
+  // Hand-placed pixel segments: [row, first x, tones] ('w' warm highlight, 1..5 light -> deep shadow).
+  const STATUE_SEGS = [
+    // crest (separate curved plume: arc over the dome, trailing down the back) and Corinthian helmet
+    [2, 11, 'ww112'], [3, 10, '2133444'], [4, 9, '34'], [5, 9, '34'], [6, 9, '4'], [7, 8, '4'],
+    [4, 13, '122'], [5, 12, 'w1223'], [6, 12, '12233'], [7, 12, '255554'], [8, 12, '22343'], [9, 13, '234'],
+    // neck, torso (trapezius, shoulders, pectoral line, abs), belt
+    [10, 13, '223'], [11, 11, 'w1122334'], [12, 10, 'w1122223343'], [13, 10, '1112222334'], [14, 10, '1122223344'],
+    [15, 11, '33322444'], [16, 11, '11222334'], [17, 11, '12232334'], [18, 12, '1223234'], [19, 12, '122334'],
+    [20, 12, '123234'], [21, 12, '122334'], [22, 11, '23344444'],
+    // short chiton with folds, darker hem
+    [23, 11, '12321334'], [24, 10, '1232132344'], [25, 10, '2343243455'],
+    // weight leg (back, straight, calf bulging back) and free leg (knee forward, heel raised)
+    [26, 11, '2345'], [26, 15, '112'], [27, 11, '234'], [28, 11, '234'], [29, 11, '234'], [30, 11, '234'],
+    [31, 11, '244'], [32, 10, '2234'], [33, 10, '2234'], [34, 11, '234'], [35, 11, '234'], [36, 11, '23'], [37, 11, '34'], [38, 10, '23344'],
+    [27, 15, '1122'], [28, 16, '112'], [29, 16, '1123'], [30, 17, '113'], [31, 17, '124'], [32, 17, '123'], [33, 16, '1123'],
+    [34, 16, '123'], [35, 16, '123'], [36, 16, '12'], [37, 16, '123'], [38, 17, '1223'],
+    // spear arm on a 45 degree diagonal to the fist
+    [12, 20, '3'], [13, 20, '23'], [14, 21, '23'], [15, 22, '23'], [16, 23, '123'], [17, 23, '234'],
+    // plinth
+    [39, 8, 'w1111222222333'], [40, 8, '33344444444455']
   ];
-  DECOR.__statue = function () {
-    const WD = 24, HT = 38, p = new O.Pix(WD, HT);
-    const M = [null, '#fffaf0', '#e8e1e8', '#c4bbd1', '#9e94b5', '#7a7295'];
-    const set = (x, y, k) => p.set(x, y, M[k]);
-    // round shield (behind the body): 1 px rim, cylindrical 3-tone face, embossed lambda
-    for (let y = 11; y <= 28; y++) for (let x = 0; x <= 10; x++) {
-      const dx = (x + 0.5 - 4.6) / 4.5, dy = (y + 0.5 - 19.8) / 7.8, d = dx * dx + dy * dy;
+  function statuePix() {
+    const WD = 28, HT = 42, p = new O.Pix(WD, HT), M = STAT_M;
+    const K = new Int8Array(WD * HT).fill(-1);
+    const put = (x, y, k) => { if (x >= 0 && y >= 0 && x < WD && y < HT) K[y * WD + x] = k; };
+    // shield behind the body: 3/4-view bowl, bright upper-left rim, dark lower-right rim, rosette boss
+    const scx = 7, scy = 22, srx = 5.4, sry = 8.4, SH = [];
+    for (let y = 12; y <= 32; y++) for (let x = 1; x <= 13; x++) {
+      const dx = (x + 0.5 - scx) / srx, dy = (y + 0.5 - scy) / sry, d = dx * dx + dy * dy;
       if (d > 1) continue;
-      if (d > 0.7) { set(x, y, dx * 0.8 + dy * 0.6 < -0.3 ? 1 : dx * 0.8 + dy * 0.6 > 0.3 ? 4 : 2); continue; }
-      set(x, y, dx < -0.35 ? 2 : dx < 0.3 ? 3 : 4);
+      const q = dx * 0.7 + dy * 0.7;
+      if (d > 0.74) put(x, y, q < -0.4 ? 0 : q < 0.2 ? 2 : 4);                  // rim
+      else if (d > 0.56) put(x, y, q < -0.3 ? 4 : 3);                           // groove inside the rim
+      else put(x, y, dx < -0.4 ? 1 : dx < 0.25 ? 2 : 3);                         // bowl
+      SH.push([x, y]);
     }
-    [[4, 15], [4, 16], [3, 17], [3, 18], [3, 19], [2, 20], [2, 21], [2, 22]].forEach(([x, y]) => { set(x, y, 1); set(x + 1, y, 5); });
-    [[5, 16], [5, 17], [6, 18], [6, 19], [6, 20], [7, 21], [7, 22]].forEach(([x, y]) => { set(x, y, 2); set(x + 1, y, 5); });
-    // the figure
-    STATUE_MAP.forEach((row, y) => { for (let x = 0; x < WD; x++) { const k = +row[x]; if (k) set(x, y, k); } });
-    // one weathering streak running down from the collar bone
-    for (let y = 12; y <= 21; y++) { const c = p.get(10, y); if (c === M[1] || c === M[2]) set(10, y, 3); }
+    // lambda emblem (Sparta) in relief: lit left stroke, shaded right stroke
+    [[6, 18], [6, 19], [5, 20], [5, 21], [4, 22], [4, 23]].forEach(([x, y]) => { put(x, y, 1); put(x + 1, y, 4); });
+    [[7, 20], [7, 21], [8, 22], [8, 23]].forEach(([x, y]) => { put(x, y, 2); put(x + 1, y, 4); });
+    STATUE_SEGS.forEach(([y, x0, str]) => { for (let i = 0; i < str.length; i++) put(x0 + i, y, str[i] === 'w' ? 0 : +str[i]); });
+    // spear: upright shaft through the fist, leaf-shaped blade with a socket collar
+    for (let y = 8; y <= 38; y++) if (y < 16 || y > 17) put(24, y, 2);
+    [[24, 2, 0], [23, 3, 1], [24, 3, 2], [25, 3, 4], [23, 4, 1], [24, 4, 2], [25, 4, 4], [23, 5, 2], [24, 5, 3], [25, 5, 4], [24, 6, 3], [23, 7, 3], [24, 7, 4], [25, 7, 5]].forEach(([x, y, k]) => put(x, y, k));
+    // the body casts a 1 px shadow onto the shield on its left
+    const body = new Uint8Array(WD * HT);
+    STATUE_SEGS.forEach(([y, x0, str]) => { for (let i = 0; i < str.length; i++) body[y * WD + x0 + i] = 1; });
+    SH.forEach(([x, y]) => { if (!body[y * WD + x] && body[y * WD + x + 1]) put(x, y, 5); });
+    for (let y = 0; y < HT; y++) for (let x = 0; x < WD; x++) { const k = K[y * WD + x]; if (k >= 0) p.set(x, y, M[k]); }
     p.selout(OUT);
-    // spear shaft after the outline: a slim two-tone rod, clear of the body, gripped by the fist
-    for (let y = 5; y <= 36; y++) { set(20, y, 2); set(21, y, 5); }
-    set(19, 16, 2); set(20, 16, 1); set(21, 16, 3); set(19, 17, 3); set(20, 17, 3); set(21, 17, 4); set(20, 18, 4);
-    p.set(22, 16, OUT); p.set(22, 17, OUT); p.set(21, 18, OUT); p.set(19, 18, OUT);
-    STATUE_ANCHOR.ax = 12; STATUE_ANCHOR.ay = 37;
     return p;
+  }
+  DECOR.__statue = function () {
+    STATUE_ANCHOR.ax = 14; STATUE_ANCHOR.ay = 41 + (PED_H - 12);
+    return statuePix();
   };
 
   /* =====================================================================================
@@ -2614,25 +2803,34 @@
       { bx: cx - w * 0.2, bw: w * 0.22, hgt: h * (0.55 + 0.14 * Math.sin(ph * 2 + 1.3 + sd)), sw: Math.sin(ph + 2.1 + sd) * w * 0.12 },
       { bx: cx + w * 0.2, bw: w * 0.22, hgt: h * (0.6 + 0.14 * Math.sin(ph * 2 + 3.9 + sd)), sw: Math.sin(ph + 4.2 + sd) * w * 0.12 }
     ];
-    const E = new Float32Array(w * h).fill(-1);
+    const E = new Float32Array(w * h).fill(-1), SEAM = new Uint8Array(w * h);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-      let best = -1;
+      let best = -1, second = -1;
       tongues.forEach((tg) => {
         const t = (baseY + 0.5 - (y + 0.5)) / tg.hgt;
         if (t > 1) return;
         const spine = tg.bx + tg.sw * Math.pow(Math.max(0, t), 1.4);
         let half = tg.bw * Math.pow(Math.max(0, 1 - t), 0.75);
         if (t < 0.18) half *= Math.sqrt(Math.max(0, 1 - Math.pow((0.18 - t) / 0.3, 2)));  // rounded base
-        const e = half - Math.abs(x + 0.5 - spine);
-        if (e > best) best = e + (1 - t) * 0.9;
+        const e = half - Math.abs(x + 0.5 - spine) + (1 - t) * 0.9;
+        if (half - Math.abs(x + 0.5 - spine) < 0) return;
+        if (e > best) { second = best; best = e; } else if (e > second) second = e;
       });
-      if (best >= 0) E[y * w + x] = best;
+      if (best >= 0) {
+        E[y * w + x] = best;
+        const hy = (baseY - y) / h;
+        if (second >= 0 && best - second < 0.9 && hy > 0.28 && hy < 0.8) SEAM[y * w + x] = 1;   // gap between two tongues
+      }
     }
     const p = new O.Pix(w, h);
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
       const e = E[y * w + x];
       if (e < 0) continue;
-      p.set(x, y, FIRE[e < 1 ? 6 : e < 2 ? 4 : e < 3.3 ? 3 : e < 4.4 ? 2 : 1]);
+      const hy = (baseY - y) / h, cx0 = Math.abs(x + 0.5 - cx);
+      let k = e < 1 ? 6 : e < 2 ? 4 : e < 3.3 ? 3 : 2;
+      if (k === 2 && hy < 0.26 && cx0 < Math.max(1.1, w * 0.11)) k = e > 4.8 ? 0 : 1;              // white-hot core, bottom centre only
+      if (SEAM[y * w + x] && k < 5) k = Math.max(k, 4);
+      p.set(x, y, FIRE[k]);
     }
     // detached blob rising from the main tongue's tip
     if (pinch) {
@@ -2650,30 +2848,44 @@
     return c;
   }
   const propCache = {};
+  // Bronze tripod brazier: polished metal ramp with a bright rim band and a dark reflected band under it,
+  // a vertical specular streak on the bowl, gold meander, curved legs ending in lion paws.
+  const BRONZE = ['#ffe7a0', '#d69a4a', '#9a5a2e', '#5e3226', '#33202a'];
   function brazierSprite() {
     if (propCache.brazier) return propCache.brazier;
-    const p = new O.Pix(22, 26), BR = ['#ffe3a8', '#e5ab62', '#b87a40', '#82502f', '#553226', '#34201e'];
-    // tripod legs with lion paws
-    limb(p, [11, 12], [3, 24], 1.2, 1.0, BR); limb(p, [11, 12], [18, 24], 1.2, 1.0, BR); limb(p, [11, 12], [11, 25], 1.3, 1.1, BR);
-    p.rect(1, 24, 4, 2, BR[3]); p.rect(16, 24, 4, 2, BR[3]); p.rect(9, 24, 4, 2, BR[2]); p.set(1, 24, BR[1]); p.set(9, 24, BR[0]);
-    // ring
-    p.line(5, 18, 17, 18, BR[2]); p.line(5, 19, 17, 19, BR[4]);
-    // bowl
-    for (let y = 4; y < 12; y++) {
-      const hw = 10 - Math.pow((y - 4) / 8, 2) * 6;
-      for (let x = Math.floor(11 - hw); x < 11 + hw; x++) {
-        const t = (x + 0.5 - 11) / hw;
-        let k = t < -0.55 ? 1 : t < 0 ? 2 : t < 0.55 ? 3 : 4;
-        if (y === 4) k = 0;
-        if (y === 5) k = t < 0 ? 4 : 5; // rim lip shadow
-        p.set(x, y, BR[k]);
+    const p = new O.Pix(24, 26), B = BRONZE, cx = 12; // feet on row 24, outline row 25 on the floor
+    // legs: three slender splayed rods (front one lit), a thin stretcher ring, lion-paw feet
+    const leg = (x0, x1, front) => {
+      for (let y = 13; y <= 22; y++) {
+        const t = (y - 13) / 9, x = Math.round(x0 + (x1 - x0) * Math.pow(t, 1.3));
+        p.set(x, y, front ? B[1] : B[2]); p.set(x + 1, y, front ? B[2] : B[3]);
+        if (front && y % 3 === 0) p.set(x, y, B[0]);
+      }
+    };
+    leg(cx - 3, cx - 9, false); leg(cx + 2, cx + 8, false); leg(cx - 1, cx - 1, true);
+    for (let x = cx - 5; x <= cx + 4; x++) if (!p.get(x, 17)) p.set(x, 17, x < cx - 1 ? B[2] : B[3]);
+    const paw = (x, front) => { p.set(x - 1, 23, B[front ? 0 : 1]); p.set(x, 23, B[front ? 1 : 2]); p.set(x + 1, 23, B[3]); p.set(x - 2, 24, B[front ? 1 : 2]); p.set(x - 1, 24, B[1]); p.set(x, 24, B[2]); p.set(x + 1, 24, B[3]); p.set(x + 2, 24, B[4]); };
+    paw(cx - 9, false); paw(cx + 9, false); paw(cx - 1, true);
+    // bowl (lebes): rim band, reflected dark band, rounded belly with a specular streak
+    for (let y = 4; y <= 12; y++) {
+      const hw = y < 6 ? 11 : 11 - Math.pow((y - 5) / 7, 1.6) * 7;
+      for (let x = Math.floor(cx - hw); x < Math.ceil(cx + hw); x++) {
+        const t = (x + 0.5 - cx) / hw;
+        let k;
+        if (y === 4) k = t < 0.6 ? 0 : 1;                  // bright rim band
+        else if (y === 5) k = t < -0.7 ? 2 : 4;            // dark reflected band under the lip
+        else k = t < -0.62 ? 1 : t < -0.35 ? 0 : t < 0.1 ? 1 : t < 0.55 ? 2 : 3;
+        if (y === 12) k = Math.min(4, k + 1);
+        p.set(x, y, B[k]);
       }
     }
-    // gold meander band on the bowl
-    for (let x = 3; x < 19; x++) if (p.get(x, 7)) p.set(x, 7, x % 3 === 0 ? BR[5] : GOLD[x < 11 ? 1 : 2]);
-    // embers / coals in the bowl
-    for (let x = 3; x < 19; x++) p.set(x, 3, x % 3 ? '#ff7a3a' : '#ffd35a');
-    p.set(2, 4, BR[1]); p.set(19, 4, BR[3]);
+    // gold meander band round the belly
+    for (let x = cx - 9; x <= cx + 8; x++) if (p.get(x, 7)) p.set(x, 7, (x - cx + 20) % 3 === 0 ? B[4] : x < cx + 3 ? GOLD[1] : GOLD[2]);
+    for (let x = cx - 9; x <= cx + 8; x++) if (p.get(x, 8)) p.set(x, 8, x < cx + 3 ? B[2] : B[3]);
+    // stem knot joining bowl and legs
+    p.set(cx - 1, 13, B[1]); p.set(cx, 13, B[2]); p.set(cx + 1, 13, B[3]); p.set(cx - 1, 14, B[2]); p.set(cx, 14, B[3]);
+    // glowing coals heaped above the rim
+    for (let x = cx - 9; x <= cx + 8; x++) { const hgt = 1 + (Math.abs(x - cx) < 6 ? 1 : 0); for (let y = 4 - hgt; y < 4; y++) p.set(x, y, (x + y) % 3 ? '#c8402e' : '#ffb030'); }
     p.selout(OUT);
     propCache.brazier = p.canvas();
     return propCache.brazier;
@@ -2705,10 +2917,10 @@
   function drawLightProp(ctx, type, x, y, t, i) {
     if (type === 'brazier') {
       const b = brazierSprite();
-      ctx.drawImage(b, x - 11, y - 25);
+      ctx.drawImage(b, x - 12, y - 24);
       const f = Math.floor((t + i * 3) / 6) % 8;
-      ctx.drawImage(flame(18, 26, f, 1 + i), x - 9, y - 22 - 25);
-      drawEmbers(ctx, x, y - 42, t, i, 5, 10);
+      ctx.drawImage(flame(18, 20, f, 1 + i), x - 9, y - 22 - 19);
+      drawEmbers(ctx, x, y - 38, t, i, 5, 10);
     } else if (type === 'torch') {
       ctx.drawImage(torchSprite(), x - 6, y - 7);
       const f = Math.floor((t + i * 4) / 6) % 8;

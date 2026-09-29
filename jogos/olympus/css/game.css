@@ -1,0 +1,115 @@
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    height: 100%;
+    background: #000;
+    color: #fcfcfc;
+    overflow: hidden;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+#wrap {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#screen {
+    display: block;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    background: #000;
+}
+
+.noscript {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: monospace;
+}
+
+/* ---------- touch controls (shown only on touch devices) ---------- */
+#touch { display: none; }
+
+body.touch #wrap {
+    align-items: flex-start;
+    padding-top: 8px;
+}
+
+body.touch #touch {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 180px;
+    padding: 0 16px 24px;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+#touch > * { pointer-events: auto; }
+
+.dpad {
+    position: relative;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    background: rgba(124, 124, 124, 0.25);
+    border: 2px solid rgba(252, 252, 252, 0.3);
+    touch-action: none;
+}
+
+.arrow {
+    position: absolute;
+    width: 0;
+    height: 0;
+    border: 12px solid transparent;
+}
+.arrow.up    { top: 10px;    left: 58px; border-bottom-color: rgba(252, 252, 252, 0.6); }
+.arrow.down  { bottom: 10px; left: 58px; border-top-color: rgba(252, 252, 252, 0.6); }
+.arrow.left  { left: 10px;   top: 58px;  border-right-color: rgba(252, 252, 252, 0.6); }
+.arrow.right { right: 10px;  top: 58px;  border-left-color: rgba(252, 252, 252, 0.6); }
+
+#touch button {
+    font: bold 16px monospace;
+    color: #fcfcfc;
+    border: 2px solid rgba(252, 252, 252, 0.5);
+    background: rgba(216, 40, 0, 0.55);
+    touch-action: none;
+}
+#touch button.on { background: rgba(248, 184, 0, 0.8); }
+
+.mid { align-self: flex-end; }
+.mid button {
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: rgba(124, 124, 124, 0.45) !important;
+    font-size: 12px !important;
+}
+
+.ab {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+}
+.ab button {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+}
+.ab .b { margin-top: 36px; }
+
+/* Landscape phones: controls overlay the sides of the screen */
+@media (orientation: landscape) {
+    body.touch #wrap { align-items: center; padding-top: 0; }
+    body.touch #touch { height: 100%; padding: 16px; background: none; }
+    .mid { align-self: flex-end; }
+}

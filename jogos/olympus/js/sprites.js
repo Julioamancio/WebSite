@@ -437,20 +437,24 @@
   O.SPR = {};
   O.SPRITE_DATA = DATA;
 
-  function register(name, pix) {
-    const w = pix.w, h = pix.h;
-    const n = pix.canvas();
+  // Registers a sprite from a Pix or a canvas. Anchor (ax, ay) = pixel placed on the feet point
+  // (default: bottom-centre). Also builds flipped and white-flash variants.
+  function register(name, src, anchor) {
+    const n = src instanceof O.Pix ? src.canvas() : src;
+    const w = n.width, h = n.height;
     const mk = () => O.makeCanvas(w, h);
     const f = mk(), wn = mk(), wf = mk();
     const gf = f.getContext('2d');
     gf.translate(w, 0); gf.scale(-1, 1); gf.drawImage(n, 0, 0);
-    const white = new O.Pix(w, h);
-    for (let i = 0; i < pix.d.length; i++) if (pix.d[i]) white.d[i] = '#fcfcfc';
-    const wc = white.canvas();
-    wn.getContext('2d').drawImage(wc, 0, 0);
+    const gwn = wn.getContext('2d');
+    gwn.drawImage(n, 0, 0);
+    gwn.globalCompositeOperation = 'source-in';
+    gwn.fillStyle = '#ffffff'; gwn.fillRect(0, 0, w, h);
     const gwf = wf.getContext('2d');
-    gwf.translate(w, 0); gwf.scale(-1, 1); gwf.drawImage(wc, 0, 0);
-    O.SPR[name] = { w, h, n, f, wn, wf, pix };
+    gwf.translate(w, 0); gwf.scale(-1, 1); gwf.drawImage(wn, 0, 0);
+    const a = anchor || {};
+    O.SPR[name] = { w, h, n, f, wn, wf, ax: a.ax !== undefined ? a.ax : Math.floor(w / 2), ay: a.ay !== undefined ? a.ay : h - 1 };
+    return O.SPR[name];
   }
   O.registerSprite = register;
 
@@ -466,6 +470,47 @@
     // Marble statue made from the hero's silhouette.
     const statue = build(recolor(HERO.heroStand, { H: 'M', S: 'M', s: 'm', R: 'M', W: 'M', w: 'm', B: 'M', Y: 'M', K: 'm' }));
     register('statue', statue);
+  };
+
+  // Art modules push their init functions here; they run after the base sprites.
+  O.ART_INITS = O.ART_INITS || [];
+  // Temporary stand-ins so the engine always finds a frame; real art modules overwrite them.
+  const ALIASES = {
+    hero_idle: ['heroStand', 4], hero_run: [['heroWalk1', 'heroWalk1', 'heroWalk2', 'heroWalk2'], 8], hero_jump: 'heroJump', hero_peak: 'heroJump',
+    hero_fall: 'heroJump', hero_land: 'heroStand', hero_crouch: 'heroCrouch', hero_atk: ['heroAtk', 5], hero_catk: ['heroCrouchAtk', 5],
+    hero_jatk: ['heroJumpAtk', 5], hero_hurt: 'heroJump', hero_dead: ['heroCrouch', 2], hero_hold: 'heroStand', hero_lyre: ['heroStand', 2],
+    snake_move: [['snake1', 'snake2'], 4], snake_lunge: [['snake1', 'snake2'], 2], bat_hang: 'batHang', bat_fly: [['bat1', 'bat2'], 4],
+    satyr_idle: ['satyr1', 2], satyr_walk: [['satyr1', 'satyr2'], 6], satyr_jump: 'satyr2',
+    boar_idle: ['boar0', 4], boar_paw: ['boar0', 4], boar_run: [['boar1', 'boar2'], 6], boar_stun: ['boarStun', 4],
+    elder_idle: ['elder', 4], merchant_idle: ['merchant', 4], villager_idle: ['villager', 4], eurydice_idle: ['eurydice', 4],
+    zeus_idle: ['zeus', 4], hermes_idle: ['hermes', 4], hades_idle: ['hades', 4],
+    icon_club: 'iconClub', icon_sandals: 'iconSandals', arrow_up: 'arrowUp', flame: [['flame1', 'flame2'], 4]
+  };
+  function applyAliases() {
+    Object.keys(ALIASES).forEach((base) => {
+      const v = ALIASES[base];
+      if (typeof v === 'string') { if (!O.SPR[base]) O.SPR[base] = O.SPR[v]; return; }
+      const src = v[0], n = v[1];
+      for (let i = 0; i < n; i++) {
+        const nm = base + '_' + i;
+        if (!O.SPR[nm]) O.SPR[nm] = O.SPR[Array.isArray(src) ? src[i % src.length] : src];
+      }
+    });
+  }
+  O.bootArt = function () {
+    O.initSprites();
+    O.ART_INITS.forEach((fn) => { try { fn(); } catch (e) { console.error('Art module failed', e); } });
+    applyAliases();
+  };
+  // Draw a sprite so that its anchor lands on screen point (x, y).
+  O.drawA = function (ctx, name, x, y, flip, white, alpha) {
+    const s = O.SPR[name];
+    if (!s) return null;
+    const sx = Math.round(flip ? x - (s.w - 1 - s.ax) : x - s.ax), sy = Math.round(y - s.ay);
+    if (alpha !== undefined) ctx.globalAlpha = alpha;
+    ctx.drawImage(white ? (flip ? s.wf : s.wn) : (flip ? s.f : s.n), sx, sy);
+    if (alpha !== undefined) ctx.globalAlpha = 1;
+    return { sx, sy, s };
   };
 
   O.drawSpr = function (ctx, name, x, y, flip, white) {

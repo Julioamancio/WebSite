@@ -5,7 +5,7 @@
   const ctx = canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
 
-  O.initSprites();
+  O.bootArt();
   const game = O.game = new O.Game(ctx);
   O.Input.bindTouch(document.getElementById('touch'));
 
@@ -37,10 +37,10 @@
     last = now;
     while (acc >= STEP) {
       O.Input.update();
-      game.update();
+      try { game.update(); } catch (e) { O.logOnce('update', e); }
       acc -= STEP;
     }
-    game.draw();
+    try { game.draw(); } catch (e) { O.logOnce('draw', e); }
     requestAnimationFrame(frame);
   }
   requestAnimationFrame(frame);

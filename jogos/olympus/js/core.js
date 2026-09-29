@@ -3,11 +3,13 @@ window.OLY = window.OLY || {};
 (function (O) {
   'use strict';
 
-  // NES screen: 256x240. Top 32px = HUD, 13 rows of 16px tiles = play field.
-  O.W = 256;
-  O.H = 240;
+  // Modern widescreen pixel resolution (16:9, scales x5 to 1080p).
+  // The world (13 rows of 16px tiles = 208px) is drawn 8px below the top; the HUD overlays it.
+  O.W = 384;
+  O.H = 216;
   O.TILE = 16;
-  O.HUD_H = 32;
+  O.HUD_H = 8; // world Y offset on screen (kept under this name for compatibility)
+  O.VIEW_Y = 8;
   O.ROWS = 13;
 
   // Character -> color map used by every pixel-art string in sprites.js.
@@ -40,6 +42,9 @@ window.OLY = window.OLY || {};
       return s / 4294967296;
     };
   };
+  // Log an error only once per key (art modules must never crash the game loop).
+  const logged = {};
+  O.logOnce = function (key, err) { if (logged[key]) return; logged[key] = 1; console.error('[' + key + ']', err); };
   O.pad = (n, len) => String(Math.max(0, n | 0)).padStart(len, '0');
 
   /* ---------- 5x7 bitmap font inside 8x8 cells ---------- */

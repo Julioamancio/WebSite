@@ -30,9 +30,12 @@
           let depth = 0;
           for (let k = y - 1; k >= 0 && earth(lvl.tile(x, k)); k--) depth++;
           const deep = ch === 'D' && depth >= 2;
-          const img = ch === 'd' ? O.Tiles.get(lvl.theme, 'd', 0, lvl.tile(x, y - 1) !== 'd') : O.Tiles.get(lvl.theme, deep ? 'q' : ch, O.hash(x, y) % 4);
+          let img = null;
+          if (O.Tiles.getCtx) { try { img = O.Tiles.getCtx(lvl.theme, ch, x, y, lvl); } catch (e) { O.logOnce('getCtx', e); } }
+          if (!img) img = ch === 'd' ? O.Tiles.get(lvl.theme, 'd', 0, lvl.tile(x, y - 1) !== 'd') : O.Tiles.get(lvl.theme, deep ? 'q' : ch, O.hash(x, y) % 4);
           if (!img) continue;
           g.drawImage(img, x * T, y * T);
+          if (O.Tiles.handlesEdges) continue;
           if (earth(ch)) {
             const top = ch === 'G' ? 1 : 0, inset = ch === 'G' ? 6 : 0;
             if (x > 0 && !lvl.isSolid(x - 1, y)) {
@@ -50,11 +53,9 @@
     };
     pass(false);
     (def.decor || []).filter((d) => d[3] === 'back').forEach((d) => placeDecor(g, d));
-    (def.statues || []).forEach((st) => {
-      const sp = O.SPR.statue;
-      g.drawImage(sp.n, Math.round(st.tx * T + 8 - sp.w / 2), st.row * T - st.lift - sp.h + 2);
-    });
+    (def.statues || []).forEach((st) => O.drawA(g, 'statue', st.tx * T + 8, st.row * T - st.lift));
     pass(true);
+    if (O.Tiles.overlay) { try { O.Tiles.overlay(lvl, g, f); } catch (e) { O.logOnce('overlay', e); } }
     (def.decor || []).filter((d) => d[3] === 'front').forEach((d) => placeDecor(f, d));
   };
 
@@ -182,16 +183,17 @@
   P.drawWorld = function (c) {
     const lvl = this.lvl, cam = this.cam;
     c.save();
-    c.beginPath(); c.rect(0, VY, W, VIEW_H); c.clip();
     if (this.shake > 0) c.translate((this.t >> 1) & 1 ? 2 : -2, (this.t >> 2) & 1 ? 1 : -1);
     const bg = O.Tiles.background(lvl.theme);
-    c.drawImage(bg.sky, 0, VY);
+    c.drawImage(bg.sky, 0, 0);
     bg.layers.forEach((L) => {
-      const off = Math.floor(cam * L.f) % 512;
-      c.drawImage(L.c, -off, VY); c.drawImage(L.c, 512 - off, VY);
+      const lw = L.c.width;
+      const off = Math.floor(cam * L.f) % lw;
+      for (let x = -off; x < W; x += lw) c.drawImage(L.c, x, L.y || 0);
     });
     const lv = lvl.render();
     c.drawImage(lv, cam, 0, W, VIEW_H, 0, VY, W, VIEW_H);
+    c.drawImage(lv, cam, 0, W, VY, 0, 0, W, VY);
     this.drawLights(c);
     this.npcs.forEach((n) => n.draw(c, this));
     this.pickups.forEach((pk) => pk.draw(c, this));
@@ -201,49 +203,48 @@
     else this.player.draw(c, this);
     this.drawFx(c);
     c.drawImage(lvl.front, cam, 0, W, VIEW_H, 0, VY, W, VIEW_H);
+    if (O.Light && O.Light.apply) { try { c.save(); O.Light.apply(c, this); } catch (e) { O.logOnce('Light.apply', e); } finally { c.restore(); } }
     this.drawAmbient(c);
-    if (this.flash > 0 && (this.flash & 1)) { c.fillStyle = 'rgba(252,252,252,0.35)'; c.fillRect(0, VY, W, VIEW_H); }
-    if (this.banner > 0 && this.banner < 140 && !this.dialog) {
-      const name = lvl.name, w = name.length * 8 + 36, x = Math.round((W - w) / 2);
-      panel(c, x, VY + 10, w, 20);
-      shadowText(c, name, x + 18, VY + 16, GOLD[0]);
-    }
-    const boss = this.enemies.find((e) => e instanceof O.Boar);
-    if (boss && boss.state !== 'wait') {
-      panel(c, 8, VY + 182, 240, 22);
-      shadowText(c, 'BOAR', 16, VY + 189, '#fc7050');
-      for (let i = 0; i < boss.maxHp; i++) {
-        const x = 56 + i * 11, on = i < boss.hp;
-        c.fillStyle = '#000000'; c.fillRect(x, VY + 188, 9, 9);
-        c.fillStyle = on ? '#d82800' : '#3c0c08'; c.fillRect(x + 1, VY + 189, 7, 7);
-        if (on) { c.fillStyle = '#fc7050'; c.fillRect(x + 1, VY + 189, 7, 2); c.fillStyle = '#fcd8a8'; c.fillRect(x + 2, VY + 189, 2, 1); }
-      }
-    }
+    if (this.flash > 0 && (this.flash & 1)) { c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(0, 0, W, H); }
     c.restore();
+    if (this.banner > 0 && this.banner < 140 && !this.dialog) this.drawBanner(c, lvl.name);
+    const boss = this.enemies.find((e) => e instanceof O.Boar);
+    if (boss && boss.state !== 'wait') this.drawBossBar(c, boss);
+  };
+
+  P.drawBanner = function (c, name) {
+    if (O.UI && O.UI.drawBanner) { try { return O.UI.drawBanner(c, this, name); } catch (e) { O.logOnce('UI.drawBanner', e); } }
+    const w = name.length * 8 + 36, x = Math.round((W - w) / 2);
+    panel(c, x, 30, w, 20);
+    shadowText(c, name, x + 18, 36, GOLD[0]);
+  };
+  P.drawBossBar = function (c, boss) {
+    if (O.UI && O.UI.drawBossBar) { try { return O.UI.drawBossBar(c, this, boss); } catch (e) { O.logOnce('UI.drawBossBar', e); } }
+    panel(c, 60, H - 26, W - 120, 22);
+    shadowText(c, 'BOAR', 68, H - 19, '#fc7050');
+    for (let i = 0; i < boss.maxHp; i++) {
+      const x = 108 + i * 12, on = i < boss.hp;
+      c.fillStyle = '#000000'; c.fillRect(x, H - 20, 10, 9);
+      c.fillStyle = on ? '#d82800' : '#3c0c08'; c.fillRect(x + 1, H - 19, 8, 7);
+    }
   };
 
   P.drawLights = function (c) {
     const cam = this.cam, t = this.t;
     (this.lvl.def.lights || []).forEach((l, i) => {
       const x = Math.round(l.tx * T + 8 - cam), y = l.row * T + VY;
+      if (O.drawLightProp) { try { O.drawLightProp(c, l.type, x, y, t, i); return; } catch (e) { O.logOnce('drawLightProp', e); } }
       if (l.type === 'brazier') {
         const flick = (t >> 3) & 1;
         drawGlow(c, '#f8b800', x, y - 20, 30 + flick, 0.45);
-        const b = O.SPR.brazier;
-        c.drawImage(b.n, x - Math.floor(b.w / 2), y - b.h + 1);
-        O.drawSpr(c, flick ? 'flame1' : 'flame2', x - 4, y - b.h - 6);
-        O.drawSpr(c, flick ? 'flame2' : 'flame1', x - 2, y - b.h - 9);
+        O.drawA(c, 'brazier', x, y);
+        O.drawA(c, 'flame_' + ((t >> 3) & 3), x, y - 12);
       } else if (l.type === 'torch') {
-        const flick = ((t + i * 5) >> 3) & 1;
-        drawGlow(c, '#f8b800', x, y - 4, 34 + flick * 2, 0.4);
-        c.fillStyle = '#000000'; c.fillRect(x - 2, y, 5, 10);
+        drawGlow(c, '#f8b800', x, y - 4, 34, 0.4);
         c.fillStyle = '#c88830'; c.fillRect(x - 1, y + 1, 3, 8);
-        c.fillStyle = '#f8d078'; c.fillRect(x - 1, y + 1, 1, 8);
-        O.drawSpr(c, flick ? 'flame1' : 'flame2', x - 4, y - 7);
+        O.drawA(c, 'flame_' + (((t + i * 5) >> 3) & 3), x, y + 1);
       } else if (l.type === 'crystal') {
-        const pulse = Math.round(Math.sin(t * 0.05 + i) * 3);
-        drawGlow(c, '#40d8e0', x, y - 10, 22 + pulse, 0.4);
-        if (((t + i * 13) % 50) < 6) { c.fillStyle = '#fcfcfc'; c.fillRect(x - 3 + i * 2, y - 14, 1, 1); c.fillRect(x - 4 + i * 2, y - 13, 3, 1); c.fillRect(x - 3 + i * 2, y - 12, 1, 1); }
+        drawGlow(c, '#40d8e0', x, y - 10, 22 + Math.round(Math.sin(t * 0.05 + i) * 3), 0.4);
       }
     });
   };
@@ -252,6 +253,7 @@
     const cam = this.cam;
     this.amb.forEach((p) => {
       const x = Math.round(p.x - cam), y = Math.round(p.y) + VY;
+      if (O.AmbDraw) { try { if (O.AmbDraw(c, p, x, y, this) !== false) return; } catch (e) { O.logOnce('AmbDraw', e); } }
       if (p.k === 'leaf') {
         const flip = (p.t >> 4) & 1;
         c.fillStyle = '#2c7818'; c.fillRect(x, y, 2, 1);
@@ -272,28 +274,31 @@
 
   P.drawItemGet = function (c) {
     const p = this.player;
-    const d = O.drawOn(c, this, 'heroStand', p, p.facing < 0, false);
+    const d = O.drawBody(c, this, 'hero_hold', p, p.facing < 0, false);
     const it = O.ITEMS[this.itemKey];
-    const s = O.SPR[it.icon];
-    const cx = d.sx + d.s.w / 2, cy = d.sy - 10;
-    for (let i = 0; i < 10; i++) {
-      const a = (i / 10) * Math.PI * 2 + this.t * 0.03;
-      c.fillStyle = i % 2 ? '#f8b800' : '#fcf088';
-      for (let k = 7; k < 18; k += 2) c.fillRect(Math.round(cx + Math.cos(a) * k), Math.round(cy + Math.sin(a) * k), 1, 1);
+    const iconName = O.SPR[it.icon] ? it.icon : it.icon.replace('icon_', 'icon');
+    const s = O.SPR[iconName];
+    if (!d || !s) return;
+    const cx = Math.round(p.x + p.w / 2 - this.cam), cy = d.sy - 8;
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2 + this.t * 0.03;
+      c.fillStyle = i % 2 ? '#ffd24a' : '#fff7b0';
+      for (let k = 8; k < 22; k += 2) c.fillRect(Math.round(cx + Math.cos(a) * k), Math.round(cy + Math.sin(a) * k), 1, 1);
     }
-    O.drawSpr(c, it.icon, cx - s.w / 2, cy - s.h / 2 + Math.round(Math.sin(this.t * 0.2)));
+    O.drawA(c, iconName, cx, cy + Math.floor(s.h / 2) + Math.round(Math.sin(this.t * 0.2)));
   };
 
   P.drawDeath = function (c) {
     const p = this.player;
-    if (this.dieT < 60) O.drawOn(c, this, 'heroStand', p, ((this.dieT >> 3) & 1) === 1, (this.dieT >> 1) & 1);
-    else O.drawOn(c, this, 'heroCrouch', p, p.facing < 0, false);
+    if (this.dieT < 50) O.drawBody(c, this, 'hero_hurt', p, ((this.dieT >> 3) & 1) === 1, (this.dieT >> 1) & 1);
+    else O.drawBody(c, this, this.dieT < 70 ? 'hero_dead_0' : 'hero_dead_1', p, p.facing < 0, false);
   };
 
   P.drawFx = function (c) {
     const cam = this.cam;
     this.fx.forEach((f) => {
       const x = Math.round(f.x - cam), y = Math.round(f.y) + VY;
+      if (O.FXDraw) { try { if (O.FXDraw(c, f, x, y, this) !== false) return; } catch (e) { O.logOnce('FXDraw', e); } }
       if (f.type === 'puff') {
         const r = 3 + f.t * 0.7;
         const col = f.t < 8 ? '#fcfcfc' : f.t < 15 ? '#d8d8e8' : '#9090b0';
@@ -328,6 +333,7 @@
 
   /* ---------------- HUD ---------------- */
   P.drawHUD = function (c) {
+    if (O.UI && O.UI.drawHUD) { try { return O.UI.drawHUD(c, this); } catch (e) { O.logOnce('UI.drawHUD', e); } }
     const st = this.st;
     c.fillStyle = INK; c.fillRect(0, 0, W, VY);
     c.fillStyle = '#141848'; c.fillRect(0, 0, W, 2);
@@ -363,6 +369,7 @@
 
   /* ---------------- dialogue ---------------- */
   P.drawDialog = function (c) {
+    if (O.UI && O.UI.drawDialog) { try { return O.UI.drawDialog(c, this); } catch (e) { O.logOnce('UI.drawDialog', e); } }
     const d = this.dialog;
     const x = 6, y = 158, w = 244, h = 76;
     panel(c, x, y, w, h);
@@ -398,6 +405,7 @@
   };
 
   P.drawPause = function (c) {
+    if (O.UI && O.UI.drawPause) { try { return O.UI.drawPause(c, this); } catch (e) { O.logOnce('UI.drawPause', e); } }
     const st = this.st;
     c.fillStyle = 'rgba(0,0,16,0.55)'; c.fillRect(0, VY, W, VIEW_H);
     panel(c, 16, 40, 224, 188);
@@ -463,6 +471,7 @@
   }
 
   P.drawTitle = function (c) {
+    if (O.UI && O.UI.drawTitle) { try { return O.UI.drawTitle(c, this); } catch (e) { O.logOnce('UI.drawTitle', e); } }
     if (!titleBg) buildTitle();
     c.drawImage(titleBg, 0, 0);
     const off = Math.floor(this.t * 0.15) % 512;
@@ -547,6 +556,7 @@
   }
 
   P.drawStory = function (c) {
+    if (O.UI && O.UI.drawStory) { try { return O.UI.drawStory(c, this); } catch (e) { O.logOnce('UI.drawStory', e); } }
     const pg = O.STORY[this.page];
     const t = this.storyT;
     c.drawImage(sceneBg(pg.scene), 0, 0);
@@ -610,6 +620,7 @@
 
   /* ---------------- game over / ending ---------------- */
   P.drawGameOver = function (c) {
+    if (O.UI && O.UI.drawGameOver) { try { return O.UI.drawGameOver(c, this); } catch (e) { O.logOnce('UI.drawGameOver', e); } }
     for (let y = 0; y < H; y += 4) { c.fillStyle = y < 120 ? '#0c0004' : '#1c0408'; c.fillRect(0, y, W, 4); }
     drawLogo(c, 'GAME OVER', ['#fcd8a8', '#fc7050', '#d82800', '#a81000', '#681000'], '#1c0000', 64);
     shadowText(c, 'EURYDICE STILL WAITS...', centerX('EURYDICE STILL WAITS...'), 104, '#c8a8c8');
@@ -622,6 +633,7 @@
   };
 
   P.drawEnding = function (c) {
+    if (O.UI && O.UI.drawEnding) { try { return O.UI.drawEnding(c, this); } catch (e) { O.logOnce('UI.drawEnding', e); } }
     if (!titleBg) buildTitle();
     c.drawImage(titleBg, 0, 0);
     c.fillStyle = 'rgba(8,4,24,0.5)'; c.fillRect(0, 0, W, H);

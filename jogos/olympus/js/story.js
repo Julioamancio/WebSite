@@ -12,9 +12,9 @@
   ];
 
   O.ITEMS = {
-    club: { name: 'THE WOODEN CLUB', icon: 'iconClub', desc: 'PRESS B TO ATTACK. HOLD DOWN AND PRESS B TO STRIKE LOW.' },
+    club: { name: 'THE WOODEN CLUB', icon: 'icon_club', desc: 'PRESS B TO ATTACK. HOLD DOWN AND PRESS B TO STRIKE LOW.' },
     blessing: { name: "ZEUS'S BLESSING", icon: 'heart', desc: 'YOUR LIFE HAS GROWN STRONGER.' },
-    sandals: { name: 'THE SANDALS OF HERMES', icon: 'iconSandals', desc: 'NOW YOU CAN JUMP MUCH HIGHER THAN BEFORE.' }
+    sandals: { name: 'THE SANDALS OF HERMES', icon: 'icon_sandals', desc: 'NOW YOU CAN JUMP MUCH HIGHER THAN BEFORE.' }
   };
 
   O.ENDING = [

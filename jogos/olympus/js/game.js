@@ -114,11 +114,12 @@
       (d.items || []).forEach((it) => this.pickups.push(new O.Pickup(it.kind, it.tx * T + 4, it.row * T - 8, 0, Infinity)));
       this.music(d.music);
       if (d.onEnter) d.onEnter(this);
-      this.updateCamera();
+      this.look = this.player.facing * 28;
+      this.updateCamera(true);
       this.banner = 150;
     }
     openDenDoor() {
-      for (let y = 8; y <= 10; y++) for (let x = 17; x <= 18; x++) this.lvl.setTile(x, y, 'n');
+      for (let y = 8; y <= 10; y++) for (let x = 21; x <= 22; x++) this.lvl.setTile(x, y, 'n');
     }
     goto(id, spawn) {
       this.sfx('door');
@@ -436,9 +437,13 @@
       this.amb = a.filter((p) => !p.dead);
     }
 
-    updateCamera() {
+    // Smooth camera with a little look-ahead in the facing direction.
+    updateCamera(snap) {
       const p = this.player, lvl = this.lvl;
-      this.cam = Math.round(O.clamp(p.x + p.w / 2 - W / 2, 0, Math.max(0, lvl.pxW - W)));
+      this.look = (this.look || 0) + ((p.facing * 28) - (this.look || 0)) * 0.04;
+      const target = O.clamp(p.x + p.w / 2 - W / 2 + this.look, 0, Math.max(0, lvl.pxW - W));
+      this.camF = snap || this.camF === undefined ? target : this.camF + (target - this.camF) * 0.12;
+      this.cam = Math.round(this.camF);
     }
   }
 

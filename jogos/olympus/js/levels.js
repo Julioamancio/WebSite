@@ -89,20 +89,22 @@
     },
 
     zeus: {
-      name: 'TEMPLE OF ZEUS', theme: 'temple', music: 'temple', w: 16, ambient: 'embers',
+      name: 'TEMPLE OF ZEUS', theme: 'temple', music: 'temple', w: 24, ambient: 'embers',
       build(b) {
-        b.fill(0, 0, 16, 11, 'm');
-        b.fill(0, 0, 16, 1, 'E');
-        b.fill(0, 11, 16, 2, 'B');
-        b.column(3, 1, 10); b.column(12, 1, 10);
+        b.fill(0, 0, 24, 11, 'm');
+        b.fill(0, 0, 24, 1, 'E');
+        b.fill(0, 11, 24, 2, 'B');
+        b.column(3, 1, 10); b.column(20, 1, 10);
         b.fill(0, 7, 2, 4, 'n');
       },
       decor: [
-        ['curtain', 4.6, 1, 'back', 1, 'top'], ['curtain', 10.4, 1, 'back', 2, 'top'],
-        back('window', 7.5, 7), back('amphora', 13.6, 11, 3), back('amphora', 1.9, 11, 4)
+        ['curtain', 6.5, 1, 'back', 1, 'top'], ['curtain', 16.5, 1, 'back', 2, 'top'],
+        back('window', 11.5, 7), back('pedestal', 5, 11), back('pedestal', 18, 11),
+        back('amphora', 22, 11, 3), back('amphora', 2.2, 11, 4)
       ],
-      lights: [{ type: 'brazier', tx: 5, row: 11 }, { type: 'brazier', tx: 10, row: 11 }],
-      npcs: [{ kind: 'zeus', tx: 7, row: 11, float: true }],
+      statues: [{ tx: 5, row: 11, lift: 12 }, { tx: 18, row: 11, lift: 12 }],
+      lights: [{ type: 'brazier', tx: 8, row: 11 }, { type: 'brazier', tx: 15, row: 11 }],
+      npcs: [{ kind: 'zeus', tx: 11, row: 11, float: true }],
       exits: [{ type: 'door', tx: 0, ty: 7, tw: 2, th: 4, to: 'village', spawn: { tx: 36, row: 10 } }]
     },
 
@@ -144,52 +146,52 @@
     },
 
     den: {
-      name: "BOAR'S DEN", theme: 'cave', music: null, w: 20, ambient: 'drips',
+      name: "BOAR'S DEN", theme: 'cave', music: null, w: 24, ambient: 'drips',
       build(b) {
-        b.fill(0, 0, 20, 2, 'B');
-        b.fill(0, 11, 20, 2, 'B');
+        b.fill(0, 0, 24, 2, 'B');
+        b.fill(0, 11, 24, 2, 'B');
         b.fill(0, 2, 1, 9, 'B');
-        b.fill(19, 2, 1, 9, 'B');
-        b.fill(1, 2, 18, 9, 'k');
+        b.fill(23, 2, 1, 9, 'B');
+        b.fill(1, 2, 22, 9, 'k');
         b.fill(1, 8, 2, 3, 'n');
       },
       decor: [
-        ['stalactite', 5, 2, 'front', 1, 'top'], ['stalactite', 11, 2, 'front', 2, 'top'], ['stalactite', 16, 2, 'front', 3, 'top'],
-        back('crystals', 7, 11, 1), back('crystals', 13.5, 11, 2), back('rocks', 4.5, 11, 4)
+        ['stalactite', 5, 2, 'front', 1, 'top'], ['stalactite', 11, 2, 'front', 2, 'top'], ['stalactite', 18, 2, 'front', 3, 'top'],
+        back('crystals', 7, 11, 1), back('crystals', 15.5, 11, 2), back('rocks', 4.5, 11, 4), back('rocks', 20, 11, 6)
       ],
-      lights: [{ type: 'crystal', tx: 7, row: 11 }, { type: 'crystal', tx: 13.5, row: 11 }, { type: 'torch', tx: 9.5, row: 6 }],
+      lights: [{ type: 'crystal', tx: 7, row: 11 }, { type: 'crystal', tx: 15.5, row: 11 }, { type: 'torch', tx: 5.5, row: 6 }, { type: 'torch', tx: 17.5, row: 6 }],
       exits: [
         { type: 'door', tx: 1, ty: 8, tw: 2, th: 3, to: 'forest', spawn: { tx: 102, row: 11 }, when: (g) => !g.bossActive },
-        { type: 'door', tx: 17, ty: 8, tw: 2, th: 3, to: 'hermes', spawn: { tx: 2, row: 11 }, when: (g) => !!g.st.flags.boarDefeated }
+        { type: 'door', tx: 21, ty: 8, tw: 2, th: 3, to: 'hermes', spawn: { tx: 2, row: 11 }, when: (g) => !!g.st.flags.boarDefeated }
       ],
       onEnter(g) {
         if (g.st.flags.boarDefeated) {
           g.openDenDoor();
           g.music('temple');
         } else {
-          g.enemies.push(new O.Boar(14 * O.TILE, 11 * O.TILE));
+          g.enemies.push(new O.Boar(17 * O.TILE, 11 * O.TILE));
           g.bossActive = true;
         }
       }
     },
 
     hermes: {
-      name: 'SHRINE OF HERMES', theme: 'temple', music: 'temple', w: 16, ambient: 'embers',
+      name: 'SHRINE OF HERMES', theme: 'temple', music: 'temple', w: 24, ambient: 'embers',
       build(b) {
-        b.fill(0, 0, 16, 11, 'm');
-        b.fill(0, 0, 16, 1, 'E');
-        b.fill(0, 11, 16, 2, 'B');
-        b.column(4, 1, 10); b.column(13, 1, 10);
+        b.fill(0, 0, 24, 11, 'm');
+        b.fill(0, 0, 24, 1, 'E');
+        b.fill(0, 11, 24, 2, 'B');
+        b.column(3, 1, 10); b.column(20, 1, 10);
         b.fill(0, 7, 2, 4, 'n');
       },
       decor: [
-        ['curtain', 5.6, 1, 'back', 3, 'top'], ['curtain', 11.4, 1, 'back', 4, 'top'],
-        back('window', 8.5, 7), back('pedestal', 14.8, 11), back('amphora', 2.6, 11, 5)
+        ['curtain', 6.5, 1, 'back', 3, 'top'], ['curtain', 16.5, 1, 'back', 4, 'top'],
+        back('window', 11.5, 7), back('pedestal', 18, 11), back('amphora', 4.6, 11, 5), back('amphora', 22, 11, 6)
       ],
-      statues: [{ tx: 14.8, row: 11, lift: 12 }],
-      lights: [{ type: 'brazier', tx: 6, row: 11 }, { type: 'brazier', tx: 11, row: 11 }],
-      npcs: [{ kind: 'hermes', tx: 8, row: 11, float: true }],
-      exits: [{ type: 'door', tx: 0, ty: 7, tw: 2, th: 4, to: 'den', spawn: { tx: 16, row: 11 } }]
+      statues: [{ tx: 18, row: 11, lift: 12 }],
+      lights: [{ type: 'brazier', tx: 8, row: 11 }, { type: 'brazier', tx: 15, row: 11 }],
+      npcs: [{ kind: 'hermes', tx: 11, row: 11, float: true }],
+      exits: [{ type: 'door', tx: 0, ty: 7, tw: 2, th: 4, to: 'den', spawn: { tx: 20, row: 11 } }]
     }
   };
 })(window.OLY);

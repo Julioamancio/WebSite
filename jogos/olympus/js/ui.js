@@ -111,6 +111,7 @@ window.OLY = window.OLY || {};
   }
   // Draw text; returns the pen advance in px.
   function text(ctx, str, x, y, color, scale, track) {
+    if (O.HDFont) { const r = O.HDFont(ctx, str, x, y, color || TXT, scale, track, textWidth(str, scale, track)); if (r !== null) return r; }
     const a = atlas(color || TXT), s = scale || 1, tr = track || 0;
     const t = String(str).toUpperCase();
     let px = Math.round(x);

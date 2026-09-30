@@ -46,6 +46,8 @@
     e.white = (flip) => cache['W' + flip] || (cache['W' + flip] = bake(e, e.w * S, e.h * S, flip, true));
     return e;
   }
+  // A frame from any image/canvas: w, h, ax, ay in source pixels, k = game units per source pixel.
+  HD.makeFrame = (img, w, h, ax, ay, k) => hdFrame(img, 0, { w, h, ax, ay }, k);
   HD.drawFrame = function (ctx, e, x, y, flip, white, alpha) {
     const sx = O.px(flip ? x - (e.w - e.ax) : x - e.ax), sy = O.px(y - e.ay);
     ctx.save();
@@ -73,6 +75,17 @@
       if (!img) return;
       const k = (HEIGHT[c] || 40) / (ref[c] || m.body);
       Object.keys(m.frames).forEach((fname) => { O.SPR[fname] = hdFrame(img, m.frames[fname], m, k); });
+    });
+    if (O.SPR.lyre_play_0 && O.SPR.lyre_play_0.hd) { O.SPR.hero_lyre_0 = O.SPR.lyre_play_0; O.SPR.hero_lyre_1 = O.SPR.lyre_play_4 || O.SPR.lyre_play_0; }
+    // No pixel frame may leak into an HD animation: a pixel "<kind>_blink" (NPCs) or any missing index of an
+    // animation whose frame 0 is HD falls back to that HD frame.
+    Object.keys(O.SPR).forEach((n) => {
+      const s = O.SPR[n];
+      if (!s || s.hd) return;
+      let base = null;
+      if (/_blink$/.test(n)) base = n.replace(/_blink$/, '_idle_0');
+      else if (/_\d+$/.test(n)) base = n.replace(/_\d+$/, '_0');
+      if (base && O.SPR[base] && O.SPR[base].hd) O.SPR[n] = O.SPR[base];
     });
   }
 
@@ -438,7 +451,7 @@
   /* ---------- title helpers ---------- */
   function label(c, s, x, y, size, color, alpha) {
     c.save();
-    c.font = '600 ' + size + 'px Georgia, "Times New Roman", serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = '700 ' + size + 'px "Cinzel", Georgia, serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
     if (alpha !== undefined) c.globalAlpha = alpha;
     c.fillStyle = 'rgba(10,4,20,0.75)'; c.fillText(s, x + size * 0.08, y + size * 0.1);
     c.fillStyle = color; c.fillText(s, x, y);
@@ -447,14 +460,14 @@
   function logo(c, title, sub, y, t) {
     c.save();
     c.textAlign = 'center'; c.textBaseline = 'middle';
-    c.font = 'bold 30px Georgia, "Times New Roman", serif';
+    c.font = '900 30px "Cinzel", Georgia, serif';
     const gr = c.createLinearGradient(0, y - 15, 0, y + 15);
     gr.addColorStop(0, '#fffbe6'); gr.addColorStop(0.35, '#ffd86a'); gr.addColorStop(0.7, '#e09a26'); gr.addColorStop(1, '#8a4e10');
     c.fillStyle = 'rgba(40,10,20,0.6)'; c.fillText(title, W / 2 + 1.2, y + 1.5);
     c.lineWidth = 1.2; c.strokeStyle = 'rgba(70,24,8,0.9)'; c.strokeText(title, W / 2, y);
     c.fillStyle = gr; c.fillText(title, W / 2, y);
     c.globalCompositeOperation = 'source-over';
-    c.font = 'italic 600 8px Georgia, "Times New Roman", serif';
+    c.font = '700 8px "Cinzel", Georgia, serif';
     const sw = c.measureText(sub).width;
     c.fillStyle = 'rgba(20,6,20,0.7)'; c.fillText(sub, W / 2 + 0.5, y + 22.5);
     c.fillStyle = '#fff1d0'; c.fillText(sub, W / 2, y + 22);
@@ -522,9 +535,11 @@
     const M = window.OLY_SPRITES || {};
     const jobs = SCENERY.map((n) => loadImg(BASE + n + '.webp').then((i) => { if (i) HD.img[n] = i; }))
       .concat(Object.keys(M).map((n) => loadImg(BASE + M[n].img).then((i) => { if (i) HD.sheets[n] = i; })));
+    // the interface fonts (Google Fonts; offline the game falls back to Georgia)
+    if (document.fonts && document.fonts.load) jobs.push(Promise.all(['700 20px Cinzel', '900 20px Cinzel', '20px Marcellus'].map((f) => document.fonts.load(f))).catch(() => {}));
     const timeout = new Promise((ok) => setTimeout(ok, 15000));
     return Promise.race([Promise.all(jobs), timeout]).then(() => {
-      try { registerSheets(); wrapDraws(); buildPortraits(); HD.on = true; } catch (e) { console.error('[hd] registro falhou', e); }
+      try { registerSheets(); wrapDraws(); buildPortraits(); HD.on = true; if (O.HDUI) O.HDUI.init(); } catch (e) { console.error('[hd] registro falhou', e); }
     });
   };
 })(window.OLY);

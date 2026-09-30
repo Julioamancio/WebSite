@@ -206,7 +206,7 @@
     // letterbox, text, fades
     c.fillStyle = '#000'; c.fillRect(0, 0, W, BAR); c.fillRect(0, H - BAR, W, BAR);
     drawText(c, s, t);
-    c.font = '4px Georgia, serif'; c.fillStyle = 'rgba(200,200,215,0.55)'; c.textAlign = 'right'; c.textBaseline = 'middle';
+    c.font = '700 4px "Cinzel", Georgia, serif'; c.fillStyle = 'rgba(200,200,215,0.55)'; c.textAlign = 'right'; c.textBaseline = 'middle';
     c.fillText('START: SKIP   A: NEXT', W - 6, BAR / 2);
     let fade = 0;
     if (s.fadeIn) fade = Math.max(fade, 1 - t / s.fadeIn);
@@ -335,7 +335,7 @@
     items.forEach((it) => { if (t >= it[0]) cur = it; });
     if (!cur) return;
     const shown = cur[1].slice(0, Math.floor((t - cur[0]) * 34));
-    c.font = 'italic 6.4px Georgia, "Times New Roman", serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.font = '7.2px "Marcellus", Georgia, serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
     const lines = wrap(c, cur[1], W - 60), full = wrap(c, shown, W - 60);
     const y0 = H - BAR / 2 - (lines.length - 1) * 4;
     full.forEach((l, i) => {
@@ -570,7 +570,7 @@
     title(c, s, f, cam, t) {
       if (t < f.t0 || t > f.t1) return;
       const a = Math.min(1, (t - f.t0) * 1.5, (f.t1 - t) * 1.5);
-      c.save(); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = 'bold 15px Georgia, "Times New Roman", serif';
+      c.save(); c.textAlign = 'center'; c.textBaseline = 'middle'; c.font = '900 15px "Cinzel", Georgia, serif';
       const ty = f.y || H / 2, gr = c.createLinearGradient(0, ty - 10, 0, ty + 10);
       gr.addColorStop(0, '#fff3c4'); gr.addColorStop(0.5, '#f0c050'); gr.addColorStop(1, '#a8701c');
       c.globalAlpha = a; c.fillStyle = 'rgba(0,0,0,0.55)'; c.fillText(f.text, W / 2 + 0.8, ty + 0.8);

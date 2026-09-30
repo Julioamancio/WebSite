@@ -1,0 +1,25 @@
+{
+ "image": "orpheus_p_hurt.png",
+ "w": 640,
+ "h": 557,
+ "ax": 342,
+ "ay": 542,
+ "frames": {
+  "hero_p_hurt": {
+   "x": 0,
+   "y": 0,
+   "src": 25
+  },
+  "hero_p_dead_0": {
+   "x": 640,
+   "y": 0,
+   "src": 33
+  },
+  "hero_p_dead_1": {
+   "x": 1280,
+   "y": 0,
+   "src": 52
+  }
+ },
+ "stand": 639
+}

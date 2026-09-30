@@ -1,0 +1,6 @@
+[
+  { "char": "orpheus", "name": "orpheus_p_lowpunch2", "kind": "custom", "pose": "cmuodbtd8000w9tjr398e3egg",
+    "prompt": "Bare hands only: NO shield, NO club, NO weapon, no object. He drops into a deep crouch, then throws a hard punch forward LOW, his right arm fully extended straight ahead just above the ground, fist far in front of his knees, then pulls the arm back and stays crouched." },
+  { "char": "orpheus", "name": "orpheus_p_hurt", "kind": "custom", "air": true, "pose": "cmuodbtd8000w9tjr398e3egg",
+    "prompt": "Bare hands only: NO shield, NO club, NO weapon, no object. Hit by an unseen blow from the front: he recoils backward in pain, collapses to his knees, then falls onto his back and lies still." }
+]

@@ -186,8 +186,10 @@
       };
     }
     // The frame of the equipped weapon's set, or the club set when that weapon lacks this frame.
-    frameName(g) {
-      const n = this.baseFrame(g), w = this.weapon;
+    frameName(g) { return this.wf(this.baseFrame(g)); }
+    // 'hero_x' -> the equipped weapon's version of that frame when it exists (death, item-get and the rest)
+    wf(n) {
+      const w = this.weapon;
       if (!w || w.prefix === 'hero_') return n;
       const alt = w.prefix + n.slice(5);
       return O.SPR[alt] ? alt : n;
@@ -233,7 +235,10 @@
       g.spark(this.x + this.w / 2, this.y + this.h / 2);
       if (this.hp <= 0) this.kill(g); else this.onHit(g, dir);
     }
-    onHit(g, dir) { this.vx = dir * 2; this.knock = 8; }
+    // knockback, unless it would push a walker off a ledge (bats and the boar handle their own)
+    // In the air a hit leaves the jump alone (jumps are only taken when they land safely), so it can't be
+    // flung over a pit nor stopped above one; on the ground it is pushed back unless that means a ledge.
+    onHit(g, dir) { this.knock = 8; if (this.onGround) this.vx = this.groundAhead(g.lvl, dir) ? dir * 2 : 0; }
     kill(g) {
       this.remove = true;
       g.puff(this.x + this.w / 2, this.y + this.h / 2);
@@ -241,6 +246,36 @@
       g.drop(this);
     }
     tick() { if (this.flash > 0) this.flash--; if (this.inv > 0) this.inv--; this.t++; }
+    // Where would a jump with (vx, vy) land? Simulates the arc; true only if it lands on solid ground
+    // (or a platform) inside the level — never in a pit or on spikes.
+    safeJump(lvl, vx, vy) {
+      let x = this.x, y = this.y, v = vy;
+      for (let i = 0; i < 180; i++) {
+        const prevBottom = y + this.h;
+        v = Math.min(P.maxFall, v + P.grav);
+        x += vx; y += v;
+        if (x < 0 || x + this.w > lvl.pxW) return false;
+        const hx0 = Math.floor(x / T), hx1 = Math.floor((x + this.w - 1) / T);
+        // hitting a wall from the side mid-jump means dropping down beside it: not safe
+        const ry0 = Math.floor(y / T), ry1 = Math.floor((y + this.h - 1) / T);
+        for (let ty = ry0; ty <= ry1; ty++) for (let tx = hx0; tx <= hx1; tx++) if (lvl.isSolid(tx, ty)) return false;
+        if (v > 0) {
+          const ty = Math.floor((y + this.h) / T);
+          if (ty >= lvl.h) return false;
+          // a landing only counts when the feet come down onto the top of a tile (as moveBody does)
+          if (prevBottom > ty * T + 0.01) continue;
+          for (let tx = hx0; tx <= hx1; tx++) {
+            if (lvl.isSolid(tx, ty) || lvl.isOneWay(tx, ty)) return !lvl.isHazard(tx, ty - 1) && !lvl.isHazard(tx, ty);
+          }
+        }
+      }
+      return false;
+    }    // Is there safe ground under the next step in direction dir (default: facing)?
+    groundAhead(lvl, dir) {
+      const d = dir || this.facing, fx = d > 0 ? this.x + this.w + 1 : this.x - 1;
+      const tx = Math.floor(fx / T), ty = Math.floor((this.y + this.h + 1) / T);
+      return (lvl.isSolid(tx, ty) || lvl.isOneWay(tx, ty)) && !lvl.isHazard(tx, ty - 1);
+    }
     edgeAhead(lvl) {
       const fx = this.facing > 0 ? this.x + this.w + 1 : this.x - 1;
       const tx = Math.floor(fx / T), ty = Math.floor((this.y + this.h + 1) / T);
@@ -337,8 +372,12 @@
       const dx = p.x + p.w / 2 - (this.x + this.w / 2), dy = Math.abs(p.y + p.h - (this.y + this.h));
       if (this.jumpCool > 0) this.jumpCool--;
       if (this.swingCool > 0) this.swingCool--;
-      if (this.knock > 0) { this.knock--; this.vx *= 0.9; this.swing = 0; }
-      else if (this.swing > 0) {
+      if (this.knock > 0) {
+        // knocked back, but never off a ledge
+        this.knock--;
+        if (this.onGround) { this.vx *= 0.9; if (!this.groundAhead(lvl, Math.sign(this.vx) || this.facing)) this.vx = 0; }
+        this.swing = 0;
+      } else if (this.swing > 0) {
         this.vx = 0;
         const e = S.total - this.swing;
         if (e === S.wind) g.sfx('swing');
@@ -346,19 +385,22 @@
       } else if (Math.abs(dx) < 160) {
         this.facing = dx < 0 ? -1 : 1;
         if (this.onGround && this.swingCool === 0 && Math.abs(dx) < 34 && dy < 14) { this.swing = S.total; this.vx = 0; }
-        else {
-          this.vx = this.facing * 0.75;
-          if (this.onGround && this.edgeAhead(lvl)) this.vx = 0;
-          if (this.onGround && this.jumpCool === 0 &&
-              (this.blocked || (p.atk > 0 && Math.abs(dx) < 52 && Math.random() < 0.25))) {
-            this.vy = -4.2; this.jumpCool = 50;
-          }
+        else if (this.onGround) {
+          const sp = 0.75, dir = this.facing;
+          const edge = !this.groundAhead(lvl, dir);
+          // jump over a wall or a gap only when the arc lands on safe ground; dodge a swing the same way
+          const wantJump = this.jumpCool === 0 && (this.blocked || edge || (p.atk > 0 && Math.abs(dx) < 52 && Math.random() < 0.25));
+          if (wantJump && Math.abs(dx) > 10 && this.safeJump(lvl, dir * 1.2, -4.2)) { this.vx = dir * 1.2; this.vy = -4.2; this.jumpCool = 50; }
+          else if (edge) {
+            // no way across: wait at the edge, pacing a little (it never walks into the pit)
+            this.vx = 0; this.pace = (this.pace || 0) + 1;
+            if ((this.pace >> 5) & 1 && this.groundAhead(lvl, -dir)) this.vx = -dir * 0.4;
+          } else this.vx = dir * sp;
         }
-      } else this.vx = 0;
+      } else if (this.onGround) this.vx = 0;
       this.fall(lvl);
       this.blocked = this.hitWall;
-    }
-    attackBox() {
+    }    attackBox() {
       if (this.swing <= 0) return null;
       const S = Satyr.SWING, e = S.total - this.swing;
       if (e < S.wind || e > S.hit) return null;

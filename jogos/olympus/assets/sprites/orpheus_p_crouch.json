@@ -1,39 +1,39 @@
 {
  "image": "orpheus_p_crouch.png",
- "w": 399,
- "h": 356,
- "ax": 200,
- "ay": 349,
+ "w": 395,
+ "h": 528,
+ "ax": 181,
+ "ay": 522,
  "frames": {
   "hero_p_crouch": {
    "x": 0,
    "y": 0,
-   "src": 24
+   "src": 30
   },
   "hero_p_catk_0": {
-   "x": 399,
+   "x": 395,
+   "y": 0,
+   "src": 20
+  },
+  "hero_p_catk_1": {
+   "x": 790,
    "y": 0,
    "src": 21
   },
-  "hero_p_catk_1": {
-   "x": 798,
-   "y": 0,
-   "src": 27
-  },
   "hero_p_catk_2": {
-   "x": 1197,
+   "x": 1185,
    "y": 0,
-   "src": 33
+   "src": 22
   },
   "hero_p_catk_3": {
-   "x": 1596,
+   "x": 1580,
    "y": 0,
-   "src": 39
+   "src": 24
   },
   "hero_p_catk_4": {
-   "x": 1995,
+   "x": 1975,
    "y": 0,
-   "src": 45
+   "src": 28
   }
  },
  "stand": 639

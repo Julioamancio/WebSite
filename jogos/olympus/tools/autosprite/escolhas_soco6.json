@@ -1,0 +1,25 @@
+{
+ "orpheus_p_crouch": {
+  "raw": "orpheus_p_lowpunch2",
+  "char": "orpheus",
+  "anchor_raw": "orpheus_p_lowpunch2",
+  "frames": {
+   "hero_p_crouch": 30,
+   "hero_p_catk_0": 20,
+   "hero_p_catk_1": 21,
+   "hero_p_catk_2": 22,
+   "hero_p_catk_3": 24,
+   "hero_p_catk_4": 28
+  }
+ },
+ "orpheus_p_hurt": {
+  "raw": "orpheus_p_hurt",
+  "char": "orpheus",
+  "anchor_raw": "orpheus_p_hurt",
+  "frames": {
+   "hero_p_hurt": 25,
+   "hero_p_dead_0": 33,
+   "hero_p_dead_1": 52
+  }
+ }
+}

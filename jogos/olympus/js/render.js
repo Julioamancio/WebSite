@@ -326,8 +326,9 @@
 
   P.drawDeath = function (c) {
     const p = this.player;
-    if (this.dieT < 50) O.drawBody(c, this, 'hero_hurt', p, ((this.dieT >> 3) & 1) === 1, (this.dieT >> 1) & 1);
-    else O.drawBody(c, this, this.dieT < 70 ? 'hero_dead_0' : 'hero_dead_1', p, p.facing < 0, false);
+    const wf = (n) => (p.wf ? p.wf(n) : n);
+    if (this.dieT < 50) O.drawBody(c, this, wf('hero_hurt'), p, ((this.dieT >> 3) & 1) === 1, (this.dieT >> 1) & 1);
+    else O.drawBody(c, this, wf(this.dieT < 70 ? 'hero_dead_0' : 'hero_dead_1'), p, p.facing < 0, false);
   };
 
   P.drawFx = function (c) {

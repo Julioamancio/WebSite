@@ -65,6 +65,23 @@ const GAME = require('url').pathToFileURL(path.resolve(__dirname, '..', 'index.h
     g.loadLevel('den', { tx: 2, row: 11 }); g.st.flags.cs_boar = 1;
     out.boarGore = hurtBy('boar', (e) => { e.setState('idle'); e.st = 25; e.x = g.player.x + g.player.w + 4; e.dir = e.facing = -1; e.dmg = 0; });
     g.st = Object.assign(g.st, { items: { club: true, sandals: true } });
+    // smart satyr: across a pit it jumps only when the arc lands safely, otherwise waits; a hit never pushes it in
+    const noFall = (sx, px, hit) => {
+      g.dialog = null; g.state = 'play'; g.st.hp = 99; g.st.maxHp = 99;
+      g.loadLevel('forest', { tx: 1, row: 11 }); g.enemies = [OLY.makeEnemy({ kind: 'satyr', tx: sx })];
+      const s = g.enemies[0]; s.dmg = 0; s.hp = 99; g.player.place(px * T, 176); g.player.inv = 1e9; g.player.facing = sx > px ? 1 : -1;
+      let fell = false;
+      for (let i = 0; i < 900; i++) {
+        if (hit && i % 40 === 5) I.latch.attack = true;
+        step(1);
+        if (s.remove || s.y > g.lvl.pxH) { fell = true; break; }
+      }
+      return { fell, x: Math.round(s.x / T) };
+    };
+    out.satyrGap = noFall(19, 27, false);
+    out.satyrWideGap = noFall(44, 52, false);
+    out.satyrKnockEdge = noFall(21, 20, true);
+    g.st.hp = 12; g.st.maxHp = 12;
     // cutscenes: entering the temple plays the Zeus cutscene, then Zeus talks; the opening runs to the village
     OLY.Cutscene.available = cutAvail; g.st.flags = {}; g.state = 'play'; g.trans = null;
     g.loadLevel('zeus', { tx: 2, row: 11 }); out.cutZeus = g.state === 'cut';

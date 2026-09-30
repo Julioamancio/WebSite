@@ -1,0 +1,14 @@
+{
+  "name": "orpheus-tools",
+  "private": true,
+  "description": "Ferramentas de teste e captura de tela do jogo Orpheus: Song of Olympus",
+  "scripts": {
+    "teste": "node regressao.js",
+    "print": "node gameshot.js captura.png village 8",
+    "sprites": "node preview.js sprites.png hero_ 4 sky",
+    "proporcao": "node prop.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.0"
+  }
+}

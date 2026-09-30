@@ -1,0 +1,29 @@
+{
+ "image": "zeus_idle.png",
+ "w": 311,
+ "h": 575,
+ "ax": 98,
+ "ay": 569,
+ "frames": {
+  "zeus_idle_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "zeus_idle_1": {
+   "x": 311,
+   "y": 0,
+   "src": 14
+  },
+  "zeus_idle_2": {
+   "x": 622,
+   "y": 0,
+   "src": 28
+  },
+  "zeus_idle_3": {
+   "x": 933,
+   "y": 0,
+   "src": 42
+  }
+ }
+}

@@ -1,0 +1,39 @@
+{
+ "image": "elder_talk.png",
+ "w": 330,
+ "h": 565,
+ "ax": 135,
+ "ay": 558,
+ "frames": {
+  "elder_talk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "elder_talk_1": {
+   "x": 330,
+   "y": 0,
+   "src": 9
+  },
+  "elder_talk_2": {
+   "x": 660,
+   "y": 0,
+   "src": 18
+  },
+  "elder_talk_3": {
+   "x": 990,
+   "y": 0,
+   "src": 27
+  },
+  "elder_talk_4": {
+   "x": 1320,
+   "y": 0,
+   "src": 36
+  },
+  "elder_talk_5": {
+   "x": 1650,
+   "y": 0,
+   "src": 45
+  }
+ }
+}

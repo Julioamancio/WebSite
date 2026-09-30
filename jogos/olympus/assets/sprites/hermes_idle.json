@@ -1,0 +1,29 @@
+{
+ "image": "hermes_idle.png",
+ "w": 281,
+ "h": 571,
+ "ax": 106,
+ "ay": 565,
+ "frames": {
+  "hermes_idle_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "hermes_idle_1": {
+   "x": 281,
+   "y": 0,
+   "src": 14
+  },
+  "hermes_idle_2": {
+   "x": 562,
+   "y": 0,
+   "src": 28
+  },
+  "hermes_idle_3": {
+   "x": 843,
+   "y": 0,
+   "src": 42
+  }
+ }
+}

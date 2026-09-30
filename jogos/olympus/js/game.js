@@ -91,6 +91,8 @@
     }
     startNew(withStory) {
       this.st = newState();
+      // HD: the opening is the cinematic cutscene (CS1-CS5); the old story pages stay as fallback.
+      if (withStory && O.Cutscene && O.Cutscene.start(this, ['cs1', 'cs2', 'cs3', 'cs4', 'cs5'], () => this.startNew(false))) return;
       if (withStory) {
         this.state = 'story'; this.page = 0; this.chars = 0; this.storyT = 0;
         this.music('title');
@@ -117,6 +119,7 @@
       this.look = this.player.facing * 28;
       this.updateCamera(true);
       this.banner = 150;
+      if (O.Cutscene && this.state === 'play') O.Cutscene.onLevel(this);
     }
     openDenDoor() {
       for (let y = 8; y <= 10; y++) for (let x = 21; x <= 22; x++) this.lvl.setTile(x, y, 'n');
@@ -126,7 +129,8 @@
       this.trans = { t: 0, dir: 1, cb: () => this.loadLevel(id, spawn) };
     }
     toEnding() {
-      this.trans = { t: 0, dir: 1, cb: () => { this.state = 'ending'; this.endT = 0; this.music('temple'); } };
+      const ending = () => { this.state = 'ending'; this.endT = 0; this.music('temple'); };
+      this.trans = { t: 0, dir: 1, cb: () => { if (!(O.Cutscene && O.Cutscene.start(this, ['end'], ending))) ending(); } };
     }
 
     /* ----- dialogue ----- */
@@ -239,7 +243,8 @@
       this.openDenDoor();
       this.pickups.push(new O.Pickup('ambrosia', boss.x + boss.w / 2 - 4, boss.y, -3, Infinity));
       this.music('fanfare', 'temple');
-      this.say('', ['THE ERYMANTHIAN BOAR HAS FALLEN! A PASSAGE HAS OPENED TO THE EAST.'], () => this.save({ tx: 10, row: 11 }));
+      const after = () => { this.music('temple'); this.say('', ['THE ERYMANTHIAN BOAR HAS FALLEN! A PASSAGE HAS OPENED TO THE EAST.'], () => this.save({ tx: 10, row: 11 })); };
+      if (!(O.Cutscene && O.Cutscene.start(this, ['string1'], after))) after();
     }
     die() {
       this.state = 'dying'; this.dieT = 0;
@@ -269,6 +274,7 @@
           }
           break;
         case 'story': this.updateStory(); break;
+        case 'cut': O.Cutscene.update(this); break;
         case 'play': this.updatePlay(); break;
         case 'itemget':
           this.updateAmbient();
@@ -384,7 +390,7 @@
 
       if (I.pressed.up && p.onGround) {
         const npc = this.npcs.find((n) => n.near(p));
-        if (npc && O.TALK[npc.kind]) { O.TALK[npc.kind](this); return; }
+        if (npc && O.TALK[npc.kind]) { this.talking = npc; O.TALK[npc.kind](this); return; }
         const ex = (lvl.def.exits || []).find((e) => e.type === 'door' && (!e.when || e.when(this)) &&
           O.overlap(p, { x: e.tx * T, y: e.ty * T, w: e.tw * T, h: e.th * T }));
         if (ex) { this.goto(ex.to, ex.spawn); return; }
@@ -443,7 +449,7 @@
       this.look = (this.look || 0) + ((p.facing * 28) - (this.look || 0)) * 0.04;
       const target = O.clamp(p.x + p.w / 2 - W / 2 + this.look, 0, Math.max(0, lvl.pxW - W));
       this.camF = snap || this.camF === undefined ? target : this.camF + (target - this.camF) * 0.12;
-      this.cam = Math.round(this.camF);
+      this.cam = O.px ? O.px(this.camF) : Math.round(this.camF); // HD: steps of one device pixel
     }
   }
 

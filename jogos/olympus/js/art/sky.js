@@ -1776,7 +1776,7 @@
   const ENT = { on: false, ctx: null, game: null };
   const ORIG = {};
   function litDrawA(ctx, name, x, y, flip, white, alpha) {
-    if (ENT.on && ctx === ENT.ctx && !white) {
+    if (ENT.on && ctx === ENT.ctx && !white && !(O.SPR[name] && O.SPR[name].hd)) { // HD art is already lit
       const s = O.SPR[name], cls = s && classOf(name);
       const th = ENT.game.lvl.theme, fn = cls && (SPRITE_LIGHT[th] || (th === 'village' ? null : SPRITE_LIGHT.temple));
       if (fn) {
@@ -1817,7 +1817,7 @@
       const origR = O.renderLevel;
       O.renderLevel = function (lvl) {
         const r = origR.apply(this, arguments);
-        try { bakeLevel(lvl); } catch (e) { O.logOnce('sky.bake', e); }
+        if (!(O.HD && O.HD.scene(lvl))) { try { bakeLevel(lvl); } catch (e) { O.logOnce('sky.bake', e); } } // HD scenery is already lit
         return r;
       };
       O.renderLevel.__sky = true;
@@ -1956,7 +1956,7 @@
       if (!game || !game.lvl) return;
       const th = game.lvl.theme, fn = THEME_LIGHT[th] || THEME_LIGHT.temple;
       ctx.save();
-      ctx.setTransform(1, 0, 0, 1, 0, 0); // screen-shake must not expose unlit edges
+      if (O.baseTransform) O.baseTransform(ctx); else ctx.setTransform(1, 0, 0, 1, 0, 0); // screen-shake must not expose unlit edges
       ctx.imageSmoothingEnabled = false;
       fn(ctx, game, game.t || 0);
       ctx.restore();
@@ -1971,7 +1971,7 @@
       if (theme === 'forest') ops.push(['multiply', 'rgb(150,142,205)']);
       if (!ops.length) return;
       ctx.save();
-      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      if (O.baseTransform) O.baseTransform(ctx); else ctx.setTransform(1, 0, 0, 1, 0, 0);
       gradeOps(ctx, ops, mask || null);
       ctx.restore();
     }

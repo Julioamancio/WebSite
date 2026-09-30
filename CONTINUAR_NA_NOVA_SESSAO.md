@@ -190,3 +190,15 @@ As páginas marcam **Pronto** num banco do Artifact (coleção `prontos`, id = n
 - Crédito é dinheiro dele: teste com uma geração antes de lote de um tipo novo; conferir travas antes de mandar gerar.
 - Windows + PowerShell; nunca rodar comandos em `C:\WINDOWS\System32`.
 - Não concordar automaticamente; apontar riscos; nunca dizer que fez sem verificar.
+
+
+---
+
+## ESTADO EM 30/09/2026 (madrugada) — beta publicada
+
+- **Jogo no ar (beta 2.5D): https://orpheus.destruitor.com.br** (teste só do Orfeu: /teste.html). Detalhes na linha 11 da seção 2 do ORPHEUS_MEMORIA_COMPLETA.md.
+- Tarefa 1 (AutoSprite): **FEITA**, e ampliada — Orfeu completo, idle + falar dos 7 NPCs, inimigos (cobra, morcego, sátiro, javali) e 4 animações com a lira. Sem o MCP carregado, o cliente em `jogos/olympus/tools/autosprite/lib.mjs` fala com a API lendo AUTOSPRITE_API_KEY do ambiente.
+- Tarefa 2 (clipes do Flow): o Flow parou; as cutscenes foram feitas **no próprio motor** (`js/cutscene.js`). A página dos 17 prompts continua pronta: https://claude.ai/artifact/9N1dVQMPKwPWXMLcMAv2Bk — se um dia os clipes vierem, podem substituir as cenas.
+- Tarefa 3 (Rainha e Javali no Flow): o javali foi criado direto no AutoSprite; a Rainha ainda não tem base (na cutscene final ela só aparece no texto).
+- Publicar de novo: `python jogos/olympus/tools/empacotar.py <versao> <saida.tgz>` e seguir o roteiro da memória `orpheus-vps` (upload por HTTP; SSH desta rede trava acima de ~20 KB).
+- Pendências conhecidas da beta: HUD e fonte da caixa de diálogo ainda são pixel; céu da vila é um degradê (falta o cenário 03); a Rainha não tem sprite; botões de toque um pouco em cima da arte no celular.

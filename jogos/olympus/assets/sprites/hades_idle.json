@@ -1,0 +1,29 @@
+{
+ "image": "hades_idle.png",
+ "w": 310,
+ "h": 569,
+ "ax": 157,
+ "ay": 561,
+ "frames": {
+  "hades_idle_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "hades_idle_1": {
+   "x": 310,
+   "y": 0,
+   "src": 14
+  },
+  "hades_idle_2": {
+   "x": 620,
+   "y": 0,
+   "src": 28
+  },
+  "hades_idle_3": {
+   "x": 930,
+   "y": 0,
+   "src": 42
+  }
+ }
+}

@@ -506,6 +506,7 @@
   O.drawA = function (ctx, name, x, y, flip, white, alpha) {
     const s = O.SPR[name];
     if (!s) return null;
+    if (s.hd) return O.HD.drawFrame(ctx, s, x, y, flip, white, alpha);
     const sx = Math.round(flip ? x - (s.w - 1 - s.ax) : x - s.ax), sy = Math.round(y - s.ay);
     if (alpha !== undefined) ctx.globalAlpha = alpha;
     ctx.drawImage(white ? (flip ? s.wf : s.wn) : (flip ? s.f : s.n), sx, sy);
@@ -516,6 +517,7 @@
   O.drawSpr = function (ctx, name, x, y, flip, white) {
     const s = O.SPR[name];
     if (!s) return;
+    if (s.hd) { O.HD.drawFrame(ctx, s, flip ? x + s.w - s.ax : x + s.ax, y + s.ay, flip, white); return; }
     ctx.drawImage(white ? (flip ? s.wf : s.wn) : (flip ? s.f : s.n), Math.round(x), Math.round(y));
   };
 })(window.OLY);

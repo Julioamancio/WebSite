@@ -7,9 +7,11 @@ const GAME = require('url').pathToFileURL(path.resolve(__dirname, '..', 'index.h
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1152, height: 648 } });
   const errs = []; p.on('pageerror', e => errs.push('ERR ' + e.message)); p.on('console', m => { if (m.type() === 'error') errs.push('CERR ' + m.text()); });
-  await p.goto(GAME); await p.waitForTimeout(800);
+  await p.goto(GAME); await p.waitForFunction(() => window.OLY && OLY.game, null, { timeout: 30000 }); await p.waitForTimeout(200);
   const r = await p.evaluate(() => {
     const g = OLY.game, I = OLY.Input, out = {}, T = 16;
+    out.hd = !!(OLY.HD && OLY.HD.on && OLY.SPR.hero_idle_0.hd);
+    const cutAvail = OLY.Cutscene.available; OLY.Cutscene.available = () => false; // gameplay first, cutscenes below
     try { localStorage.clear(); } catch (e) {}
     const step = n => { for (let i = 0; i < n; i++) { I.update(); g.update(); } };
     const talkThrough = (until, max) => { for (let i = 0; i < (max || 80) && !until(); i++) { if (g.dialog) { I.latch.jump = true; } step(4); } };
@@ -40,6 +42,14 @@ const GAME = require('url').pathToFileURL(path.resolve(__dirname, '..', 'index.h
     out.jump = jump(false); out.jumpSandals = jump(true);
     // continue from save
     g.state = 'gameover'; g.continueAfterDeath(); out.continue = { state: g.state, lvl: g.lvl.id, hp: g.st.hp };
+    // cutscenes: entering the temple plays the Zeus cutscene, then Zeus talks; the opening runs to the village
+    OLY.Cutscene.available = cutAvail; g.st.flags = {}; g.state = 'play'; g.trans = null;
+    g.loadLevel('zeus', { tx: 2, row: 11 }); out.cutZeus = g.state === 'cut';
+    for (let i = 0; i < 900 && g.state === 'cut'; i++) step(1);
+    out.cutZeusThen = { state: g.state, dialog: !!g.dialog, talking: g.talking && g.talking.kind };
+    g.dialog = null; g.startNew(true); out.opening = g.state === 'cut';
+    for (let i = 0; i < 400 && g.state === 'cut'; i++) { I.latch.jump = true; step(60); if (g.trans) step(40); }
+    out.openingEnd = { state: g.state, lvl: g.lvl && g.lvl.id };
     return out;
   });
   console.log(JSON.stringify(r));

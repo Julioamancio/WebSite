@@ -1,0 +1,49 @@
+{
+ "image": "hades_walk.png",
+ "w": 393,
+ "h": 572,
+ "ax": 208,
+ "ay": 564,
+ "frames": {
+  "hades_walk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "hades_walk_1": {
+   "x": 393,
+   "y": 0,
+   "src": 1
+  },
+  "hades_walk_2": {
+   "x": 786,
+   "y": 0,
+   "src": 2
+  },
+  "hades_walk_3": {
+   "x": 1179,
+   "y": 0,
+   "src": 3
+  },
+  "hades_walk_4": {
+   "x": 1572,
+   "y": 0,
+   "src": 4
+  },
+  "hades_walk_5": {
+   "x": 1965,
+   "y": 0,
+   "src": 5
+  },
+  "hades_walk_6": {
+   "x": 2358,
+   "y": 0,
+   "src": 6
+  },
+  "hades_walk_7": {
+   "x": 2751,
+   "y": 0,
+   "src": 7
+  }
+ }
+}

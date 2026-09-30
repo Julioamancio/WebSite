@@ -1,0 +1,49 @@
+{
+ "image": "elder_walk.png",
+ "w": 642,
+ "h": 578,
+ "ax": 372,
+ "ay": 572,
+ "frames": {
+  "elder_walk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "elder_walk_1": {
+   "x": 642,
+   "y": 0,
+   "src": 1
+  },
+  "elder_walk_2": {
+   "x": 1284,
+   "y": 0,
+   "src": 2
+  },
+  "elder_walk_3": {
+   "x": 1926,
+   "y": 0,
+   "src": 3
+  },
+  "elder_walk_4": {
+   "x": 2568,
+   "y": 0,
+   "src": 4
+  },
+  "elder_walk_5": {
+   "x": 3210,
+   "y": 0,
+   "src": 5
+  },
+  "elder_walk_6": {
+   "x": 3852,
+   "y": 0,
+   "src": 6
+  },
+  "elder_walk_7": {
+   "x": 4494,
+   "y": 0,
+   "src": 7
+  }
+ }
+}

@@ -1,0 +1,39 @@
+{
+ "image": "hermes_talk.png",
+ "w": 300,
+ "h": 567,
+ "ax": 106,
+ "ay": 560,
+ "frames": {
+  "hermes_talk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "hermes_talk_1": {
+   "x": 300,
+   "y": 0,
+   "src": 9
+  },
+  "hermes_talk_2": {
+   "x": 600,
+   "y": 0,
+   "src": 18
+  },
+  "hermes_talk_3": {
+   "x": 900,
+   "y": 0,
+   "src": 27
+  },
+  "hermes_talk_4": {
+   "x": 1200,
+   "y": 0,
+   "src": 36
+  },
+  "hermes_talk_5": {
+   "x": 1500,
+   "y": 0,
+   "src": 45
+  }
+ }
+}

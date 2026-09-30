@@ -6,7 +6,7 @@ let chromium;
 try { ({ chromium } = require('playwright')); } catch (e) { ({ chromium } = require(require('child_process').execSync('npm root -g').toString().trim() + '/playwright')); }
 const GAME = require('url').pathToFileURL(path.resolve(__dirname, '..', 'index.html')).href;
 (async () => {
-  const [out, level = 'village', tx = '6', row = '11', scale = '3', extra = ''] = process.argv.slice(2);
+  const [out, level = 'village', tx = '6', row = '11', scale = '5', extra = ''] = process.argv.slice(2);
   const S = +scale;
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 384 * S, height: 216 * S } });
@@ -14,7 +14,8 @@ const GAME = require('url').pathToFileURL(path.resolve(__dirname, '..', 'index.h
   p.on('pageerror', e => errs.push('PAGEERROR ' + e.message));
   p.on('console', m => { if (m.type() === 'error' || m.type() === 'warning') errs.push(m.type() + ': ' + m.text()); });
   await p.goto(GAME);
-  await p.waitForTimeout(500);
+  await p.waitForFunction(() => window.OLY && OLY.game, null, { timeout: 30000 });
+  await p.waitForTimeout(300);
   await p.evaluate(([level, tx, row, extra]) => {
     const g = OLY.game; g.trans = null; g.st.items.club = true;
     if (level === 'title') { g.state = 'title'; }

@@ -1,0 +1,39 @@
+{
+ "image": "hades_talk.png",
+ "w": 311,
+ "h": 567,
+ "ax": 157,
+ "ay": 558,
+ "frames": {
+  "hades_talk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "hades_talk_1": {
+   "x": 311,
+   "y": 0,
+   "src": 9
+  },
+  "hades_talk_2": {
+   "x": 622,
+   "y": 0,
+   "src": 18
+  },
+  "hades_talk_3": {
+   "x": 933,
+   "y": 0,
+   "src": 27
+  },
+  "hades_talk_4": {
+   "x": 1244,
+   "y": 0,
+   "src": 36
+  },
+  "hades_talk_5": {
+   "x": 1555,
+   "y": 0,
+   "src": 45
+  }
+ }
+}

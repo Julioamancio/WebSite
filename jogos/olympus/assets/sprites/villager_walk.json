@@ -1,0 +1,49 @@
+{
+ "image": "villager_walk.png",
+ "w": 328,
+ "h": 571,
+ "ax": 101,
+ "ay": 557,
+ "frames": {
+  "villager_walk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "villager_walk_1": {
+   "x": 328,
+   "y": 0,
+   "src": 1
+  },
+  "villager_walk_2": {
+   "x": 656,
+   "y": 0,
+   "src": 2
+  },
+  "villager_walk_3": {
+   "x": 984,
+   "y": 0,
+   "src": 3
+  },
+  "villager_walk_4": {
+   "x": 1312,
+   "y": 0,
+   "src": 4
+  },
+  "villager_walk_5": {
+   "x": 1640,
+   "y": 0,
+   "src": 5
+  },
+  "villager_walk_6": {
+   "x": 1968,
+   "y": 0,
+   "src": 6
+  },
+  "villager_walk_7": {
+   "x": 2296,
+   "y": 0,
+   "src": 7
+  }
+ }
+}

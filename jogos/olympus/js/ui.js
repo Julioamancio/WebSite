@@ -891,7 +891,8 @@ window.OLY = window.OLY || {};
     box(c, x + 3, y + 3, s - 6, s - 6, OUT);
     const p = O.SPR[name];
     box(c, x + 4, y + 4, 48, 48, '#2a2040');
-    if (p) c.drawImage(p.n, 0, 0, Math.min(48, p.w), Math.min(48, p.h), x + 4, y + 4, Math.min(48, p.w), Math.min(48, p.h));
+    if (p && p.hdc) { c.save(); c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high'; c.drawImage(p.hdc, x + 4, y + 4, 48, 48); c.restore(); }
+    else if (p) c.drawImage(p.n, 0, 0, Math.min(48, p.w), Math.min(48, p.h), x + 4, y + 4, Math.min(48, p.w), Math.min(48, p.h));
     // inner glass sheen
     c.fillStyle = 'rgba(255,255,255,0.10)'; c.fillRect(x + 4, y + 4, 48, 1); c.fillRect(x + 4, y + 5, 1, 47);
     c.drawImage(STUD, x - 2, y - 2); c.drawImage(STUD, x + s - 5, y - 2); c.drawImage(STUD, x - 2, y + s - 5); c.drawImage(STUD, x + s - 5, y + s - 5);

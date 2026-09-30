@@ -34,9 +34,12 @@ def alpha_bbox(im, thr=40):
     return im.getchannel('A').point(lambda v: 255 if v > thr else 0).getbbox()
 
 
-def feet_anchor(char):
-    """Centro da sola no quadro 0 do idle do personagem (coordenadas do quadro 768)."""
-    im = frames_of(char + '_idle')[0]
+def feet_anchor(char, raw=None):
+    """Centro da sola no quadro 0 do idle do personagem (coordenadas do quadro 768).
+    `raw` escolhe outra folha de referência (ex.: as da lira, que têm outro enquadramento)."""
+    if not raw:
+        raw = char + '_idle' if os.path.exists(os.path.join(raw_dir, char + '_idle.png')) else char + '_walk'
+    im = frames_of(raw)[0]
     bb = alpha_bbox(im)
     band = im.crop((0, bb[3] - 12, im.width, bb[3]))
     fb = alpha_bbox(band)
@@ -47,7 +50,17 @@ for out_name, s in spec.items():
     fr = frames_of(s['raw'])
     names = list(s['frames'])
     chosen = [fr[s['frames'][n]] for n in names]
-    ax0, ay0 = feet_anchor(s['char'])
+    ax0, ay0 = feet_anchor(s['char'], s.get('anchor_raw'))
+    if s.get('center'):  # voadores (morcego): cada quadro centrado no mesmo ponto, âncora no centro do corpo
+        b0 = alpha_bbox(chosen[0])
+        ax0, ay0 = (b0[0] + b0[2]) / 2, round((b0[1] + b0[3]) / 2)
+        moved = []
+        for im in chosen:
+            b = alpha_bbox(im)
+            cv = Image.new('RGBA', im.size, (0, 0, 0, 0))
+            cv.paste(im, (round(ax0 - (b[0] + b[2]) / 2), round(ay0 - (b[1] + b[3]) / 2)))
+            moved.append(cv)
+        chosen = moved
     if s.get('pes'):
         # no ar a física do motor é quem sobe o personagem: desce cada quadro até os pés tocarem ay0
         moved = []

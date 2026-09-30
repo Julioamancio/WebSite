@@ -1,0 +1,39 @@
+{
+ "image": "orpheus_crouch.png",
+ "w": 446,
+ "h": 414,
+ "ax": 149,
+ "ay": 407,
+ "frames": {
+  "hero_crouch": {
+   "x": 0,
+   "y": 0,
+   "src": 40
+  },
+  "hero_catk_0": {
+   "x": 446,
+   "y": 0,
+   "src": 29
+  },
+  "hero_catk_1": {
+   "x": 892,
+   "y": 0,
+   "src": 31
+  },
+  "hero_catk_2": {
+   "x": 1338,
+   "y": 0,
+   "src": 33
+  },
+  "hero_catk_3": {
+   "x": 1784,
+   "y": 0,
+   "src": 36
+  },
+  "hero_catk_4": {
+   "x": 2230,
+   "y": 0,
+   "src": 40
+  }
+ }
+}

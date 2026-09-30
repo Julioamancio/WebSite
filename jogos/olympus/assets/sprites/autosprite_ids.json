@@ -53,5 +53,23 @@
       "character": "cmunh17s8000lpgjenv6raaqf",
       "pose": "cmunh17t2000npgje9l67hqsh"
     }
+  },
+  "enemies": {
+    "snake": {
+      "character": "cmunjif0j0007ucyw2mwcq8ii",
+      "pose": "cmunjif1d0009ucywtjfniqfj"
+    },
+    "bat": {
+      "character": "cmunjitq0000s123sz8chp7y0",
+      "pose": "cmunjitqr000u123sh9j3k646"
+    },
+    "satyr": {
+      "character": "cmunjj84y0002cxujiuk39e3q",
+      "pose": "cmunjj85t0004cxujrovvu4t3"
+    },
+    "boar": {
+      "character": "cmunjjnp0000eq9xiv93lmm3k",
+      "pose": "cmunjjnpt000gq9xiayeb38sc"
+    }
   }
 }

@@ -481,7 +481,9 @@
       const bob = this.float ? Math.round(Math.sin(this.t * 0.05) * 2) - 6 : 0;
       if (O.drawNPCAura && this.god) { try { O.drawNPCAura(c, g, this, bob); } catch (err) { O.logOnce('drawNPCAura', err); } }
       const blink = ((this.t + Math.round(this.x)) % 200) < 7 && O.SPR[this.kind + '_blink'];
-      const d = drawBody(c, g, blink ? this.kind + '_blink' : O.frame(this.kind + '_idle', this.t, 12, 4), this, this.facing < 0, false, 0, bob);
+      const talking = g.dialog && g.talking === this && O.SPR[this.kind + '_talk_0'];
+      const name = talking ? O.frame(this.kind + '_talk', this.t, 7, 6) : blink ? this.kind + '_blink' : O.frame(this.kind + '_idle', this.t, 12, 4);
+      const d = drawBody(c, g, name, this, this.facing < 0, false, 0, bob);
       if (d && this.near(g.player) && !g.dialog && ((this.t >> 4) & 1)) {
         O.drawA(c, 'arrow_up', d.sx + d.s.w / 2, d.sy - 4);
       }

@@ -1,0 +1,20 @@
+[
+  { "char": "boar", "name": "boar_idle", "kind": "idle", "end": true,
+    "prompt": "The giant boar stands on all four hooves breathing heavily, flanks rising and falling, bristly mane twitching, snorting small puffs of steam from the snout, tail flicking." },
+  { "char": "boar", "name": "boar_paw", "kind": "custom", "end": true,
+    "prompt": "The giant boar stays in place and angrily scrapes the ground with one front hoof twice, head lowered, tusks forward, snorting steam, ready to charge." },
+  { "char": "boar", "name": "boar_run", "kind": "run", "loop": true,
+    "prompt": "The giant boar charges at full speed in place toward the right (treadmill run, it stays in place): powerful galloping cycle, head low, tusks forward, mane bouncing." },
+  { "char": "boar", "name": "boar_stun", "kind": "custom", "end": true,
+    "prompt": "The giant boar is dazed after crashing into a wall: it sways on wobbly legs, head drooping and shaking, eyes half closed, then recovers to standing." },
+  { "char": "snake", "name": "snake_move", "kind": "custom", "loop": true, "end": true,
+    "prompt": "The snake slithers in place toward the right (it stays in place): smooth S-shaped waves travel along its body, head raised and steady, tongue flicking." },
+  { "char": "snake", "name": "snake_lunge", "kind": "custom", "end": true,
+    "prompt": "The snake coils back, then strikes forward to the right with its head and open mouth, fangs showing, then pulls back to its starting pose." },
+  { "char": "bat", "name": "bat_fly", "kind": "custom", "loop": true, "end": true,
+    "prompt": "The bat hovers in place flapping its leathery wings up and down in a fast steady rhythm, body bobbing slightly, red eyes glowing." },
+  { "char": "satyr", "name": "satyr_walk", "kind": "walk", "loop": true,
+    "prompt": "The satyr walks in place toward the right (treadmill walk, he stays in place) on his goat legs, swaggering, the wooden club in his right hand in every frame." },
+  { "char": "satyr", "name": "satyr_idle", "kind": "idle", "end": true,
+    "prompt": "The satyr stands menacingly, breathing, bouncing slightly on his goat legs, tapping the wooden club in his right hand, grinning." }
+]

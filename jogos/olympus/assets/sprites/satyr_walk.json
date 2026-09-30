@@ -1,0 +1,39 @@
+{
+ "image": "satyr_walk.png",
+ "w": 483,
+ "h": 719,
+ "ax": 266,
+ "ay": 713,
+ "frames": {
+  "satyr_walk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 16
+  },
+  "satyr_walk_1": {
+   "x": 483,
+   "y": 0,
+   "src": 20
+  },
+  "satyr_walk_2": {
+   "x": 966,
+   "y": 0,
+   "src": 24
+  },
+  "satyr_walk_3": {
+   "x": 1449,
+   "y": 0,
+   "src": 28
+  },
+  "satyr_walk_4": {
+   "x": 1932,
+   "y": 0,
+   "src": 32
+  },
+  "satyr_walk_5": {
+   "x": 2415,
+   "y": 0,
+   "src": 36
+  }
+ }
+}

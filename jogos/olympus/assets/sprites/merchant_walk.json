@@ -1,0 +1,49 @@
+{
+ "image": "merchant_walk.png",
+ "w": 342,
+ "h": 576,
+ "ax": 171,
+ "ay": 565,
+ "frames": {
+  "merchant_walk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "merchant_walk_1": {
+   "x": 342,
+   "y": 0,
+   "src": 1
+  },
+  "merchant_walk_2": {
+   "x": 684,
+   "y": 0,
+   "src": 2
+  },
+  "merchant_walk_3": {
+   "x": 1026,
+   "y": 0,
+   "src": 3
+  },
+  "merchant_walk_4": {
+   "x": 1368,
+   "y": 0,
+   "src": 4
+  },
+  "merchant_walk_5": {
+   "x": 1710,
+   "y": 0,
+   "src": 5
+  },
+  "merchant_walk_6": {
+   "x": 2052,
+   "y": 0,
+   "src": 6
+  },
+  "merchant_walk_7": {
+   "x": 2394,
+   "y": 0,
+   "src": 7
+  }
+ }
+}

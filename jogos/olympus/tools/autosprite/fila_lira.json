@@ -1,0 +1,10 @@
+[
+  { "char": "orpheus", "name": "orpheus_lyre_play", "kind": "custom", "end": true, "loop": true, "pose": "cmuni42a0000333vpt5jommca",
+    "prompt": "He holds the small golden lyre with seven strings against his chest in every frame, NO club, no weapon. He gently plucks the strings with his right fingers, head tilted slightly, soft smile, cape swaying softly." },
+  { "char": "orpheus", "name": "orpheus_lyre_drop_run", "kind": "custom", "pose": "cmuni42a0000333vpt5jommca",
+    "prompt": "Holding the golden lyre, he suddenly looks ahead in alarm, lets the lyre fall to the ground, then runs in place toward the right with empty hands (treadmill run, he stays in place). NO club, no weapon." },
+  { "char": "orpheus", "name": "orpheus_lyre_kneel", "kind": "custom", "pose": "cmuni42a0000333vpt5jommca",
+    "prompt": "Holding the golden lyre in his left hand, he sadly sinks down to kneel on one knee, then reaches his right hand forward and up toward the sky, and stays kneeling. NO club, no weapon." },
+  { "char": "orpheus", "name": "orpheus_lyre_walk", "kind": "walk", "pose": "cmuni42a0000333vpt5jommca",
+    "prompt": "Walks in place toward the right (treadmill walk, he stays in place), calm and determined, holding the golden lyre against his chest in every frame. NO club, no weapon." }
+]

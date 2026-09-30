@@ -1,0 +1,29 @@
+{
+ "image": "eurydice_idle.png",
+ "w": 163,
+ "h": 565,
+ "ax": 88,
+ "ay": 559,
+ "frames": {
+  "eurydice_idle_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "eurydice_idle_1": {
+   "x": 163,
+   "y": 0,
+   "src": 14
+  },
+  "eurydice_idle_2": {
+   "x": 326,
+   "y": 0,
+   "src": 28
+  },
+  "eurydice_idle_3": {
+   "x": 489,
+   "y": 0,
+   "src": 42
+  }
+ }
+}

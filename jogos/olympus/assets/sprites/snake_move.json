@@ -1,0 +1,29 @@
+{
+ "image": "snake_move.png",
+ "w": 763,
+ "h": 277,
+ "ax": 370,
+ "ay": 271,
+ "frames": {
+  "snake_move_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "snake_move_1": {
+   "x": 763,
+   "y": 0,
+   "src": 14
+  },
+  "snake_move_2": {
+   "x": 1526,
+   "y": 0,
+   "src": 28
+  },
+  "snake_move_3": {
+   "x": 2289,
+   "y": 0,
+   "src": 42
+  }
+ }
+}

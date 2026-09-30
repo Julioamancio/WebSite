@@ -1,0 +1,29 @@
+{
+ "image": "elder_idle.png",
+ "w": 282,
+ "h": 573,
+ "ax": 129,
+ "ay": 567,
+ "frames": {
+  "elder_idle_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "elder_idle_1": {
+   "x": 282,
+   "y": 0,
+   "src": 14
+  },
+  "elder_idle_2": {
+   "x": 564,
+   "y": 0,
+   "src": 28
+  },
+  "elder_idle_3": {
+   "x": 846,
+   "y": 0,
+   "src": 42
+  }
+ }
+}

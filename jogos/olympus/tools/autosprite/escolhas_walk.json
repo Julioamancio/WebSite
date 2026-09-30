@@ -1,0 +1,114 @@
+{
+    "orpheus_walk":  {
+                         "char":  "orpheus",
+                         "raw":  "orpheus_walk",
+                         "frames":  {
+                                        "hero_walk_0":  0,
+                                        "hero_walk_1":  1,
+                                        "hero_walk_2":  2,
+                                        "hero_walk_3":  3,
+                                        "hero_walk_4":  4,
+                                        "hero_walk_5":  5,
+                                        "hero_walk_6":  6,
+                                        "hero_walk_7":  7
+                                    }
+                     },
+    "eurydice_walk":  {
+                          "char":  "eurydice",
+                          "raw":  "eurydice_walk",
+                          "frames":  {
+                                         "eurydice_walk_0":  0,
+                                         "eurydice_walk_1":  1,
+                                         "eurydice_walk_2":  2,
+                                         "eurydice_walk_3":  3,
+                                         "eurydice_walk_4":  4,
+                                         "eurydice_walk_5":  5,
+                                         "eurydice_walk_6":  6,
+                                         "eurydice_walk_7":  7
+                                     }
+                      },
+    "elder_walk":  {
+                       "char":  "elder",
+                       "raw":  "elder_walk",
+                       "frames":  {
+                                      "elder_walk_0":  0,
+                                      "elder_walk_1":  1,
+                                      "elder_walk_2":  2,
+                                      "elder_walk_3":  3,
+                                      "elder_walk_4":  4,
+                                      "elder_walk_5":  5,
+                                      "elder_walk_6":  6,
+                                      "elder_walk_7":  7
+                                  }
+                   },
+    "merchant_walk":  {
+                          "char":  "merchant",
+                          "raw":  "merchant_walk",
+                          "frames":  {
+                                         "merchant_walk_0":  0,
+                                         "merchant_walk_1":  1,
+                                         "merchant_walk_2":  2,
+                                         "merchant_walk_3":  3,
+                                         "merchant_walk_4":  4,
+                                         "merchant_walk_5":  5,
+                                         "merchant_walk_6":  6,
+                                         "merchant_walk_7":  7
+                                     }
+                      },
+    "villager_walk":  {
+                          "char":  "villager",
+                          "raw":  "villager_walk",
+                          "frames":  {
+                                         "villager_walk_0":  0,
+                                         "villager_walk_1":  1,
+                                         "villager_walk_2":  2,
+                                         "villager_walk_3":  3,
+                                         "villager_walk_4":  4,
+                                         "villager_walk_5":  5,
+                                         "villager_walk_6":  6,
+                                         "villager_walk_7":  7
+                                     }
+                      },
+    "zeus_walk":  {
+                      "char":  "zeus",
+                      "raw":  "zeus_walk",
+                      "frames":  {
+                                     "zeus_walk_0":  0,
+                                     "zeus_walk_1":  1,
+                                     "zeus_walk_2":  2,
+                                     "zeus_walk_3":  3,
+                                     "zeus_walk_4":  4,
+                                     "zeus_walk_5":  5,
+                                     "zeus_walk_6":  6,
+                                     "zeus_walk_7":  7
+                                 }
+                  },
+    "hermes_walk":  {
+                        "char":  "hermes",
+                        "raw":  "hermes_walk",
+                        "frames":  {
+                                       "hermes_walk_0":  0,
+                                       "hermes_walk_1":  1,
+                                       "hermes_walk_2":  2,
+                                       "hermes_walk_3":  3,
+                                       "hermes_walk_4":  4,
+                                       "hermes_walk_5":  5,
+                                       "hermes_walk_6":  6,
+                                       "hermes_walk_7":  7
+                                   }
+                    },
+    "hades_walk":  {
+                       "char":  "hades",
+                       "raw":  "hades_walk",
+                       "frames":  {
+                                      "hades_walk_0":  0,
+                                      "hades_walk_1":  1,
+                                      "hades_walk_2":  2,
+                                      "hades_walk_3":  3,
+                                      "hades_walk_4":  4,
+                                      "hades_walk_5":  5,
+                                      "hades_walk_6":  6,
+                                      "hades_walk_7":  7
+                                  }
+                   }
+}

@@ -1,0 +1,64 @@
+{
+ "boar_idle": {
+  "raw": "boar_idle",
+  "char": "boar",
+  "frames": {
+   "boar_idle_0": 0,
+   "boar_idle_1": 14,
+   "boar_idle_2": 28,
+   "boar_idle_3": 42
+  }
+ },
+ "boar_paw": {
+  "raw": "boar_paw",
+  "char": "boar",
+  "frames": {
+   "boar_paw_0": 12,
+   "boar_paw_1": 20,
+   "boar_paw_2": 28,
+   "boar_paw_3": 36
+  }
+ },
+ "boar_run": {
+  "raw": "boar_run",
+  "char": "boar",
+  "frames": {
+   "boar_run_0": 16,
+   "boar_run_1": 20,
+   "boar_run_2": 24,
+   "boar_run_3": 28,
+   "boar_run_4": 32,
+   "boar_run_5": 36
+  }
+ },
+ "boar_stun": {
+  "raw": "boar_stun",
+  "char": "boar",
+  "frames": {
+   "boar_stun_0": 12,
+   "boar_stun_1": 24,
+   "boar_stun_2": 36,
+   "boar_stun_3": 48
+  }
+ },
+ "snake_move": {
+  "raw": "snake_move",
+  "char": "snake",
+  "anchor_raw": "snake_move",
+  "frames": {
+   "snake_move_0": 0,
+   "snake_move_1": 14,
+   "snake_move_2": 28,
+   "snake_move_3": 42
+  }
+ },
+ "snake_lunge": {
+  "raw": "snake_lunge",
+  "char": "snake",
+  "anchor_raw": "snake_move",
+  "frames": {
+   "snake_lunge_0": 24,
+   "snake_lunge_1": 36
+  }
+ }
+}

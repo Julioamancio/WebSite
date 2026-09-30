@@ -1,0 +1,49 @@
+{
+ "image": "orpheus_walk.png",
+ "w": 449,
+ "h": 580,
+ "ax": 188,
+ "ay": 567,
+ "frames": {
+  "hero_walk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "hero_walk_1": {
+   "x": 449,
+   "y": 0,
+   "src": 1
+  },
+  "hero_walk_2": {
+   "x": 898,
+   "y": 0,
+   "src": 2
+  },
+  "hero_walk_3": {
+   "x": 1347,
+   "y": 0,
+   "src": 3
+  },
+  "hero_walk_4": {
+   "x": 1796,
+   "y": 0,
+   "src": 4
+  },
+  "hero_walk_5": {
+   "x": 2245,
+   "y": 0,
+   "src": 5
+  },
+  "hero_walk_6": {
+   "x": 2694,
+   "y": 0,
+   "src": 6
+  },
+  "hero_walk_7": {
+   "x": 3143,
+   "y": 0,
+   "src": 7
+  }
+ }
+}

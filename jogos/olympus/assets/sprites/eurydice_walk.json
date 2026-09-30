@@ -1,0 +1,49 @@
+{
+ "image": "eurydice_walk.png",
+ "w": 328,
+ "h": 574,
+ "ax": 176,
+ "ay": 565,
+ "frames": {
+  "eurydice_walk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "eurydice_walk_1": {
+   "x": 328,
+   "y": 0,
+   "src": 1
+  },
+  "eurydice_walk_2": {
+   "x": 656,
+   "y": 0,
+   "src": 2
+  },
+  "eurydice_walk_3": {
+   "x": 984,
+   "y": 0,
+   "src": 3
+  },
+  "eurydice_walk_4": {
+   "x": 1312,
+   "y": 0,
+   "src": 4
+  },
+  "eurydice_walk_5": {
+   "x": 1640,
+   "y": 0,
+   "src": 5
+  },
+  "eurydice_walk_6": {
+   "x": 1968,
+   "y": 0,
+   "src": 6
+  },
+  "eurydice_walk_7": {
+   "x": 2296,
+   "y": 0,
+   "src": 7
+  }
+ }
+}

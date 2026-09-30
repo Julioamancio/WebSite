@@ -22,7 +22,7 @@
 </head>
 <body>
 <div id="wrap"><canvas id="c" width="1920" height="1080"></canvas></div>
-<div id="hud"><span><b>ORPHEUS</b> teste dos sprites 2.5D (AutoSprite + cenário do Flow)</span><span>← → andar · Espaço/X pular · Z/J golpe · ↓ agachar</span><span id="st"></span></div>
+<div id="hud"><span><b>ORPHEUS</b> teste dos sprites 2.5D (AutoSprite + cenário do Flow)</span><span>← → andar · Espaço/X pular · Z/J golpe (↓+golpe = baixo; no ar = aéreo) · ↓ agachar · 1 erguer item · 2 dano</span><span id="st"></span></div>
 <div id="loading">Carregando…</div>
 <div class="pad l"><button data-k="left">◀</button><button data-k="right">▶</button><button data-k="down">▼</button></div>
 <div class="pad r"><button data-k="atk">B</button><button data-k="jump">A</button></div>
@@ -41,7 +41,7 @@
     { f: 'assets/web/floresta_meio.webp', k: 0.30 },
     { f: 'assets/web/floresta_perto.webp', k: 0.60 }
   ];
-  var SHEETS = ['orpheus_idle', 'orpheus_run', 'orpheus_jump', 'orpheus_attack'];
+  var SHEETS = ['orpheus_idle', 'orpheus_run', 'orpheus_jump', 'orpheus_attack', 'orpheus_crouch', 'orpheus_jatk', 'orpheus_hurt', 'orpheus_hold'];
   var spr = {};   // nome no motor -> {img, x, w, h, ax, ay}
 
   function loadImg(src) {
@@ -67,7 +67,7 @@
   // --- entrada
   var keys = {};
   var MAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowDown: 'down', KeyS: 'down',
-              Space: 'jump', KeyX: 'jump', KeyK: 'jump', KeyZ: 'atk', KeyJ: 'atk' };
+              Space: 'jump', KeyX: 'jump', KeyK: 'jump', KeyZ: 'atk', KeyJ: 'atk', Digit1: 'hold', Digit2: 'die' };
   addEventListener('keydown', function (e) { var k = MAP[e.code]; if (k) { keys[k] = true; e.preventDefault(); } });
   addEventListener('keyup', function (e) { var k = MAP[e.code]; if (k) { keys[k] = false; e.preventDefault(); } });
   Array.prototype.forEach.call(document.querySelectorAll('.pad button'), function (b) {
@@ -83,11 +83,14 @@
   function step() {
     var walk = 1.5 * S, grav = 0.25 * S, jumpV = 4.8 * S, maxFall = 5 * S;
     var dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
-    var crouch = keys.down && P.ground && !P.atk;
-    if (keys.atk && !prevAtk && !P.atk) P.atk = 20;
+    var crouch = keys.down && P.ground && !(P.atk && P.atkType !== 'low');
+    if (keys.atk && !prevAtk && !P.atk) { P.atk = 20; P.atkType = !P.ground ? 'air' : keys.down ? 'low' : 'stand'; }
+    if (keys.hold && !P.demo) P.demo = { k: 'hold', t: 70 };
+    if (keys.die && !P.demo) P.demo = { k: 'die', t: 110 };
+    if (P.demo && --P.demo.t <= 0) P.demo = null;
     if (keys.jump && !prevJump && P.ground && !P.atk) { P.vy = -jumpV; P.ground = false; }
     prevJump = keys.jump; prevAtk = keys.atk;
-    P.vx = (P.atk && P.ground) || crouch ? 0 : dir * walk;
+    P.vx = (P.atk && P.ground) || crouch || P.demo ? 0 : dir * walk;
     if (dir) P.face = dir;
     P.x += P.vx;
     if (!P.ground) { P.vy = Math.min(P.vy + grav, maxFall); P.y += P.vy; if (P.y >= GROUND) { P.y = GROUND; P.vy = 0; P.ground = true; P.land = 6; } }
@@ -99,9 +102,17 @@
     camX += (P.x - W * 0.45 - camX) * 0.12;
   }
   function heroFrame() {
-    if (P.atk) return 'hero_atk_' + Math.min(4, Math.floor((20 - P.atk) / 4));
+    if (P.demo) {
+      if (P.demo.k === 'hold') return 'hero_hold';
+      return P.demo.t > 85 ? 'hero_hurt' : P.demo.t > 70 ? 'hero_dead_0' : 'hero_dead_1';
+    }
+    if (P.atk) {
+      var f = Math.min(4, Math.floor((20 - P.atk) / 4));
+      return (P.atkType === 'air' ? 'hero_jatk_' : P.atkType === 'low' ? 'hero_catk_' : 'hero_atk_') + f;
+    }
     if (!P.ground) return P.vy < -8 ? 'hero_jump' : P.vy < 6 ? 'hero_peak' : 'hero_fall';
-    if (P.land || P.crouch) return 'hero_land';
+    if (P.crouch) return 'hero_crouch';
+    if (P.land) return 'hero_land';
     if (P.vx) return 'hero_run_' + (Math.floor(P.t / 4) % 8);
     if (P.blink < 0) return 'hero_blink';
     return 'hero_idle_' + (Math.floor(P.t / 12) % 4);
@@ -124,6 +135,10 @@
     g.addColorStop(0, 'rgba(8,12,26,0)'); g.addColorStop(0.35, 'rgba(8,12,26,0.85)'); g.addColorStop(1, '#060913');
     ctx.fillStyle = g; ctx.fillRect(0, GROUND - 10, W, H - GROUND + 10);
   }
+
+  // gancho para testes automáticos: avança n quadros de lógica e devolve o quadro atual
+  window.__teste = { keys: keys, tick: function (n) { for (var i = 0; i < (n || 1); i++) step(); return heroFrame(); },
+                     tem: function (n) { return !!spr[n]; } };
 
   var stEl = document.getElementById('st');
   function frame() {

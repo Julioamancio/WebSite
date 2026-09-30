@@ -27,6 +27,7 @@
         for (let x = 0; x < lvl.w; x++) {
           const ch = lvl.tiles[y][x];
           if (ch === '.' || !!FG[ch] !== fg) continue;
+          if (O.HD && O.HD.hideTile(lvl, ch, x, y)) continue; // the 2.5D scenery already shows it
           let depth = 0;
           for (let k = y - 1; k >= 0 && earth(lvl.tile(x, k)); k--) depth++;
           const deep = ch === 'D' && depth >= 2;
@@ -51,12 +52,14 @@
         }
       }
     };
+    const hd = O.HD && O.HD.scene(lvl);
+    const keep = (d) => !(hd && O.HD.hideDecor(lvl, d));
     pass(false);
-    (def.decor || []).filter((d) => d[3] === 'back').forEach((d) => placeDecor(g, d));
-    (def.statues || []).forEach((st) => O.drawA(g, 'statue', st.tx * T + 8, st.row * T - st.lift));
+    (def.decor || []).filter((d) => d[3] === 'back' && keep(d)).forEach((d) => placeDecor(g, d));
+    if (!hd) (def.statues || []).forEach((st) => O.drawA(g, 'statue', st.tx * T + 8, st.row * T - st.lift));
     pass(true);
-    if (O.Tiles.overlay) { try { O.Tiles.overlay(lvl, g, f); } catch (e) { O.logOnce('overlay', e); } }
-    (def.decor || []).filter((d) => d[3] === 'front').forEach((d) => placeDecor(f, d));
+    if (O.Tiles.overlay && !hd) { try { O.Tiles.overlay(lvl, g, f); } catch (e) { O.logOnce('overlay', e); } }
+    (def.decor || []).filter((d) => d[3] === 'front' && keep(d)).forEach((d) => placeDecor(f, d));
     // Keep an ungraded copy of the spike areas (lighting modules may darken the level canvas later).
     lvl.hazard = null;
     for (let y = 0; y < lvl.h; y++) {
@@ -178,6 +181,7 @@
     switch (this.state) {
       case 'press': case 'title': this.drawTitle(c); break;
       case 'story': this.drawStory(c); break;
+      case 'cut': O.Cutscene.draw(c, this); break;
       case 'play': case 'itemget': case 'dying': this.drawWorld(c); this.drawHUD(c); if (this.dialog) this.drawDialog(c); break;
       case 'pause': this.drawWorld(c); this.drawHUD(c); this.drawPause(c); break;
       case 'gameover': this.drawGameOver(c); break;
@@ -193,17 +197,21 @@
     const lvl = this.lvl, cam = this.cam;
     c.save();
     if (this.shake > 0) c.translate((this.t >> 1) & 1 ? 2 : -2, (this.t >> 2) & 1 ? 1 : -1);
-    const bg = O.Tiles.background(lvl.theme);
-    c.drawImage(bg.sky, 0, 0);
-    bg.layers.forEach((L) => {
-      const lw = L.c.width;
-      const off = Math.floor(cam * L.f) % lw;
-      for (let x = -off; x < W; x += lw) c.drawImage(L.c, x, L.y || 0);
-    });
+    const hd = O.HD && O.HD.drawBackground(c, this);
+    if (!hd) {
+      const bg = O.Tiles.background(lvl.theme);
+      c.drawImage(bg.sky, 0, 0);
+      bg.layers.forEach((L) => {
+        const lw = L.c.width;
+        const off = Math.floor(cam * L.f) % lw;
+        for (let x = -off; x < W; x += lw) c.drawImage(L.c, x, L.y || 0);
+      });
+    }
     const lv = lvl.render();
+    if (hd) O.HD.drawSet(c, this);
     c.drawImage(lv, cam, 0, W, VIEW_H, 0, VY, W, VIEW_H);
     c.drawImage(lv, cam, 0, W, VY, 0, 0, W, VY);
-    this.drawLights(c);
+    if (!(hd && O.HD.hideLights(lvl))) this.drawLights(c);
     this.npcs.forEach((n) => n.draw(c, this));
     this.pickups.forEach((pk) => pk.draw(c, this));
     // Snakes crawl in the grass: draw them after the foreground layer so the tufts don't cover them.
@@ -214,7 +222,8 @@
     this.drawFx(c);
     c.drawImage(lvl.front, cam, 0, W, VIEW_H, 0, VY, W, VIEW_H);
     this.enemies.forEach((e) => { if (e.lowProfile) e.draw(c, this); });
-    if (O.Light && O.Light.apply) { try { c.save(); O.Light.apply(c, this); } catch (e) { O.logOnce('Light.apply', e); } finally { c.restore(); } }
+    if (hd) O.HD.post(c, this);
+    if (O.Light && O.Light.apply && !(hd && O.HD.hideLights(lvl))) { try { c.save(); O.Light.apply(c, this); } catch (e) { O.logOnce('Light.apply', e); } finally { c.restore(); } }
     this.drawHazards(c);
     this.drawAmbient(c);
     if (this.flash > 0 && (this.flash & 1)) { c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(0, 0, W, H); }

@@ -1,0 +1,49 @@
+{
+ "image": "hermes_walk.png",
+ "w": 359,
+ "h": 568,
+ "ax": 154,
+ "ay": 560,
+ "frames": {
+  "hermes_walk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "hermes_walk_1": {
+   "x": 359,
+   "y": 0,
+   "src": 1
+  },
+  "hermes_walk_2": {
+   "x": 718,
+   "y": 0,
+   "src": 2
+  },
+  "hermes_walk_3": {
+   "x": 1077,
+   "y": 0,
+   "src": 3
+  },
+  "hermes_walk_4": {
+   "x": 1436,
+   "y": 0,
+   "src": 4
+  },
+  "hermes_walk_5": {
+   "x": 1795,
+   "y": 0,
+   "src": 5
+  },
+  "hermes_walk_6": {
+   "x": 2154,
+   "y": 0,
+   "src": 6
+  },
+  "hermes_walk_7": {
+   "x": 2513,
+   "y": 0,
+   "src": 7
+  }
+ }
+}

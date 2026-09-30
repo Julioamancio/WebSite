@@ -1,0 +1,36 @@
+{
+ "bat_fly": {
+  "raw": "bat_fly",
+  "char": "bat",
+  "center": true,
+  "anchor_raw": "bat_fly",
+  "frames": {
+   "bat_fly_0": 4,
+   "bat_fly_1": 0,
+   "bat_fly_2": 8,
+   "bat_fly_3": 12,
+   "bat_hang": 0
+  }
+ },
+ "satyr_walk": {
+  "raw": "satyr_walk",
+  "char": "satyr",
+  "frames": {
+   "satyr_walk_0": 16,
+   "satyr_walk_1": 20,
+   "satyr_walk_2": 24,
+   "satyr_walk_3": 28,
+   "satyr_walk_4": 32,
+   "satyr_walk_5": 36
+  }
+ },
+ "satyr_idle": {
+  "raw": "satyr_idle",
+  "char": "satyr",
+  "frames": {
+   "satyr_idle_0": 0,
+   "satyr_idle_1": 24,
+   "satyr_jump": 0
+  }
+ }
+}

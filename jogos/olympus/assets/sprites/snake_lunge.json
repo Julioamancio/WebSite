@@ -1,0 +1,19 @@
+{
+ "image": "snake_lunge.png",
+ "w": 557,
+ "h": 260,
+ "ax": 199,
+ "ay": 252,
+ "frames": {
+  "snake_lunge_0": {
+   "x": 0,
+   "y": 0,
+   "src": 24
+  },
+  "snake_lunge_1": {
+   "x": 557,
+   "y": 0,
+   "src": 36
+  }
+ }
+}

@@ -1,0 +1,49 @@
+{
+ "image": "orpheus_lyre_play.png",
+ "w": 261,
+ "h": 613,
+ "ax": 116,
+ "ay": 606,
+ "frames": {
+  "lyre_play_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "lyre_play_1": {
+   "x": 261,
+   "y": 0,
+   "src": 7
+  },
+  "lyre_play_2": {
+   "x": 522,
+   "y": 0,
+   "src": 14
+  },
+  "lyre_play_3": {
+   "x": 783,
+   "y": 0,
+   "src": 21
+  },
+  "lyre_play_4": {
+   "x": 1044,
+   "y": 0,
+   "src": 28
+  },
+  "lyre_play_5": {
+   "x": 1305,
+   "y": 0,
+   "src": 35
+  },
+  "lyre_play_6": {
+   "x": 1566,
+   "y": 0,
+   "src": 42
+  },
+  "lyre_play_7": {
+   "x": 1827,
+   "y": 0,
+   "src": 49
+  }
+ }
+}

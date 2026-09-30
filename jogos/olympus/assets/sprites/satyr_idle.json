@@ -1,0 +1,24 @@
+{
+ "image": "satyr_idle.png",
+ "w": 347,
+ "h": 713,
+ "ax": 266,
+ "ay": 707,
+ "frames": {
+  "satyr_idle_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "satyr_idle_1": {
+   "x": 347,
+   "y": 0,
+   "src": 24
+  },
+  "satyr_jump": {
+   "x": 694,
+   "y": 0,
+   "src": 0
+  }
+ }
+}

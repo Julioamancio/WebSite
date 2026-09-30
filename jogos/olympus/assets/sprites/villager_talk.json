@@ -1,0 +1,39 @@
+{
+ "image": "villager_talk.png",
+ "w": 164,
+ "h": 566,
+ "ax": 89,
+ "ay": 558,
+ "frames": {
+  "villager_talk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "villager_talk_1": {
+   "x": 164,
+   "y": 0,
+   "src": 9
+  },
+  "villager_talk_2": {
+   "x": 328,
+   "y": 0,
+   "src": 18
+  },
+  "villager_talk_3": {
+   "x": 492,
+   "y": 0,
+   "src": 27
+  },
+  "villager_talk_4": {
+   "x": 656,
+   "y": 0,
+   "src": 36
+  },
+  "villager_talk_5": {
+   "x": 820,
+   "y": 0,
+   "src": 45
+  }
+ }
+}

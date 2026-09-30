@@ -1,0 +1,39 @@
+{
+ "image": "merchant_talk.png",
+ "w": 237,
+ "h": 565,
+ "ax": 102,
+ "ay": 558,
+ "frames": {
+  "merchant_talk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "merchant_talk_1": {
+   "x": 237,
+   "y": 0,
+   "src": 9
+  },
+  "merchant_talk_2": {
+   "x": 474,
+   "y": 0,
+   "src": 18
+  },
+  "merchant_talk_3": {
+   "x": 711,
+   "y": 0,
+   "src": 27
+  },
+  "merchant_talk_4": {
+   "x": 948,
+   "y": 0,
+   "src": 36
+  },
+  "merchant_talk_5": {
+   "x": 1185,
+   "y": 0,
+   "src": 45
+  }
+ }
+}

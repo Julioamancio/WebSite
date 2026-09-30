@@ -1,0 +1,6 @@
+{
+ "orpheus_crouch": {"raw": "orpheus_crouch_attack", "char": "orpheus", "frames": {"hero_crouch": 40, "hero_catk_0": 29, "hero_catk_1": 31, "hero_catk_2": 33, "hero_catk_3": 36, "hero_catk_4": 40}},
+ "orpheus_jatk": {"raw": "orpheus_air_attack", "char": "orpheus", "pes": true, "frames": {"hero_jatk_0": 21, "hero_jatk_1": 23, "hero_jatk_2": 25, "hero_jatk_3": 32, "hero_jatk_4": 35}},
+ "orpheus_hurt": {"raw": "orpheus_hurt_death", "char": "orpheus", "frames": {"hero_hurt": 24, "hero_dead_0": 33, "hero_dead_1": 44}},
+ "orpheus_hold": {"raw": "orpheus_hold", "char": "orpheus", "frames": {"hero_hold": 30}}
+}

@@ -1,0 +1,34 @@
+{
+ "image": "orpheus_jatk.png",
+ "w": 578,
+ "h": 503,
+ "ax": 321,
+ "ay": 497,
+ "frames": {
+  "hero_jatk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 21
+  },
+  "hero_jatk_1": {
+   "x": 578,
+   "y": 0,
+   "src": 23
+  },
+  "hero_jatk_2": {
+   "x": 1156,
+   "y": 0,
+   "src": 25
+  },
+  "hero_jatk_3": {
+   "x": 1734,
+   "y": 0,
+   "src": 32
+  },
+  "hero_jatk_4": {
+   "x": 2312,
+   "y": 0,
+   "src": 35
+  }
+ }
+}

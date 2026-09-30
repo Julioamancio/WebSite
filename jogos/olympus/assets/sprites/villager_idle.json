@@ -1,0 +1,29 @@
+{
+ "image": "villager_idle.png",
+ "w": 158,
+ "h": 566,
+ "ax": 92,
+ "ay": 558,
+ "frames": {
+  "villager_idle_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "villager_idle_1": {
+   "x": 158,
+   "y": 0,
+   "src": 14
+  },
+  "villager_idle_2": {
+   "x": 316,
+   "y": 0,
+   "src": 28
+  },
+  "villager_idle_3": {
+   "x": 474,
+   "y": 0,
+   "src": 42
+  }
+ }
+}

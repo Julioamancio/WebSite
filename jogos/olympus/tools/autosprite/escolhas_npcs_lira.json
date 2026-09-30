@@ -1,0 +1,254 @@
+{
+ "elder_idle": {
+  "raw": "elder_idle",
+  "char": "elder",
+  "frames": {
+   "elder_idle_0": 0,
+   "elder_idle_1": 14,
+   "elder_idle_2": 28,
+   "elder_idle_3": 42
+  }
+ },
+ "merchant_idle": {
+  "raw": "merchant_idle",
+  "char": "merchant",
+  "frames": {
+   "merchant_idle_0": 0,
+   "merchant_idle_1": 14,
+   "merchant_idle_2": 28,
+   "merchant_idle_3": 42
+  }
+ },
+ "villager_idle": {
+  "raw": "villager_idle",
+  "char": "villager",
+  "frames": {
+   "villager_idle_0": 0,
+   "villager_idle_1": 14,
+   "villager_idle_2": 28,
+   "villager_idle_3": 42
+  }
+ },
+ "zeus_idle": {
+  "raw": "zeus_idle",
+  "char": "zeus",
+  "frames": {
+   "zeus_idle_0": 0,
+   "zeus_idle_1": 14,
+   "zeus_idle_2": 28,
+   "zeus_idle_3": 42
+  }
+ },
+ "hermes_idle": {
+  "raw": "hermes_idle",
+  "char": "hermes",
+  "frames": {
+   "hermes_idle_0": 0,
+   "hermes_idle_1": 14,
+   "hermes_idle_2": 28,
+   "hermes_idle_3": 42
+  }
+ },
+ "hades_idle": {
+  "raw": "hades_idle",
+  "char": "hades",
+  "frames": {
+   "hades_idle_0": 0,
+   "hades_idle_1": 14,
+   "hades_idle_2": 28,
+   "hades_idle_3": 42
+  }
+ },
+ "eurydice_talk": {
+  "raw": "eurydice_talk",
+  "char": "eurydice",
+  "frames": {
+   "eurydice_talk_0": 0,
+   "eurydice_talk_1": 9,
+   "eurydice_talk_2": 18,
+   "eurydice_talk_3": 27,
+   "eurydice_talk_4": 36,
+   "eurydice_talk_5": 45
+  }
+ },
+ "elder_talk": {
+  "raw": "elder_talk",
+  "char": "elder",
+  "frames": {
+   "elder_talk_0": 0,
+   "elder_talk_1": 9,
+   "elder_talk_2": 18,
+   "elder_talk_3": 27,
+   "elder_talk_4": 36,
+   "elder_talk_5": 45
+  }
+ },
+ "merchant_talk": {
+  "raw": "merchant_talk",
+  "char": "merchant",
+  "frames": {
+   "merchant_talk_0": 0,
+   "merchant_talk_1": 9,
+   "merchant_talk_2": 18,
+   "merchant_talk_3": 27,
+   "merchant_talk_4": 36,
+   "merchant_talk_5": 45
+  }
+ },
+ "villager_talk": {
+  "raw": "villager_talk",
+  "char": "villager",
+  "frames": {
+   "villager_talk_0": 0,
+   "villager_talk_1": 9,
+   "villager_talk_2": 18,
+   "villager_talk_3": 27,
+   "villager_talk_4": 36,
+   "villager_talk_5": 45
+  }
+ },
+ "zeus_talk": {
+  "raw": "zeus_talk",
+  "char": "zeus",
+  "frames": {
+   "zeus_talk_0": 0,
+   "zeus_talk_1": 9,
+   "zeus_talk_2": 18,
+   "zeus_talk_3": 27,
+   "zeus_talk_4": 36,
+   "zeus_talk_5": 45
+  }
+ },
+ "hermes_talk": {
+  "raw": "hermes_talk",
+  "char": "hermes",
+  "frames": {
+   "hermes_talk_0": 0,
+   "hermes_talk_1": 9,
+   "hermes_talk_2": 18,
+   "hermes_talk_3": 27,
+   "hermes_talk_4": 36,
+   "hermes_talk_5": 45
+  }
+ },
+ "hades_talk": {
+  "raw": "hades_talk",
+  "char": "hades",
+  "frames": {
+   "hades_talk_0": 0,
+   "hades_talk_1": 9,
+   "hades_talk_2": 18,
+   "hades_talk_3": 27,
+   "hades_talk_4": 36,
+   "hades_talk_5": 45
+  }
+ },
+ "orpheus_lyre_play": {
+  "raw": "orpheus_lyre_play",
+  "char": "orpheus",
+  "frames": {
+   "lyre_play_0": 0,
+   "lyre_play_1": 7,
+   "lyre_play_2": 14,
+   "lyre_play_3": 21,
+   "lyre_play_4": 28,
+   "lyre_play_5": 35,
+   "lyre_play_6": 42,
+   "lyre_play_7": 49
+  },
+  "anchor_raw": "orpheus_lyre_play"
+ },
+ "orpheus_lyre_drop": {
+  "raw": "orpheus_lyre_drop_run",
+  "char": "orpheus",
+  "frames": {
+   "lyre_drop_0": 0,
+   "lyre_drop_1": 2,
+   "lyre_drop_2": 4,
+   "lyre_drop_3": 6,
+   "lyre_drop_4": 8,
+   "lyre_drop_5": 10,
+   "lyre_drop_6": 12,
+   "lyre_drop_7": 14,
+   "lyre_drop_8": 16,
+   "lyre_drop_9": 18,
+   "lyre_drop_10": 20,
+   "lyre_drop_11": 22,
+   "lyre_drop_12": 24,
+   "lyre_drop_13": 26,
+   "lyre_drop_14": 28,
+   "lyre_drop_15": 30,
+   "lyre_drop_16": 32,
+   "lyre_drop_17": 34,
+   "lyre_drop_18": 36,
+   "lyre_drop_19": 38,
+   "lyre_drop_20": 40,
+   "lyre_drop_21": 42,
+   "lyre_drop_22": 44,
+   "lyre_drop_23": 46,
+   "lyre_drop_24": 48,
+   "lyre_drop_25": 50,
+   "lyre_drop_26": 52,
+   "lyre_drop_27": 54
+  },
+  "anchor_raw": "orpheus_lyre_play"
+ },
+ "orpheus_lyre_kneel": {
+  "raw": "orpheus_lyre_kneel",
+  "char": "orpheus",
+  "frames": {
+   "lyre_kneel_0": 0,
+   "lyre_kneel_1": 2,
+   "lyre_kneel_2": 4,
+   "lyre_kneel_3": 6,
+   "lyre_kneel_4": 8,
+   "lyre_kneel_5": 10,
+   "lyre_kneel_6": 12,
+   "lyre_kneel_7": 14,
+   "lyre_kneel_8": 16,
+   "lyre_kneel_9": 18,
+   "lyre_kneel_10": 20,
+   "lyre_kneel_11": 22,
+   "lyre_kneel_12": 24,
+   "lyre_kneel_13": 26,
+   "lyre_kneel_14": 28,
+   "lyre_kneel_15": 30,
+   "lyre_kneel_16": 32,
+   "lyre_kneel_17": 34,
+   "lyre_kneel_18": 36,
+   "lyre_kneel_19": 38,
+   "lyre_kneel_20": 40,
+   "lyre_kneel_21": 42,
+   "lyre_kneel_22": 44,
+   "lyre_kneel_23": 46,
+   "lyre_kneel_24": 48,
+   "lyre_kneel_25": 50,
+   "lyre_kneel_26": 52,
+   "lyre_kneel_27": 54
+  },
+  "anchor_raw": "orpheus_lyre_play"
+ },
+ "orpheus_lyre_walk": {
+  "raw": "orpheus_lyre_walk",
+  "char": "orpheus",
+  "frames": {
+   "lyre_walk_0": 16,
+   "lyre_walk_1": 18,
+   "lyre_walk_2": 20,
+   "lyre_walk_3": 22,
+   "lyre_walk_4": 24,
+   "lyre_walk_5": 26,
+   "lyre_walk_6": 28,
+   "lyre_walk_7": 30,
+   "lyre_walk_8": 32,
+   "lyre_walk_9": 34,
+   "lyre_walk_10": 36,
+   "lyre_walk_11": 38,
+   "lyre_walk_12": 40,
+   "lyre_walk_13": 42,
+   "lyre_walk_14": 44,
+   "lyre_walk_15": 46
+  },
+  "anchor_raw": "orpheus_lyre_play"
+ }
+}

@@ -1,0 +1,29 @@
+{
+ "image": "merchant_idle.png",
+ "w": 215,
+ "h": 564,
+ "ax": 105,
+ "ay": 558,
+ "frames": {
+  "merchant_idle_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "merchant_idle_1": {
+   "x": 215,
+   "y": 0,
+   "src": 14
+  },
+  "merchant_idle_2": {
+   "x": 430,
+   "y": 0,
+   "src": 28
+  },
+  "merchant_idle_3": {
+   "x": 645,
+   "y": 0,
+   "src": 42
+  }
+ }
+}

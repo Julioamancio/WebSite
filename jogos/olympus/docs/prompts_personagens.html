@@ -1,0 +1,481 @@
+<title>Personagens do Orpheus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Marcellus&display=swap">
+<style>
+/* Layout: one reading column of prompt cards; each card has a narrow meta rail (number, ratio, key) beside the prompt; stacks on phones. */
+:root{
+  --bg:#ecf0f3; --surface:#ffffff; --sunk:#f3f6f8; --ink:#14203a; --muted:#56627a; --line:#d2d9e2;
+  --aegean:#1b5898; --on-aegean:#ffffff; --gold:#8a5f10; --olive:#4b6a1f; --terra:#a4431f; --key:#ff00ff;
+  --display:"Marcellus","Palatino Linotype",Georgia,serif; --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0d1320; --surface:#151e30; --sunk:#10182a; --ink:#e5eaf2; --muted:#9ba7bc; --line:#27324a; --aegean:#74abea; --on-aegean:#0a1220; --gold:#e3b862; --olive:#a4c56b; --terra:#f08a64; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d1320; --surface:#151e30; --sunk:#10182a; --ink:#e5eaf2; --muted:#9ba7bc; --line:#27324a; --aegean:#74abea; --on-aegean:#0a1220; --gold:#e3b862; --olive:#a4c56b; --terra:#f08a64; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font:15px/1.6 var(--body); margin:0}
+.wrap{max-width:980px; margin:0 auto; padding-inline:20px; padding-block:0 64px}
+.meander{height:12px; background:var(--aegean); -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='12' shape-rendering='crispEdges'%3E%3Cpath d='M0 11H16M10 11V1H2V8H6V4' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E") repeat-x 0 0/16px 12px; mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='12' shape-rendering='crispEdges'%3E%3Cpath d='M0 11H16M10 11V1H2V8H6V4' fill='none' stroke='%23000' stroke-width='2'/%3E%3C/svg%3E") repeat-x 0 0/16px 12px}
+header.top{padding-block:28px 8px; display:grid; gap:10px}
+.eyebrow{font:500 12px/1.2 var(--mono); letter-spacing:.08em; text-transform:uppercase; color:var(--muted)}
+h1{font:700 clamp(30px,5vw,44px)/1.05 var(--display); margin:0; text-wrap:balance; letter-spacing:.01em}
+.lede{margin:0; max-width:62ch; color:var(--muted)}
+.progress{display:flex; flex-wrap:wrap; align-items:center; gap:12px; margin-top:6px}
+.px-row{display:flex; flex-wrap:wrap; gap:3px}
+.px{width:11px; height:11px; border:2px solid var(--aegean); background:transparent}
+.px.on{background:var(--olive); border-color:var(--olive)}
+.progress b{font:700 16px/1 var(--display)}
+.guide{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:14px; margin-block:22px 8px}
+.panel{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:16px 18px; min-width:0}
+.panel h2{font:700 17px/1.2 var(--display); margin:0 0 8px}
+.panel ol,.panel ul{margin:0; padding-left:20px; display:grid; gap:6px}
+.fixes{display:flex; flex-wrap:wrap; gap:8px; margin-top:4px}
+.fix{display:inline-flex; align-items:baseline; gap:6px; font:13px/1.3 var(--body); background:var(--sunk); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:7px 10px; cursor:pointer; text-align:left}
+.fix code{font:12px var(--mono); color:var(--aegean)}
+.fix:hover{border-color:var(--aegean)}
+.bar{position:sticky; top:env(safe-area-inset-top,0px); z-index:5; background:var(--bg); padding-block:12px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; border-bottom:1px solid var(--line)}
+.chip{font:500 14px/1 var(--body); color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:8px 13px; cursor:pointer}
+.chip span{font:12px var(--mono); color:var(--muted); margin-left:3px}
+.chip[aria-pressed="true"]{background:var(--aegean); border-color:var(--aegean); color:var(--on-aegean)}
+.chip[aria-pressed="true"] span{color:var(--on-aegean)}
+.hide-done{margin-left:auto; display:inline-flex; align-items:center; gap:7px; font-size:14px; color:var(--muted); cursor:pointer}
+.sec{display:grid; gap:14px; margin-top:30px}
+.sec-head h2{font:700 24px/1.1 var(--display); margin:0 0 4px}
+.sec-head p{margin:0; color:var(--muted); max-width:70ch}
+.card{display:grid; grid-template-columns:76px minmax(0,1fr); background:var(--surface); border:1px solid var(--line); border-radius:8px; overflow:hidden}
+.card.is-first{border-color:var(--gold); box-shadow:0 0 0 1px var(--gold)}
+.meta{background:var(--sunk); border-right:1px solid var(--line); padding:16px 10px; display:grid; align-content:start; justify-items:center; gap:10px}
+.num{font:700 30px/1 var(--display); color:var(--aegean); font-variant-numeric:tabular-nums}
+.tags{display:grid; gap:5px; justify-items:center}
+.tag{display:inline-flex; align-items:center; gap:4px; font:500 11px/1 var(--mono); color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:4px 5px; background:var(--surface); white-space:nowrap}
+.tag.new{color:var(--olive); border-color:var(--olive)}
+.sw{display:inline-block; width:8px; height:8px; background:var(--key)}
+.main{padding:16px 18px; display:grid; gap:10px; min-width:0}
+.head{display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px}
+.head h3{margin:0; font:600 18px/1.25 var(--body); text-wrap:balance}
+.flag{font:500 11px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--gold); border:1px solid var(--gold); border-radius:4px; padding:4px 6px}
+.state{font:500 11px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; border:1px solid; border-radius:4px; padding:4px 6px}
+.state.aguardando{color:var(--gold)} .state.no_projeto{color:var(--olive)} .state.refazer{color:var(--terra)}
+.nota{margin:0; padding:8px 12px; border-left:3px solid var(--terra); background:var(--sunk); font-size:14px}
+.nota.no_projeto{border-left-color:var(--olive)} .nota.aguardando{border-left-color:var(--gold)}
+.ratio{font-size:13px; color:var(--muted)}
+.ratio strong{color:var(--ink); font-weight:600}
+.mode{font-size:13px; color:var(--muted)}
+.px.wait{background:var(--gold); border-color:var(--gold)}
+.sum{margin:0}
+.facts{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); gap:6px 18px; margin:0}
+.facts div{min-width:0}
+.facts dt{font:500 11px/1.4 var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+.facts dd{margin:0; font-size:14px; overflow-wrap:anywhere}
+code{font:13px var(--mono)}
+.fname{color:var(--aegean)}
+.prompt{margin:0; white-space:pre-wrap; overflow-wrap:anywhere; max-height:14em; overflow:auto; font:12.5px/1.55 var(--mono); background:var(--sunk); color:var(--ink); border:1px solid var(--line); border-radius:6px; padding:12px 14px}
+.actions{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
+.btn{font:500 14px/1 var(--body); padding:10px 14px; border-radius:6px; border:1px solid var(--line); background:var(--surface); color:var(--ink); cursor:pointer}
+.btn:hover{border-color:var(--aegean)}
+.btn.primary{background:var(--aegean); border-color:var(--aegean); color:var(--on-aegean)}
+.done{margin-left:auto; display:inline-flex; align-items:center; gap:7px; font-weight:500; cursor:pointer}
+.done input,.hide-done input{width:17px; height:17px; accent-color:var(--olive)}
+
+.card.is-done .num{color:var(--olive)}
+.card.is-done .prompt,.card.is-done .sum{opacity:.6}
+:focus-visible{outline:2px solid var(--aegean); outline-offset:2px}
+.toast{position:fixed; left:50%; bottom:calc(20px + env(safe-area-inset-bottom,0px)); transform:translate(-50%,12px); background:var(--ink); color:var(--bg); font:500 14px/1.3 var(--body); padding:10px 16px; border-radius:6px; opacity:0; pointer-events:none; transition:opacity .15s, transform .15s; max-width:calc(100% - 32px)}
+.toast.show{opacity:1; transform:translate(-50%,0)}
+footer.note{margin-top:36px; color:var(--muted); font-size:14px}
+@media (max-width:620px){
+  .card{grid-template-columns:minmax(0,1fr)}
+  .meta{border-right:0; border-bottom:1px solid var(--line); display:flex; justify-content:flex-start; align-items:center; padding:10px 16px}
+  .tags{display:flex; flex-wrap:wrap}
+  .done,.hide-done{margin-left:0}
+}
+@media (prefers-reduced-motion: reduce){.toast{transition:none}}
+</style>
+
+<div class="meander" aria-hidden="true"></div>
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow">Orpheus: Song of Olympus · Google Flow</div>
+    <h1>Personagens do Orpheus</h1>
+    <p class="lede">8 prompts em inglês para a imagem base do herói e dos NPCs, no mesmo estilo 2.5D dos cenários: corpo inteiro, de perfil, olhando para a direita, sobre magenta. Essa base vai para o AutoSprite, que faz as animações.</p>
+    <div class="progress"><div class="px-row" id="pxrow" aria-hidden="true"><i class="px"></i><i class="px"></i><i class="px"></i><i class="px"></i><i class="px"></i><i class="px"></i><i class="px"></i><i class="px"></i></div><span><b id="done-n">0</b> de 8 no projeto · <span id="wait-n">0</span> esperando o Claude</span><span class="mode" id="mode">Conectando…</span></div>
+  </header>
+
+  <div class="guide">
+    <div class="panel"><h2>Como usar</h2><ol><li>Gere primeiro o <strong>Orfeu (01)</strong> em <strong>9:16 (em pé)</strong>, 4 variações. Escolha a de perfil de verdade (um olho só) e com o corpo inteiro.</li><li>Nos outros, anexe o Orfeu aprovado como <strong>referência de estilo</strong>: o prompt já manda copiar só o estilo, não a roupa nem o rosto.</li><li>Baixe só a escolhida e marque <strong>Pronto</strong>. Pode marcar uma de cada vez ou todas no fim: eu identifico pelo conteúdo.</li><li>Diga ao Claude <em>&quot;importa os prontos&quot;</em>. Eu tiro o magenta e subo no AutoSprite para animar. Subir é de graça; cada animação custa cerca de 5 créditos e só gero depois do seu ok.</li></ol></div>
+    <div class="panel"><h2>Antes de aprovar</h2><ul><li>Um personagem só, de corpo inteiro: cabeça e pés dentro da imagem</li><li>Perfil de verdade: um olho e uma orelha, nariz apontando para a direita</li><li>Olhando para a DIREITA</li><li>Visual 2.5D estilizado: nada de pixel art nem de foto realista</li><li>Proporção de adulto (nada de cabeção)</li><li>Magenta chapado, sem chão nem sombra, e nada roxo ou rosa na roupa</li><li>Mãos inteiras e o objeto certo: porrete, cajado, pote, cesta, raio, caduceu ou bidente</li><li>Nos NPCs, o mesmo estilo do Orfeu aprovado</li></ul></div>
+  </div>
+  <div class="panel">
+    <h2>Se falhar, cole no fim do prompt</h2>
+    <div class="fixes"><button class="fix" type="button" data-text="strict side profile facing right: exactly ONE eye and ONE ear visible, nose pointing to the right edge">Virou de frente ou mostra dois olhos: <code>strict side profile facing right: exactly ONE eye and ONE ear visible, nose pointing to the right edge</code></button><button class="fix" type="button" data-text="whole body inside the frame with a margin on every side, nothing cropped">Cortou os pés ou a cabeça: <code>whole body inside the frame with a margin on every side, nothing cropped</code></button><button class="fix" type="button" data-text="ONE single character only, alone in the frame, nobody else">Saiu mais de um personagem: <code>ONE single character only, alone in the frame, nobody else</code></button><button class="fix" type="button" data-text="stylized adult proportions, about 6.5 heads tall, not chibi, not big-headed">Cabeça grande, cara de criança: <code>stylized adult proportions, about 6.5 heads tall, not chibi, not big-headed</code></button><button class="fix" type="button" data-text="stylized 3D render, soft global illumination, sharp clean details, not pixel art">Saiu pixel art ou retrô: <code>stylized 3D render, soft global illumination, sharp clean details, not pixel art</code></button><button class="fix" type="button" data-text="no floor, no ground shadow, perfectly flat pure #FF00FF background">Apareceu chão ou sombra: <code>no floor, no ground shadow, perfectly flat pure #FF00FF background</code></button></div>
+  </div>
+
+  <div class="bar" role="toolbar" aria-label="Filtrar prompts"><button class="chip" type="button" data-filter="all" aria-pressed="true">Todos <span>8</span></button><button class="chip" type="button" data-filter="heroi" aria-pressed="false">Herói <span>1</span></button><button class="chip" type="button" data-filter="vila" aria-pressed="false">Pessoas da vila <span>4</span></button><button class="chip" type="button" data-filter="deuses" aria-pressed="false">Deuses <span>3</span></button><label class="hide-done"><input type="checkbox" id="hide-done"> Esconder prontos</label></div>
+  
+<section class="sec" data-sec="heroi">
+  <div class="sec-head"><h2>Herói</h2><p>O Orfeu define o estilo de todos. Gere ele primeiro e só passe para os outros quando gostar.</p></div>
+  
+<article class="card is-first" id="p01" data-sec="heroi" data-id="01">
+  <div class="meta"><div class="num">01</div><div class="tags"><span class="tag">9:16</span><span class="tag"><i class="sw"></i>magenta</span></div></div>
+  <div class="main">
+    <div class="head"><h3>Orfeu</h3><span class="flag">Gere primeiro</span><span class="state" hidden></span></div>
+    <p class="sum">Herói de 20 anos, cabelo ruivo curto, faixa vermelha, túnica branca, capa carmim e o porrete de oliveira na mão.</p>
+    <p class="nota" hidden></p>
+    <dl class="facts">
+      <div><dt>Nome no projeto</dt><dd><code class="fname">orpheus</code></dd></div>
+      <div><dt>No jogo</dt><dd>Personagem jogável · o porrete entra nos golpes, então já vem na mão</dd></div>
+    </dl>
+    <pre class="prompt" tabindex="0" aria-label="Prompt 01">[STYLE] Beautiful stylized 3D game character for a premium 2.5D side-scrolling platformer, rendered like a high-end animated film: soft global illumination, warm key light from the upper-left, gentle cool rim light on the back edge, hand-painted texture detail on skin, hair, cloth, leather and metal, clean strong silhouette, expressive face, high resolution, sharp clean edges, portrait 9:16.
+
+[WORLD] Mythological Ancient Greece, region of Arcadia. Clothes and objects are ancient Greek: chitons, himations, leather sandals, bronze, olive wood, gold trim, Greek key (meander) patterns. Light always comes from the upper-left.
+
+[POSE] ONE single character only, alone in the frame, nobody else. Full body with the whole body inside the frame and a small margin on every side: nothing cropped, from the top of the head (and anything held above it) down to the soles of the feet. Strict side view in profile, facing RIGHT: exactly ONE eye and ONE ear are visible and the nose points to the right edge of the image; if both eyes are visible, the image is wrong. Relaxed standing idle pose, weight on both feet, feet flat on one ground line near the bottom of the image. Stylized adult proportions, about 6.5 heads tall — NOT chibi, NOT big-headed. Camera at chest height, flat, no perspective, no foreshortening.
+
+[CHARACTER] Orpheus, a young Greek hero around 20 years old: slim athletic build, defined jaw, kind but determined eyes, short wavy auburn hair kept close to the head, a bright scarlet headband with two short tails fluttering behind, a white short chiton ending above the knee with a gold Greek key trim and a single shoulder strap, a brown leather belt with a round bronze buckle, a short crimson cape falling from the shoulder behind him, bronze bracers on both forearms, brown leather sandals laced up to the calves. In his right hand (the hand nearer the viewer) he holds a thick knotted olive-wood club, hanging down relaxed beside his leg, the head of the club near the knee.
+
+[BACKGROUND] Flat, solid, pure magenta background (#FF00FF), perfectly uniform, with no gradient, no floor, no shadow on the ground and no details. Crisp clean edge between the character and the magenta, with no glow spilling onto it. Never use magenta, pink, purple, violet or lilac anywhere on the character.
+
+[NEGATIVE] no pixel art, no pixelated look, no retro 8-bit or 16-bit style, no low-poly look, no photorealism, no chibi, no big head, no second character, no reflection, no text, no letters, no logo, no watermark, no signature, no border, no frame, no character sheet, no multiple views, no background scenery, no ground shadow, no cropped feet or head, no modern clothing, no sword, no shield, no spear, no lyre, no purple, no violet, no pink, no lilac.</pre>
+    <div class="actions">
+      <button class="btn primary" type="button" data-copy="prompt">Copiar prompt</button>
+      <span class="ratio">Proporção no Flow: <strong>9:16 (em pé)</strong></span>
+      <label class="done"><input type="checkbox" id="done-01"> Pronto</label>
+    </div>
+  </div>
+</article>
+</section>
+
+<section class="sec" data-sec="vila">
+  <div class="sec-head"><h2>Pessoas da vila</h2><p>Quem o Orfeu encontra em Arcádia. A Eurídice também aparece na história e como fantasma (o fantasma sai desta imagem, por código).</p></div>
+  
+<article class="card" id="p02" data-sec="vila" data-id="02">
+  <div class="meta"><div class="num">02</div><div class="tags"><span class="tag">9:16</span><span class="tag"><i class="sw"></i>magenta</span></div></div>
+  <div class="main">
+    <div class="head"><h3>Eurídice</h3><span class="state" hidden></span></div>
+    <p class="sum">Jovem de 19 anos, cabelo dourado comprido, coroa de flores brancas e vestido branco até os pés.</p>
+    <p class="nota" hidden></p>
+    <dl class="facts">
+      <div><dt>Nome no projeto</dt><dd><code class="fname">eurydice</code></dd></div>
+      <div><dt>No jogo</dt><dd>História e final · também vira o fantasma (por código)</dd></div>
+    </dl>
+    <pre class="prompt" tabindex="0" aria-label="Prompt 02">[STYLE] Beautiful stylized 3D game character for a premium 2.5D side-scrolling platformer, rendered like a high-end animated film: soft global illumination, warm key light from the upper-left, gentle cool rim light on the back edge, hand-painted texture detail on skin, hair, cloth, leather and metal, clean strong silhouette, expressive face, high resolution, sharp clean edges, portrait 9:16.
+
+[WORLD] Mythological Ancient Greece, region of Arcadia. Clothes and objects are ancient Greek: chitons, himations, leather sandals, bronze, olive wood, gold trim, Greek key (meander) patterns. Light always comes from the upper-left.
+
+[REFERENCE] If a reference image is attached, use it only for the art style (rendering, level of detail, colors, lighting). Do not copy its character, face, clothes or objects.
+
+[POSE] ONE single character only, alone in the frame, nobody else. Full body with the whole body inside the frame and a small margin on every side: nothing cropped, from the top of the head (and anything held above it) down to the soles of the feet. Strict side view in profile, facing RIGHT: exactly ONE eye and ONE ear are visible and the nose points to the right edge of the image; if both eyes are visible, the image is wrong. Relaxed standing idle pose, weight on both feet, feet flat on one ground line near the bottom of the image. Stylized adult proportions, about 6.5 heads tall — NOT chibi, NOT big-headed. Camera at chest height, flat, no perspective, no foreshortening.
+
+[CHARACTER] Eurydice, a gentle young Greek woman around 19: long flowing golden hair falling down her back, a small crown of white flowers, a soft kind face with a faint smile, a white ankle-length flowing dress with a thin gold belt and a gold Greek key hem, bare arms, thin leather sandals, both hands held together in front of her waist, graceful calm posture.
+
+[BACKGROUND] Flat, solid, pure magenta background (#FF00FF), perfectly uniform, with no gradient, no floor, no shadow on the ground and no details. Crisp clean edge between the character and the magenta, with no glow spilling onto it. Never use magenta, pink, purple, violet or lilac anywhere on the character.
+
+[NEGATIVE] no pixel art, no pixelated look, no retro 8-bit or 16-bit style, no low-poly look, no photorealism, no chibi, no big head, no second character, no reflection, no text, no letters, no logo, no watermark, no signature, no border, no frame, no character sheet, no multiple views, no background scenery, no ground shadow, no cropped feet or head, no modern clothing, no veil, no jewelry except the gold belt, no purple, no violet, no pink, no lilac.</pre>
+    <div class="actions">
+      <button class="btn primary" type="button" data-copy="prompt">Copiar prompt</button>
+      <span class="ratio">Proporção no Flow: <strong>9:16 (em pé)</strong></span>
+      <label class="done"><input type="checkbox" id="done-02"> Pronto</label>
+    </div>
+  </div>
+</article>
+
+<article class="card" id="p03" data-sec="vila" data-id="03">
+  <div class="meta"><div class="num">03</div><div class="tags"><span class="tag">9:16</span><span class="tag"><i class="sw"></i>magenta</span></div></div>
+  <div class="main">
+    <div class="head"><h3>Ancião</h3><span class="state" hidden></span></div>
+    <p class="sum">Sábio de 75 anos, cabelo e barba brancos compridos, manto marrom, apoiado num cajado torto.</p>
+    <p class="nota" hidden></p>
+    <dl class="facts">
+      <div><dt>Nome no projeto</dt><dd><code class="fname">elder</code></dd></div>
+      <div><dt>No jogo</dt><dd>ARCADIA, tile 9 · entrega o porrete e explica a missão</dd></div>
+    </dl>
+    <pre class="prompt" tabindex="0" aria-label="Prompt 03">[STYLE] Beautiful stylized 3D game character for a premium 2.5D side-scrolling platformer, rendered like a high-end animated film: soft global illumination, warm key light from the upper-left, gentle cool rim light on the back edge, hand-painted texture detail on skin, hair, cloth, leather and metal, clean strong silhouette, expressive face, high resolution, sharp clean edges, portrait 9:16.
+
+[WORLD] Mythological Ancient Greece, region of Arcadia. Clothes and objects are ancient Greek: chitons, himations, leather sandals, bronze, olive wood, gold trim, Greek key (meander) patterns. Light always comes from the upper-left.
+
+[REFERENCE] If a reference image is attached, use it only for the art style (rendering, level of detail, colors, lighting). Do not copy its character, face, clothes or objects.
+
+[POSE] ONE single character only, alone in the frame, nobody else. Full body with the whole body inside the frame and a small margin on every side: nothing cropped, from the top of the head (and anything held above it) down to the soles of the feet. Strict side view in profile, facing RIGHT: exactly ONE eye and ONE ear are visible and the nose points to the right edge of the image; if both eyes are visible, the image is wrong. Relaxed standing idle pose, weight on both feet, feet flat on one ground line near the bottom of the image. Stylized adult proportions, about 6 heads tall — NOT chibi, NOT big-headed. Camera at chest height, flat, no perspective, no foreshortening.
+
+[CHARACTER] The village elder of Arcadia, a wise old man around 75: long white hair and a long white beard reaching his chest, slightly hunched back, bushy white eyebrows, warm tired eyes, a brown wool himation wrapped over a lighter cream tunic, simple leather sandals. He leans on a tall gnarled wooden staff held in his right hand (the hand nearer the viewer), the staff planted on the ground in front of his feet and reaching above his head.
+
+[BACKGROUND] Flat, solid, pure magenta background (#FF00FF), perfectly uniform, with no gradient, no floor, no shadow on the ground and no details. Crisp clean edge between the character and the magenta, with no glow spilling onto it. Never use magenta, pink, purple, violet or lilac anywhere on the character.
+
+[NEGATIVE] no pixel art, no pixelated look, no retro 8-bit or 16-bit style, no low-poly look, no photorealism, no chibi, no big head, no second character, no reflection, no text, no letters, no logo, no watermark, no signature, no border, no frame, no character sheet, no multiple views, no background scenery, no ground shadow, no cropped feet or head, no modern clothing, no hood, no crown, no purple, no violet, no pink, no lilac.</pre>
+    <div class="actions">
+      <button class="btn primary" type="button" data-copy="prompt">Copiar prompt</button>
+      <span class="ratio">Proporção no Flow: <strong>9:16 (em pé)</strong></span>
+      <label class="done"><input type="checkbox" id="done-03"> Pronto</label>
+    </div>
+  </div>
+</article>
+
+<article class="card" id="p04" data-sec="vila" data-id="04">
+  <div class="meta"><div class="num">04</div><div class="tags"><span class="tag">9:16</span><span class="tag"><i class="sw"></i>magenta</span></div></div>
+  <div class="main">
+    <div class="head"><h3>Mercadora</h3><span class="state" hidden></span></div>
+    <p class="sum">Mulher de 40 anos, lenço laranja, vestido azul-claro e avental, segurando um pote de ambrosia.</p>
+    <p class="nota" hidden></p>
+    <dl class="facts">
+      <div><dt>Nome no projeto</dt><dd><code class="fname">merchant</code></dd></div>
+      <div><dt>No jogo</dt><dd>ARCADIA, tile 25 · vende ambrosia (10 azeitonas)</dd></div>
+    </dl>
+    <pre class="prompt" tabindex="0" aria-label="Prompt 04">[STYLE] Beautiful stylized 3D game character for a premium 2.5D side-scrolling platformer, rendered like a high-end animated film: soft global illumination, warm key light from the upper-left, gentle cool rim light on the back edge, hand-painted texture detail on skin, hair, cloth, leather and metal, clean strong silhouette, expressive face, high resolution, sharp clean edges, portrait 9:16.
+
+[WORLD] Mythological Ancient Greece, region of Arcadia. Clothes and objects are ancient Greek: chitons, himations, leather sandals, bronze, olive wood, gold trim, Greek key (meander) patterns. Light always comes from the upper-left.
+
+[REFERENCE] If a reference image is attached, use it only for the art style (rendering, level of detail, colors, lighting). Do not copy its character, face, clothes or objects.
+
+[POSE] ONE single character only, alone in the frame, nobody else. Full body with the whole body inside the frame and a small margin on every side: nothing cropped, from the top of the head (and anything held above it) down to the soles of the feet. Strict side view in profile, facing RIGHT: exactly ONE eye and ONE ear are visible and the nose points to the right edge of the image; if both eyes are visible, the image is wrong. Relaxed standing idle pose, weight on both feet, feet flat on one ground line near the bottom of the image. Stylized adult proportions, about 6.5 heads tall — NOT chibi, NOT big-headed. Camera at chest height, flat, no perspective, no foreshortening.
+
+[CHARACTER] A market merchant woman around 40: dark brown hair tied in a bun under an orange headscarf, a friendly smile, a light-blue ankle-length dress with a cream apron tied at the waist, simple leather sandals. With both hands she holds a small round clay jar filled with glowing golden ambrosia in front of her chest.
+
+[BACKGROUND] Flat, solid, pure magenta background (#FF00FF), perfectly uniform, with no gradient, no floor, no shadow on the ground and no details. Crisp clean edge between the character and the magenta, with no glow spilling onto it. Never use magenta, pink, purple, violet or lilac anywhere on the character.
+
+[NEGATIVE] no pixel art, no pixelated look, no retro 8-bit or 16-bit style, no low-poly look, no photorealism, no chibi, no big head, no second character, no reflection, no text, no letters, no logo, no watermark, no signature, no border, no frame, no character sheet, no multiple views, no background scenery, no ground shadow, no cropped feet or head, no modern clothing, no market stall, no table, no purple, no violet, no pink, no lilac.</pre>
+    <div class="actions">
+      <button class="btn primary" type="button" data-copy="prompt">Copiar prompt</button>
+      <span class="ratio">Proporção no Flow: <strong>9:16 (em pé)</strong></span>
+      <label class="done"><input type="checkbox" id="done-04"> Pronto</label>
+    </div>
+  </div>
+</article>
+
+<article class="card" id="p05" data-sec="vila" data-id="05">
+  <div class="meta"><div class="num">05</div><div class="tags"><span class="tag">9:16</span><span class="tag"><i class="sw"></i>magenta</span></div></div>
+  <div class="main">
+    <div class="head"><h3>Moradora</h3><span class="state" hidden></span></div>
+    <p class="sum">Moça de 22 anos, flor vermelha no coque, vestido amarelo-açafrão e xale branco, com uma cesta de maçãs.</p>
+    <p class="nota" hidden></p>
+    <dl class="facts">
+      <div><dt>Nome no projeto</dt><dd><code class="fname">villager</code></dd></div>
+      <div><dt>No jogo</dt><dd>ARCADIA, tile 44 · dá dicas da floresta</dd></div>
+    </dl>
+    <pre class="prompt" tabindex="0" aria-label="Prompt 05">[STYLE] Beautiful stylized 3D game character for a premium 2.5D side-scrolling platformer, rendered like a high-end animated film: soft global illumination, warm key light from the upper-left, gentle cool rim light on the back edge, hand-painted texture detail on skin, hair, cloth, leather and metal, clean strong silhouette, expressive face, high resolution, sharp clean edges, portrait 9:16.
+
+[WORLD] Mythological Ancient Greece, region of Arcadia. Clothes and objects are ancient Greek: chitons, himations, leather sandals, bronze, olive wood, gold trim, Greek key (meander) patterns. Light always comes from the upper-left.
+
+[REFERENCE] If a reference image is attached, use it only for the art style (rendering, level of detail, colors, lighting). Do not copy its character, face, clothes or objects.
+
+[POSE] ONE single character only, alone in the frame, nobody else. Full body with the whole body inside the frame and a small margin on every side: nothing cropped, from the top of the head (and anything held above it) down to the soles of the feet. Strict side view in profile, facing RIGHT: exactly ONE eye and ONE ear are visible and the nose points to the right edge of the image; if both eyes are visible, the image is wrong. Relaxed standing idle pose, weight on both feet, feet flat on one ground line near the bottom of the image. Stylized adult proportions, about 6.5 heads tall — NOT chibi, NOT big-headed. Camera at chest height, flat, no perspective, no foreshortening.
+
+[CHARACTER] A cheerful young village woman around 22: dark hair in a bun with a red flower tucked in it, bright friendly eyes, a saffron-yellow calf-length dress with a white shawl over her shoulders, simple leather sandals. She holds a small woven basket of red apples in the crook of her right arm (the arm nearer the viewer).
+
+[BACKGROUND] Flat, solid, pure magenta background (#FF00FF), perfectly uniform, with no gradient, no floor, no shadow on the ground and no details. Crisp clean edge between the character and the magenta, with no glow spilling onto it. Never use magenta, pink, purple, violet or lilac anywhere on the character.
+
+[NEGATIVE] no pixel art, no pixelated look, no retro 8-bit or 16-bit style, no low-poly look, no photorealism, no chibi, no big head, no second character, no reflection, no text, no letters, no logo, no watermark, no signature, no border, no frame, no character sheet, no multiple views, no background scenery, no ground shadow, no cropped feet or head, no modern clothing, no pink clothes, no purple, no violet, no pink, no lilac.</pre>
+    <div class="actions">
+      <button class="btn primary" type="button" data-copy="prompt">Copiar prompt</button>
+      <span class="ratio">Proporção no Flow: <strong>9:16 (em pé)</strong></span>
+      <label class="done"><input type="checkbox" id="done-05"> Pronto</label>
+    </div>
+  </div>
+</article>
+</section>
+
+<section class="sec" data-sec="deuses">
+  <div class="sec-head"><h2>Deuses</h2><p>Maiores e mais imponentes que os mortais. O brilho divino em volta deles quem desenha é o jogo, por isso o prompt pede sem brilho.</p></div>
+  
+<article class="card" id="p06" data-sec="deuses" data-id="06">
+  <div class="meta"><div class="num">06</div><div class="tags"><span class="tag">9:16</span><span class="tag"><i class="sw"></i>magenta</span></div></div>
+  <div class="main">
+    <div class="head"><h3>Zeus</h3><span class="state" hidden></span></div>
+    <p class="sum">Rei dos deuses: cabelo e barba brancos, coroa de louros dourada, mantos branco e ouro, raio dourado erguido.</p>
+    <p class="nota" hidden></p>
+    <dl class="facts">
+      <div><dt>Nome no projeto</dt><dd><code class="fname">zeus</code></dd></div>
+      <div><dt>No jogo</dt><dd>Templo de Zeus · dá a bênção (+4 de vida) e salva o jogo</dd></div>
+    </dl>
+    <pre class="prompt" tabindex="0" aria-label="Prompt 06">[STYLE] Beautiful stylized 3D game character for a premium 2.5D side-scrolling platformer, rendered like a high-end animated film: soft global illumination, warm key light from the upper-left, gentle cool rim light on the back edge, hand-painted texture detail on skin, hair, cloth, leather and metal, clean strong silhouette, expressive face, high resolution, sharp clean edges, portrait 9:16.
+
+[WORLD] Mythological Ancient Greece, region of Arcadia. Clothes and objects are ancient Greek: chitons, himations, leather sandals, bronze, olive wood, gold trim, Greek key (meander) patterns. Light always comes from the upper-left.
+
+[REFERENCE] If a reference image is attached, use it only for the art style (rendering, level of detail, colors, lighting). Do not copy its character, face, clothes or objects.
+
+[POSE] ONE single character only, alone in the frame, nobody else. Full body with the whole body inside the frame and a small margin on every side: nothing cropped, from the top of the head (and anything held above it) down to the soles of the feet. Strict side view in profile, facing RIGHT: exactly ONE eye and ONE ear are visible and the nose points to the right edge of the image; if both eyes are visible, the image is wrong. Relaxed standing idle pose, weight on both feet, feet flat on one ground line near the bottom of the image. Stylized adult proportions, about 7 heads tall — NOT chibi, NOT big-headed. Camera at chest height, flat, no perspective, no foreshortening.
+
+[CHARACTER] Zeus, king of the gods: a powerful, broad-shouldered old man, taller and more imposing than a mortal, long flowing white hair and a full white beard, a golden laurel crown, stern majestic eyes, white and gold robes draped over one shoulder with a deep blue sash, one muscular arm bare, golden sandals. In his right hand (the hand nearer the viewer) he raises a crackling golden lightning bolt at shoulder height, with a few small sparks close to the bolt.
+
+[BACKGROUND] Flat, solid, pure magenta background (#FF00FF), perfectly uniform, with no gradient, no floor, no shadow on the ground and no details. Crisp clean edge between the character and the magenta, with no glow spilling onto it. Never use magenta, pink, purple, violet or lilac anywhere on the character.
+
+[NEGATIVE] no pixel art, no pixelated look, no retro 8-bit or 16-bit style, no low-poly look, no photorealism, no chibi, no big head, no second character, no reflection, no text, no letters, no logo, no watermark, no signature, no border, no frame, no character sheet, no multiple views, no background scenery, no ground shadow, no cropped feet or head, no modern clothing, no glow around the body, no aura, no clouds, no throne, no purple, no violet, no pink, no lilac.</pre>
+    <div class="actions">
+      <button class="btn primary" type="button" data-copy="prompt">Copiar prompt</button>
+      <span class="ratio">Proporção no Flow: <strong>9:16 (em pé)</strong></span>
+      <label class="done"><input type="checkbox" id="done-06"> Pronto</label>
+    </div>
+  </div>
+</article>
+
+<article class="card" id="p07" data-sec="deuses" data-id="07">
+  <div class="meta"><div class="num">07</div><div class="tags"><span class="tag">9:16</span><span class="tag"><i class="sw"></i>magenta</span></div></div>
+  <div class="main">
+    <div class="head"><h3>Hermes</h3><span class="state" hidden></span></div>
+    <p class="sum">Mensageiro dos deuses: jovem, chapéu dourado com asas, túnica azul-clara, sandálias aladas e bastão com serpentes.</p>
+    <p class="nota" hidden></p>
+    <dl class="facts">
+      <div><dt>Nome no projeto</dt><dd><code class="fname">hermes</code></dd></div>
+      <div><dt>No jogo</dt><dd>Santuário de Hermes · dá as Sandálias de Hermes (pulo alto)</dd></div>
+    </dl>
+    <pre class="prompt" tabindex="0" aria-label="Prompt 07">[STYLE] Beautiful stylized 3D game character for a premium 2.5D side-scrolling platformer, rendered like a high-end animated film: soft global illumination, warm key light from the upper-left, gentle cool rim light on the back edge, hand-painted texture detail on skin, hair, cloth, leather and metal, clean strong silhouette, expressive face, high resolution, sharp clean edges, portrait 9:16.
+
+[WORLD] Mythological Ancient Greece, region of Arcadia. Clothes and objects are ancient Greek: chitons, himations, leather sandals, bronze, olive wood, gold trim, Greek key (meander) patterns. Light always comes from the upper-left.
+
+[REFERENCE] If a reference image is attached, use it only for the art style (rendering, level of detail, colors, lighting). Do not copy its character, face, clothes or objects.
+
+[POSE] ONE single character only, alone in the frame, nobody else. Full body with the whole body inside the frame and a small margin on every side: nothing cropped, from the top of the head (and anything held above it) down to the soles of the feet. Strict side view in profile, facing RIGHT: exactly ONE eye and ONE ear are visible and the nose points to the right edge of the image; if both eyes are visible, the image is wrong. Relaxed standing idle pose, weight on both feet, feet flat on one ground line near the bottom of the image. Stylized adult proportions, about 7 heads tall — NOT chibi, NOT big-headed. Camera at chest height, flat, no perspective, no foreshortening.
+
+[CHARACTER] A young messenger god from ancient Greek myth: youthful, slim and light on his feet, curly brown hair under a round golden traveler's hat with two small white wings on its sides, a playful confident smile, a light-blue short chiton with gold trim, a small white cloak pinned at one shoulder, golden sandals with small white wings at the ankles. In his right hand (the hand nearer the viewer) he holds a slender golden herald's staff topped with two small wings, with two thin golden serpents coiled around it.
+
+[BACKGROUND] Flat, solid, pure magenta background (#FF00FF), perfectly uniform, with no gradient, no floor, no shadow on the ground and no details. Crisp clean edge between the character and the magenta, with no glow spilling onto it. Never use magenta, pink, purple, violet or lilac anywhere on the character.
+
+[NEGATIVE] no pixel art, no pixelated look, no retro 8-bit or 16-bit style, no low-poly look, no photorealism, no chibi, no big head, no second character, no reflection, no text, no letters, no logo, no watermark, no signature, no border, no frame, no character sheet, no multiple views, no background scenery, no ground shadow, no cropped feet or head, no modern clothing, no glow around the body, no aura, no clouds, no glasses, no purple, no violet, no pink, no lilac.</pre>
+    <div class="actions">
+      <button class="btn primary" type="button" data-copy="prompt">Copiar prompt</button>
+      <span class="ratio">Proporção no Flow: <strong>9:16 (em pé)</strong></span>
+      <label class="done"><input type="checkbox" id="done-07"> Pronto</label>
+    </div>
+  </div>
+</article>
+
+<article class="card" id="p08" data-sec="deuses" data-id="08">
+  <div class="meta"><div class="num">08</div><div class="tags"><span class="tag">9:16</span><span class="tag"><i class="sw"></i>magenta</span></div></div>
+  <div class="main">
+    <div class="head"><h3>Hades</h3><span class="state" hidden></span></div>
+    <p class="sum">Rei do submundo: alto, cabelo e barba curta pretos, coroa de ferro pontuda, mantos pretos e cajado de duas pontas.</p>
+    <p class="nota" hidden></p>
+    <dl class="facts">
+      <div><dt>Nome no projeto</dt><dd><code class="fname">hades</code></dd></div>
+      <div><dt>No jogo</dt><dd>História e Parte 2 · prende a alma da Eurídice</dd></div>
+    </dl>
+    <pre class="prompt" tabindex="0" aria-label="Prompt 08">[STYLE] Beautiful stylized 3D game character for a premium 2.5D side-scrolling platformer, rendered like a high-end animated film: soft global illumination, warm key light from the upper-left, gentle cool rim light on the back edge, hand-painted texture detail on skin, hair, cloth, leather and metal, clean strong silhouette, expressive face, high resolution, sharp clean edges, portrait 9:16.
+
+[WORLD] Mythological Ancient Greece, region of Arcadia. Clothes and objects are ancient Greek: chitons, himations, leather sandals, bronze, olive wood, gold trim, Greek key (meander) patterns. Light always comes from the upper-left.
+
+[REFERENCE] If a reference image is attached, use it only for the art style (rendering, level of detail, colors, lighting). Do not copy its character, face, clothes or objects.
+
+[POSE] ONE single character only, alone in the frame, nobody else. Full body with the whole body inside the frame and a small margin on every side: nothing cropped, from the top of the head (and anything held above it) down to the soles of the feet. Strict side view in profile, facing RIGHT: exactly ONE eye and ONE ear are visible and the nose points to the right edge of the image; if both eyes are visible, the image is wrong. Relaxed standing idle pose, weight on both feet, feet flat on one ground line near the bottom of the image. Stylized adult proportions, about 7 heads tall — NOT chibi, NOT big-headed. Camera at chest height, flat, no perspective, no foreshortening.
+
+[CHARACTER] The stern king of the underworld from ancient Greek myth: tall, regal and imposing, a pale but natural human skin tone, black wavy hair to the shoulders and a short black beard, dark serious eyes with a faint cold cyan glint, a dark iron crown with sharp pointed spikes, long black and dark steel-blue robes with iron clasps and a silver Greek key border, a dark cloak over his shoulders, dark leather sandals. In his right hand (the hand nearer the viewer) he holds a tall dark iron staff with two straight prongs at the top, planted on the ground.
+
+[BACKGROUND] Flat, solid, pure magenta background (#FF00FF), perfectly uniform, with no gradient, no floor, no shadow on the ground and no details. Crisp clean edge between the character and the magenta, with no glow spilling onto it. Never use magenta, pink, purple, violet or lilac anywhere on the character.
+
+[NEGATIVE] no pixel art, no pixelated look, no retro 8-bit or 16-bit style, no low-poly look, no photorealism, no chibi, no big head, no second character, no reflection, no text, no letters, no logo, no watermark, no signature, no border, no frame, no character sheet, no multiple views, no background scenery, no ground shadow, no cropped feet or head, no modern clothing, no flaming hair, no glow around the body, no smoke, no throne, no purple, no violet, no pink, no lilac.</pre>
+    <div class="actions">
+      <button class="btn primary" type="button" data-copy="prompt">Copiar prompt</button>
+      <span class="ratio">Proporção no Flow: <strong>9:16 (em pé)</strong></span>
+      <label class="done"><input type="checkbox" id="done-08"> Pronto</label>
+    </div>
+  </div>
+</article>
+</section>
+
+  <footer class="note">Pronto = a imagem escolhida já está em Downloads. O Claude copia para <code>jogos/olympus/assets/personagens/</code>, tira o magenta e muda o cartão para No projeto. Fonte dos prompts: <code>jogos/olympus/tools/prompts_personagens.js</code>, que também gera <code>docs/PROMPTS_FLOW_PERSONAGENS.md</code>.</footer>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var KEY = 'orpheus_personagens_prontos_v1';
+  var LABEL = { aguardando: 'Pronto · falta importar', no_projeto: 'No projeto', refazer: 'Refazer' };
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+  var marks = {}; // card id -> { status, file, marcadoEm, nota, origem }
+  var db = null;  // shared store: Claude reads the marks there and writes back the status
+
+  // Until (or unless) the shared store answers, marks live in this browser only.
+  function loadLocal() {
+    var m = {};
+    try {
+      var s = JSON.parse(localStorage.getItem(KEY) || '{}') || {};
+      Object.keys(s).forEach(function (k) { m[k] = typeof s[k] === 'object' && s[k] ? s[k] : { status: 'aguardando' }; });
+    } catch (e) {}
+    return m;
+  }
+  function saveLocal() { try { localStorage.setItem(KEY, JSON.stringify(marks)); } catch (e) {} }
+  marks = loadLocal();
+
+  var toastEl = document.getElementById('toast'), toastT;
+  function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove('show'); }, 1800); }
+  function selectEl(el) { var r = document.createRange(); r.selectNodeContents(el); var s = window.getSelection(); s.removeAllRanges(); s.addRange(r); }
+  function copy(text, el, label) {
+    function fallback() { if (el) { selectEl(el); toast('Texto selecionado: aperte Ctrl+C'); } }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(function () { toast(label + ' copiado'); }, fallback);
+      else fallback();
+    } catch (e) { fallback(); }
+  }
+
+  cards.forEach(function (c) {
+    var id = c.getAttribute('data-id');
+    var pre = c.querySelector('.prompt'), fname = c.querySelector('.fname'), box = c.querySelector('input[type=checkbox]');
+    c.querySelector('[data-copy=prompt]').addEventListener('click', function () { copy(pre.textContent, pre, 'Prompt ' + id); });
+    box.addEventListener('change', function () {
+      var on = box.checked;
+      var body = { file: fname.textContent, status: 'aguardando', marcadoEm: new Date().toISOString() };
+      if (!db) { if (on) marks[id] = body; else delete marks[id]; saveLocal(); render(); return; }
+      box.disabled = true;
+      var ref = db.collection('prontos').doc(id);
+      (on ? ref.set(body) : ref.delete()).then(function () {
+        box.disabled = false;
+        toast(on ? 'Marcado: o Claude vai buscar a imagem em Downloads' : 'Desmarcado');
+      }, function (e) {
+        box.disabled = false; box.checked = !on;
+        toast(e && e.code === 'invalid_argument' ? 'Sem permissão para marcar nesta página' : 'Não salvou. Tente de novo.');
+      });
+    });
+  });
+  Array.prototype.forEach.call(document.querySelectorAll('.fix'), function (b) {
+    b.addEventListener('click', function () { copy(b.getAttribute('data-text'), b.querySelector('code'), 'Trecho'); });
+  });
+
+  var filter = 'all', hideDone = document.getElementById('hide-done');
+  try { filter = localStorage.getItem(KEY + '_f') || 'all'; hideDone.checked = localStorage.getItem(KEY + '_h') === '1'; } catch (e) {}
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
+  if (!chips.some(function (b) { return b.getAttribute('data-filter') === filter; })) filter = 'all';
+  chips.forEach(function (b) {
+    b.addEventListener('click', function () { filter = b.getAttribute('data-filter'); try { localStorage.setItem(KEY + '_f', filter); } catch (e) {} render(); });
+  });
+  hideDone.addEventListener('change', function () { try { localStorage.setItem(KEY + '_h', hideDone.checked ? '1' : '0'); } catch (e) {} render(); });
+
+  function render() {
+    var done = 0, wait = 0;
+    cards.forEach(function (c) {
+      var m = marks[c.getAttribute('data-id')], st = m && m.status;
+      var box = c.querySelector('input[type=checkbox]'), stEl = c.querySelector('.state'), nota = c.querySelector('.nota');
+      if (st === 'no_projeto') done++; else if (st === 'aguardando') wait++;
+      var marked = st === 'aguardando' || st === 'no_projeto';
+      if (!box.disabled) box.checked = marked;
+      stEl.hidden = !LABEL[st]; stEl.className = 'state ' + (st || ''); stEl.textContent = LABEL[st] || '';
+      var txt = m && m.nota ? String(m.nota) : '';
+      nota.hidden = !txt; nota.className = 'nota ' + (st || ''); nota.textContent = txt;
+      c.classList.toggle('is-done', marked);
+      c.hidden = (filter !== 'all' && c.getAttribute('data-sec') !== filter) || (hideDone.checked && marked);
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.sec'), function (s) {
+      s.hidden = !s.querySelector('.card:not([hidden])');
+    });
+    chips.forEach(function (b) { b.setAttribute('aria-pressed', String(b.getAttribute('data-filter') === filter)); });
+    document.getElementById('done-n').textContent = done;
+    document.getElementById('wait-n').textContent = wait;
+    Array.prototype.forEach.call(document.querySelectorAll('.px'), function (p, i) {
+      p.classList.toggle('on', i < done); p.classList.toggle('wait', i >= done && i < done + wait);
+    });
+  }
+  render();
+
+  var modeEl = document.getElementById('mode');
+  var LOCAL = 'Marcações só neste navegador: o Claude não vê';
+  var cl = window.claude;
+  if (cl && typeof cl.use === 'function') {
+    cl.use('db').then(function (d) {
+      if (!d) { modeEl.textContent = LOCAL; return; }
+      db = d;
+      modeEl.textContent = 'Conectado: o Claude vê o que você marca';
+      d.collection('prontos').onSnapshot(function (snap) {
+        var m = {};
+        snap.docs.forEach(function (doc) { if (doc.exists) m[doc.id] = doc.data(); });
+        marks = m; render();
+      }, function () { db = null; marks = loadLocal(); modeEl.textContent = LOCAL; render(); });
+    }, function () { modeEl.textContent = LOCAL; });
+  } else modeEl.textContent = LOCAL;
+})();
+</script>

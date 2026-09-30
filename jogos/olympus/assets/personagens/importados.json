@@ -1,0 +1,66 @@
+{
+  "01": {
+    "file": "orpheus",
+    "origem": "Orpheus_holding_club_2K_20260929223146.jpg",
+    "mtime": 1790731907295.3567,
+    "marcadoEm": "2026-09-30T01:32:19.832Z",
+    "destino": "orpheus.jpg",
+    "importadoEm": "2026-09-30T01:35:39.950Z"
+  },
+  "02": {
+    "file": "eurydice",
+    "origem": "Woman_standing_in_profile_2K_20260929223733.jpg",
+    "mtime": 1790732253597.211,
+    "marcadoEm": "2026-09-30T01:40:00.000Z",
+    "destino": "eurydice.jpg",
+    "importadoEm": "2026-09-30T01:40:13.252Z"
+  },
+  "03": {
+    "file": "elder",
+    "origem": "Elderly_man_leaning_on_staff_2K_20260929223730.jpg",
+    "mtime": 1790732250273.7185,
+    "marcadoEm": "2026-09-30T01:40:00.000Z",
+    "destino": "elder.jpg",
+    "importadoEm": "2026-09-30T01:40:13.267Z"
+  },
+  "04": {
+    "file": "merchant",
+    "origem": "Merchant_woman_holding_clay_jar_2K_20260929223726.jpg",
+    "mtime": 1790732246411.1904,
+    "marcadoEm": "2026-09-30T01:40:00.000Z",
+    "destino": "merchant.jpg",
+    "importadoEm": "2026-09-30T01:40:13.273Z"
+  },
+  "05": {
+    "file": "villager",
+    "origem": "Woman_holding_basket_of_apples_2K_20260929223723.jpg",
+    "mtime": 1790732244023.0105,
+    "marcadoEm": "2026-09-30T01:40:00.000Z",
+    "destino": "villager.jpg",
+    "importadoEm": "2026-09-30T01:40:13.280Z"
+  },
+  "06": {
+    "file": "zeus",
+    "origem": "Zeus_holding_lightning_bolt_2K_20260929223721.jpg",
+    "mtime": 1790732241732.1375,
+    "marcadoEm": "2026-09-30T01:40:00.000Z",
+    "destino": "zeus.jpg",
+    "importadoEm": "2026-09-30T01:40:13.286Z"
+  },
+  "07": {
+    "file": "hermes",
+    "origem": "Hermes_standing_with_golden_staff_2K_20260929223712.jpg",
+    "mtime": 1790732232456.9844,
+    "marcadoEm": "2026-09-30T01:40:00.000Z",
+    "destino": "hermes.jpg",
+    "importadoEm": "2026-09-30T01:40:13.293Z"
+  },
+  "08": {
+    "file": "hades",
+    "origem": "King_of_the_underworld_standing_2K_20260929223710.jpg",
+    "mtime": 1790732230528.297,
+    "marcadoEm": "2026-09-30T01:40:00.000Z",
+    "destino": "hades.jpg",
+    "importadoEm": "2026-09-30T01:40:13.299Z"
+  }
+}

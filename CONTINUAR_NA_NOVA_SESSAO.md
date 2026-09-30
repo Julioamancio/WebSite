@@ -223,3 +223,9 @@ As páginas marcam **Pronto** num banco do Artifact (coleção `prontos`, id = n
 - Lições do AutoSprite: tipo "attack" inventou um escudo no Orfeu sem arma (usar "custom" + "NO shield"); duas vezes um job "succeeded" sem vídeo ("Video has no URL") — tem que pedir de novo; erros 502 passageiros — `tools/autosprite/insistir.mjs` tenta a cada 3 min.
 - Créditos AutoSprite restantes: ~482.
 - Testes: `node regressao.js` (local) e `node regressao_online.js` (site publicado) cobrem soco, alcance, troca de arma e golpes dos inimigos.
+
+## 30/09/2026 (noite) — publicado b20260930f (commit 1bb1b12)
+- Soco baixo e dano/morte SEM arma refeitos no AutoSprite (orpheus_p_lowpunch2, orpheus_p_hurt; montagem tools/autosprite/escolhas_soco6.json). Player.wf() escolhe o quadro pela arma; a tela de morte usa o mesmo mapeamento.
+- Sátiro não cai mais no buraco: safeJump simula o arco do pulo, groundAhead olha o chão, empurrão só desliza com chão. Testes satyrGap/satyrWideGap/satyrKnockEdge + tools/estresse_satiro.js.
+- Regressão local e online verdes, 60 fps em todas as fases.
+- PENDENTE: prompts de áudio entregues em https://claude.ai/artifact/5YwkW4zDS5iRG6Vf88HcTk (9 músicas Suno, 21 efeitos + 3 ambientes ElevenLabs). Quando o Julio baixar em Downloads\orpheus-audio com os nomes music_*.mp3 / sfx_*.mp3 / amb_*.mp3: converter para leve (OGG/Opus ou MP3 menor), trocar o chiptune do audio.js por arquivos (loop com emenda, jingles cortados em ~4 s e ~8 s), ligar sons novos (punch no soco, hiss no bote da cobra, satyr no golpe do sátiro, underworld/ending nas cutscenes, ambientes por fase), respeitar volumes das Opções.

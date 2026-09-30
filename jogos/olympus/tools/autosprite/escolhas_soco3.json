@@ -1,0 +1,15 @@
+{
+ "orpheus_p_crouch": {
+  "raw": "orpheus_p_lowpunch",
+  "char": "orpheus",
+  "anchor_raw": "orpheus_p_lowpunch",
+  "frames": {
+   "hero_p_crouch": 24,
+   "hero_p_catk_0": 21,
+   "hero_p_catk_1": 27,
+   "hero_p_catk_2": 33,
+   "hero_p_catk_3": 39,
+   "hero_p_catk_4": 45
+  }
+ }
+}

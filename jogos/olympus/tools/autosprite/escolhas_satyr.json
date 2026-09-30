@@ -1,0 +1,14 @@
+{
+ "satyr_attack": {
+  "raw": "satyr_attack2",
+  "char": "satyr",
+  "anchor_raw": "satyr_attack2",
+  "frames": {
+   "satyr_attack_0": 9,
+   "satyr_attack_1": 18,
+   "satyr_attack_2": 21,
+   "satyr_attack_3": 25,
+   "satyr_attack_4": 33
+  }
+ }
+}

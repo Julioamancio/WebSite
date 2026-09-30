@@ -421,7 +421,23 @@
     const heroDraw = O.Player.prototype.draw;
     O.Player.prototype.draw = function (c, g) {
       if ((O.SPR.hero_idle_0 || {}).hd && this.onGround) HD.shadow(c, this.x + this.w / 2 - g.cam, this.y + this.h + VY, 11, 0.32);
-      return heroDraw.call(this, c, g);
+      const r = heroDraw.call(this, c, g);
+      // punch: a quick arc of light in front of the fist while the blow can hit
+      const ab = this.attackBox && this.attackBox();
+      if (ab && this.weapon && this.weapon.prefix === 'hero_p_') {
+        const k = (this.atkElapsed() - 7) / 6, dir = this.facing;
+        // at the fist: shoulder height standing / in the air, near the ground when crouched
+        const cx = (dir > 0 ? ab.x + 8 : ab.x + ab.w - 8) - g.cam, cy = (this.crouch ? ab.y + ab.h * 0.6 : ab.y - 1) + VY;
+        c.save(); c.globalCompositeOperation = 'lighter';
+        c.globalAlpha = Math.max(0, 1 - k) * 0.9;
+        c.strokeStyle = 'rgba(255,240,200,1)'; c.lineWidth = 1.4; c.lineCap = 'round';
+        c.beginPath(); if (dir > 0) c.arc(cx, cy, 4 + k * 7, -1.1, 1.1); else c.arc(cx, cy, 4 + k * 7, Math.PI - 1.1, Math.PI + 1.1); c.stroke();
+        const gr = c.createRadialGradient(cx + dir * 3, cy, 0, cx + dir * 3, cy, 7);
+        gr.addColorStop(0, 'rgba(255,230,170,0.8)'); gr.addColorStop(1, 'rgba(255,200,120,0)');
+        c.fillStyle = gr; c.beginPath(); c.arc(cx + dir * 3, cy, 7, 0, 7); c.fill();
+        c.restore();
+      }
+      return r;
     };
   }
 

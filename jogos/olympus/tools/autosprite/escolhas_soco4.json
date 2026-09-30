@@ -1,0 +1,15 @@
+{
+ "orpheus_p_jatk": {
+  "raw": "orpheus_p_airpunch",
+  "char": "orpheus",
+  "anchor_raw": "orpheus_p_airpunch",
+  "pes": true,
+  "frames": {
+   "hero_p_jatk_0": 18,
+   "hero_p_jatk_1": 21,
+   "hero_p_jatk_2": 24,
+   "hero_p_jatk_3": 27,
+   "hero_p_jatk_4": 31
+  }
+ }
+}

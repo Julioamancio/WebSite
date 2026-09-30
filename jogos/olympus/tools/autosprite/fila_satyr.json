@@ -1,0 +1,10 @@
+[
+ {
+  "char": "satyr",
+  "name": "satyr_attack2",
+  "kind": "custom",
+  "club": true,
+  "end": true,
+  "prompt": "The satyr lifts the wooden club high over his horned head, then smashes it down hard in front of him, then returns to his ready stance."
+ }
+]

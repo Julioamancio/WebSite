@@ -1,0 +1,34 @@
+{
+ "image": "orpheus_p_jatk.png",
+ "w": 621,
+ "h": 606,
+ "ax": 300,
+ "ay": 600,
+ "frames": {
+  "hero_p_jatk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 18
+  },
+  "hero_p_jatk_1": {
+   "x": 621,
+   "y": 0,
+   "src": 21
+  },
+  "hero_p_jatk_2": {
+   "x": 1242,
+   "y": 0,
+   "src": 24
+  },
+  "hero_p_jatk_3": {
+   "x": 1863,
+   "y": 0,
+   "src": 27
+  },
+  "hero_p_jatk_4": {
+   "x": 2484,
+   "y": 0,
+   "src": 31
+  }
+ }
+}

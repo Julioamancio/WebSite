@@ -1,0 +1,14 @@
+{
+ "orpheus_p_attack": {
+  "raw": "orpheus_p_punch2",
+  "char": "orpheus",
+  "anchor_raw": "orpheus_p_punch2",
+  "frames": {
+   "hero_p_atk_0": 9,
+   "hero_p_atk_1": 12,
+   "hero_p_atk_2": 18,
+   "hero_p_atk_3": 24,
+   "hero_p_atk_4": 30
+  }
+ }
+}

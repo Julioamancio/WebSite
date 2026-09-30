@@ -1,0 +1,13 @@
+{
+ "boar_gore": {
+  "raw": "boar_gore",
+  "char": "boar",
+  "frames": {
+   "boar_gore_0": 6,
+   "boar_gore_1": 15,
+   "boar_gore_2": 21,
+   "boar_gore_3": 27,
+   "boar_gore_4": 36
+  }
+ }
+}

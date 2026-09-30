@@ -1,0 +1,34 @@
+{
+ "image": "orpheus_p_attack.png",
+ "w": 470,
+ "h": 649,
+ "ax": 196,
+ "ay": 643,
+ "frames": {
+  "hero_p_atk_0": {
+   "x": 0,
+   "y": 0,
+   "src": 9
+  },
+  "hero_p_atk_1": {
+   "x": 470,
+   "y": 0,
+   "src": 12
+  },
+  "hero_p_atk_2": {
+   "x": 940,
+   "y": 0,
+   "src": 18
+  },
+  "hero_p_atk_3": {
+   "x": 1410,
+   "y": 0,
+   "src": 24
+  },
+  "hero_p_atk_4": {
+   "x": 1880,
+   "y": 0,
+   "src": 30
+  }
+ }
+}

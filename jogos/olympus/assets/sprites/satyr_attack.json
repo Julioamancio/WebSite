@@ -1,0 +1,34 @@
+{
+ "image": "satyr_attack.png",
+ "w": 613,
+ "h": 736,
+ "ax": 234,
+ "ay": 730,
+ "frames": {
+  "satyr_attack_0": {
+   "x": 0,
+   "y": 0,
+   "src": 9
+  },
+  "satyr_attack_1": {
+   "x": 613,
+   "y": 0,
+   "src": 18
+  },
+  "satyr_attack_2": {
+   "x": 1226,
+   "y": 0,
+   "src": 21
+  },
+  "satyr_attack_3": {
+   "x": 1839,
+   "y": 0,
+   "src": 25
+  },
+  "satyr_attack_4": {
+   "x": 2452,
+   "y": 0,
+   "src": 33
+  }
+ }
+}

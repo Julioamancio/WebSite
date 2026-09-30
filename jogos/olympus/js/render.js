@@ -57,6 +57,15 @@
     pass(true);
     if (O.Tiles.overlay) { try { O.Tiles.overlay(lvl, g, f); } catch (e) { O.logOnce('overlay', e); } }
     (def.decor || []).filter((d) => d[3] === 'front').forEach((d) => placeDecor(f, d));
+    // Keep an ungraded copy of the spike areas (lighting modules may darken the level canvas later).
+    lvl.hazard = null;
+    for (let y = 0; y < lvl.h; y++) {
+      for (let x = 0; x < lvl.w; x++) {
+        if (lvl.tiles[y][x] !== 'X') continue;
+        if (!lvl.hazard) lvl.hazard = O.makeCanvas(lvl.pxW, lvl.pxH);
+        lvl.hazard.getContext('2d').drawImage(lvl.canvas, x * T - 3, y * T - 4, T + 6, T + 8, x * T - 3, y * T - 4, T + 6, T + 8);
+      }
+    }
   };
 
   /* ---------------- helpers ---------------- */
@@ -197,19 +206,32 @@
     this.drawLights(c);
     this.npcs.forEach((n) => n.draw(c, this));
     this.pickups.forEach((pk) => pk.draw(c, this));
-    this.enemies.forEach((e) => e.draw(c, this));
+    // Snakes crawl in the grass: draw them after the foreground layer so the tufts don't cover them.
+    this.enemies.forEach((e) => { if (!e.lowProfile) e.draw(c, this); });
     if (this.state === 'dying') this.drawDeath(c);
     else if (this.state === 'itemget') this.drawItemGet(c);
     else this.player.draw(c, this);
     this.drawFx(c);
     c.drawImage(lvl.front, cam, 0, W, VIEW_H, 0, VY, W, VIEW_H);
+    this.enemies.forEach((e) => { if (e.lowProfile) e.draw(c, this); });
     if (O.Light && O.Light.apply) { try { c.save(); O.Light.apply(c, this); } catch (e) { O.logOnce('Light.apply', e); } finally { c.restore(); } }
+    this.drawHazards(c);
     this.drawAmbient(c);
     if (this.flash > 0 && (this.flash & 1)) { c.fillStyle = 'rgba(255,255,255,0.35)'; c.fillRect(0, 0, W, H); }
     c.restore();
     if (this.banner > 0 && this.banner < 140 && !this.dialog) this.drawBanner(c, lvl.name);
     const boss = this.enemies.find((e) => e instanceof O.Boar);
     if (boss && boss.state !== 'wait') this.drawBossBar(c, boss);
+  };
+
+  // Spikes are redrawn on top of the lighting pass (partially) so dangers always read clearly.
+  // Spikes are redrawn on top of the lighting pass from an ungraded copy, so dangers always read clearly.
+  P.drawHazards = function (c) {
+    const lvl = this.lvl, cam = this.cam, hz = lvl.hazard;
+    if (!hz || lvl.theme === 'village') return;
+    c.globalAlpha = 0.85;
+    c.drawImage(hz, cam, 0, W, VIEW_H, 0, VY, W, VIEW_H);
+    c.globalAlpha = 1;
   };
 
   P.drawBanner = function (c, name) {

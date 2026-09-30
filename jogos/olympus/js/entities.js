@@ -177,7 +177,9 @@
       if (!this.onGround) return this.vy < -1.2 ? 'hero_jump' : this.vy > 1.2 ? 'hero_fall' : 'hero_peak';
       if (this.landT > 0) return 'hero_land';
       if (this.vx !== 0) return O.frame('hero_run', this.anim, 5, 8);
-      return O.frame('hero_idle', this.idleT, 12, 4);
+      const idle = O.frame('hero_idle', this.idleT, 12, 4);
+      if (idle === 'hero_idle_0' && (this.idleT % 200) < 6 && O.SPR.hero_blink) return 'hero_blink';
+      return idle;
     }
     draw(c, g) {
       if (this.inv > 0 && this.hurtT === 0 && ((this.inv >> 1) & 1)) return;
@@ -233,7 +235,7 @@
   class Snake extends Enemy {
     constructor(x, feet) {
       super(x, feet - 10, 20, 10);
-      this.cool = 60; this.lunge = 0;
+      this.cool = 60; this.lunge = 0; this.lowProfile = true;
     }
     update(g) {
       this.tick();
@@ -264,6 +266,7 @@
       const p = g.player;
       const dx = p.x + p.w / 2 - (this.x + this.w / 2);
       if (this.state === 'hang') {
+        this.facing = dx < 0 ? -1 : 1;
         if (Math.abs(dx) < 90 && p.y > this.y - 8) { this.state = 'fly'; this.t = 0; g.sfx('bat'); }
         return;
       }
@@ -276,8 +279,11 @@
     }
     draw(c, g) {
       // Bat frames are anchored on the centre of the body.
-      const name = this.state === 'hang' ? 'bat_hang' : O.frame('bat_fly', this.t, 4, 4);
-      O.drawA(c, name, Math.round(this.x + this.w / 2 - g.cam), Math.round(this.y + this.h / 2) + VY, this.facing < 0, this.flash > 0 && (this.flash & 2));
+      // Before noticing the hero, the bat hovers in place with a slow flap (no perch in the open sky).
+      const hover = this.state === 'hang';
+      const name = O.frame('bat_fly', this.t, hover ? 7 : 4, 4);
+      const bob = hover ? Math.round(Math.sin(this.t * 0.06) * 2) : 0;
+      O.drawA(c, name, Math.round(this.x + this.w / 2 - g.cam), Math.round(this.y + this.h / 2) + VY + bob, this.facing < 0, this.flash > 0 && (this.flash & 2));
     }
   }
 
@@ -474,7 +480,8 @@
     draw(c, g) {
       const bob = this.float ? Math.round(Math.sin(this.t * 0.05) * 2) - 6 : 0;
       if (O.drawNPCAura && this.god) { try { O.drawNPCAura(c, g, this, bob); } catch (err) { O.logOnce('drawNPCAura', err); } }
-      const d = drawBody(c, g, O.frame(this.kind + '_idle', this.t, 12, 4), this, this.facing < 0, false, 0, bob);
+      const blink = ((this.t + Math.round(this.x)) % 200) < 7 && O.SPR[this.kind + '_blink'];
+      const d = drawBody(c, g, blink ? this.kind + '_blink' : O.frame(this.kind + '_idle', this.t, 12, 4), this, this.facing < 0, false, 0, bob);
       if (d && this.near(g.player) && !g.dialog && ((this.t >> 4) & 1)) {
         O.drawA(c, 'arrow_up', d.sx + d.s.w / 2, d.sy - 4);
       }

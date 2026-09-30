@@ -33,26 +33,32 @@ Abra `jogos/olympus/index.html` no navegador. Não precisa de servidor nem de in
 
 ```
 jogos/olympus/
-  index.html        Página do jogo (canvas + controles de toque)
-  css/game.css      Layout, escala pixel-perfect e controles de celular
-  js/core.js        Paleta NES, utilitários e fonte bitmap
-  js/pix.js         Motor de pixel art (sombreamento, dithering, contornos)
-  js/sprites.js     Todos os sprites (texto -> imagem com sombreamento automático)
-  js/tiles.js       Tiles 16×16 com variações, decoração e cenários em parallax
-  js/audio.js       Motor chiptune (2 pulsos + triângulo + ruído), músicas e efeitos
-  js/input.js       Teclado, controle e toque
-  js/levels.js      Mapas das fases
-  js/story.js       TODOS os textos: abertura, diálogos, itens e final
-  js/entities.js    Física, Orfeu, inimigos, chefe, NPCs e itens coletáveis
-  js/game.js        Estados do jogo, diálogos, salvamento e lógica
-  js/render.js      Tudo o que aparece na tela: fases, luzes, partículas, HUD, título
-  js/main.js        Inicialização e loop a 60 FPS
+  index.html          Página do jogo (canvas 384x216 + controles de toque)
+  css/game.css        Layout, escala pixel-perfect e controles de celular
+  js/core.js          Constantes, utilitários e fonte bitmap base
+  js/pix.js           Motor de pixel art: paleta mestra, rampas de cor, contornos, formas sombreadas
+  js/sprites.js       Registro de sprites (âncoras, versões espelhadas e de dano) e sprites provisórios
+  js/tiles.js         Tiles e cenários base (substituídos pelos módulos de arte)
+  js/art/hero.js      Orfeu: 36 quadros de animação (corrida, golpe com rastro, pulo, agachar...)
+  js/art/npcs.js      Ancião, mercadora, moradora, Eurídice, Zeus, Hermes, Hades + retratos 48x48
+  js/art/enemies.js   Cobra, morcego, sátiro, Javali de Erimanto (chefe) e pedras
+  js/art/world.js     Tiles com autotiling, decoração (árvores, casas, templos, caverna) e braseiros
+  js/art/sky.js       Cenários em parallax, iluminação dinâmica, névoa, raios de luz e partículas
+  js/ui.js            HUD, diálogos com retrato, título, cenas da história, pausa, game over e final
+  js/audio.js         Motor chiptune (2 pulsos + triângulo + ruído), músicas e efeitos
+  js/input.js         Teclado, controle e toque
+  js/levels.js        Mapas das fases
+  js/story.js         TODOS os textos: abertura, diálogos, itens e final
+  js/entities.js      Física, Orfeu, inimigos, chefe, NPCs e itens coletáveis
+  js/game.js          Estados do jogo, diálogos, salvamento e lógica
+  js/render.js        Montagem da cena (camadas, luzes, efeitos) e ganchos dos módulos de arte
+  js/main.js          Inicialização e loop a 60 FPS
 ```
 
 ## Como editar
 
 - **Textos e diálogos**: `js/story.js`. Use apenas letras sem acento, números e `. , ! ? ' - : / ( ) " + =`.
 - **Fases**: `js/levels.js`. A legenda dos tiles está no topo do arquivo.
-- **Sprites**: `js/sprites.js`. Cada letra MAIÚSCULA é um material com sombreamento automático (por exemplo `S` pele, `H` cabelo, `W` tecido branco); a letra minúscula força a sombra; `K` é preto e `.` é transparente. O contorno preto é adicionado sozinho.
+- **Personagens e cenários**: cada módulo em `js/art/` registra seus quadros com `O.registerSprite(nome, imagem, {ax, ay})`; os nomes dos quadros (ex.: `hero_run_0..7`) são usados pelo motor em `js/entities.js`.
 - **Decoração das fases**: lista `decor` de cada fase em `js/levels.js` (oliveiras, ciprestes, carvalhos, ânforas, cortinas, janelas, cristais etc.).
 - **Músicas**: `js/audio.js`. Notas no formato `NOTA+OITAVA.DURAÇÃO` (duração em semicolcheias), por exemplo `E4.2` ou `-.4` (pausa).

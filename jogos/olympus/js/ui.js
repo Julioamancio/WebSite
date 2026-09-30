@@ -322,49 +322,64 @@ window.OLY = window.OLY || {};
     p.selout(OUT);
     return p;
   }
-  // Winged sandal of Hermes: thick sole, crossing leather straps up the ankle, three-feather wing at the heel.
+  // Winged sandal of Hermes, in profile: a bare foot on a sole with a raised toe, two diagonal straps crossing the
+  // instep over a bare heel, an ankle strap, and a three-feather wing fanning upward from the heel.
   function iconSandals() {
-    // Winged sandal of Hermes: sole, crossing leather straps up a bare ankle, three-feather wing at the heel.
     const p = fromMap([
-      '................',
-      '.aaa....SSK.....',
-      '.AaaaA..FKf.....',
-      '..bAAaaAKSK.....',
-      '.aaaa.bAFKf.....',
-      '.AAaaaAaSSK.....',
-      '..bbbAAaFKf.....',
-      '..aaa.bHFFSF....',
-      '...bbb.HFFFSFK..',
-      '.......HFFFFSKF.',
-      '......EEEEEEEEE.',
-      '......dddddddd..',
-      '................'
-    ], { a: '#ffffff', A: '#cfe0ff', b: '#8aa0d0', F: '#e8b088', f: '#c07858', S: '#c08040', K: '#7a4020', H: '#6a3a1a', E: '#a0602a', d: '#6a3a1a' });
-    p.set(6, 10, '#c88040'); p.set(8, 7, '#f4c8a0'); p.set(12, 8, '#f4c8a0');
+      'w..w............',
+      'aw.aw..w........',
+      'aAwaAw.aw.......',
+      '.aAaAAwaA.......',
+      '.bAAaAAAb.......',
+      '..bbAAAb........',
+      '....bbKSSK......',
+      '.....FfKF.......',
+      '.....FFfSK......',
+      '....FFFSKFfF....',
+      '....FFSKFFFFFf..',
+      '....fFFFFFFFFFFf',
+      '....EEEEEEEEEEEe',
+      '.....ddddddddde.'
+    ], { w: '#ffffff', a: '#eef4ff', A: '#b8ccf0', b: '#7a8cc8', F: '#f0b890', f: '#c8805e', S: '#c88a48', K: '#7a4424', E: '#b0703a', e: '#d89050', d: '#6a3a1a' });
     p.selout(OUT);
     return p;
   }
+  // HUD lyre (sits on the medallion's blue enamel): bright gold horn arms clearly apart from 2 strings,
+  // a crossbar on top and a 3-row tortoiseshell sound box.
+  const HUD_LYRE = [
+    'a.......c',
+    '.a.....c.',
+    '.aYYYYYc.',
+    'a.s...s.c',
+    'a.s...s.c',
+    'a.s...s.c',
+    '.as...sc.',
+    '..TTTTT..',
+    '.TtTTUtT.',
+    '..UUUUU..'
+  ];
   function hudLyre() {
-    const G0 = '#fff7b0', G1 = '#ffd24a', G2 = '#e39b1d', G3 = '#a8621b';
-    const p = fromMap([
-      'a.......d',
-      'a.......d',
-      '.b.....c.',
-      '.bYYYYyc.',
-      'b.s.s.s.d',
-      'b.s.s.s.d',
-      'b.s.s.s.d',
-      '.bs.s.sc.',
-      '..TTTTT..',
-      '.TtTTtTU.',
-      '..UUUUU..'
-    ], { a: G0, b: G1, c: G2, d: G3, Y: G0, y: G1, s: '#fff0c0', T: '#c08040', t: '#e0a860', U: '#7a4a24' });
-    // outline only around the gold/wood parts (strings stay free)
-    const q = new O.Pix(11, 13); q.blit(p, 1, 1);
+    const p = fromMap(HUD_LYRE, { a: GOLD[0], c: GOLD[2], Y: GOLD[0], s: '#fff0c0', T: '#c08040', t: '#e8b070', U: '#6a3a1c' });
+    const q = new O.Pix(11, 12); q.blit(p, 1, 1);
+    // the upper-left crossbar pixels catch the light
+    q.set(3, 3, '#ffffff'); q.set(8, 3, GOLD[1]); q.set(7, 3, GOLD[1]);
+    // outline only around the gold / wood parts, the strings stay free
     const sOn = []; for (let y = 0; y < q.h; y++) for (let x = 0; x < q.w; x++) if (q.get(x, y) === '#fff0c0') { sOn.push([x, y]); q.set(x, y, null); }
     q.selout(OUT);
     sOn.forEach((s2) => q.set(s2[0], s2[1], '#fff0c0'));
     return q.canvas();
+  }
+  // Small lyre lying on its side with one snapped string (game over).
+  function fallenLyre() {
+    const p = fromMap(HUD_LYRE, { a: GOLD[1], c: GOLD[3], Y: GOLD[1], s: '#e8d8b0', T: '#a86a38', t: '#c8905a', U: '#5a3018' });
+    // snap the left string: keep only its lower part, the loose end curls away
+    p.set(2, 3, null); p.set(2, 4, null); p.set(1, 5, '#e8d8b0'); p.set(2, 5, null);
+    const r = new O.Pix(p.h + 2, p.w + 2);                 // rotate 90° clockwise (top of the lyre points right)
+    for (let y = 0; y < p.h; y++) for (let x = 0; x < p.w; x++) { const c = p.get(x, y); if (c) r.set(p.h - y, x + 1, c); }
+    const sOn = []; for (let y = 0; y < r.h; y++) for (let x = 0; x < r.w; x++) if (r.get(x, y) === '#e8d8b0') { sOn.push([x, y]); r.set(x, y, null); }
+    r.selout(OUT);
+    sOn.forEach((s2) => r.set(s2[0], s2[1], '#e8d8b0'));
+    return r.canvas();
   }
   function iconLyre() {
     // Ox-horn arms (mirrored S-curves), a lit yoke, three free strings, tortoiseshell soundbox.
@@ -411,21 +426,24 @@ window.OLY = window.OLY || {};
     p.selout(OUT);
     return p;
   }
+  // "Talk" prompt: marble speech bubble with a gold up-chevron and a tail pointing down at the speaker.
   function iconArrowUp() {
     const p = fromMap([
-      '.OOOOOOOOO.',
-      'OMMMMMMMMMO',
-      'OMMMMgMMMMO',
-      'OMMMgGgMMMO',
-      'OMMgGGGgMMO',
-      'OMMMMGMMMmO',
-      'OMMMMGMMmmO',
-      'OmmmmmmmmmO',
-      '.OOOOmOOOO.',
-      '....OmO....',
-      '.....O.....'
-    ], { O: OUT, M: MARBLE[1], m: MARBLE[3], g: GOLD[3], G: GOLD[1] });
-    p.set(1, 1, '#ffffff'); p.set(2, 1, '#ffffff'); p.set(1, 2, '#ffffff');
+      '.OOOOOOOOOOO.',
+      'OwMMMMMMMMMMO',
+      'OMMMMMaMMMMMO',
+      'OMMMMaGbMMMMO',
+      'OMMMaGGGbMMMO',
+      'OMMaGGGGGbMMO',
+      'OMMcccGGcccmO',
+      'OMMMMaGbMMmmO',
+      'OMMMMcccMmmmO',
+      'OmmmmmmmmmmmO',
+      '.OOOOmmmOOOO.',
+      '.....OmmO....',
+      '.....OmO.....',
+      '......O......'
+    ], { O: OUT, w: '#ffffff', M: MARBLE[1], m: MARBLE[3], a: GOLD[0], G: GOLD[1], b: GOLD[2], c: GOLD[3] });
     return p;
   }
 
@@ -518,27 +536,59 @@ window.OLY = window.OLY || {};
     keyCache[k] = cv;
     return cv;
   }
-  // Golden laurel sprig (points right), procedurally placed leaves along an arc.
+  // Golden laurel sprig, hand-authored: a curved stem with three pairs of almond leaves pointing along it
+  // (lit upper edge GOLD[0], body GOLD[1], underside GOLD[3]) and a berry at the tip. Plum sel-out on the
+  // exterior only. 'L' = 23x13 (titles, banners), 'S' = 15x10 (small labels). The stem base is on the left,
+  // the tip points right; flip = mirrored copy (for the left side of a title).
+  const LAUREL_MAP = {
+    L: [
+      '................aa...',
+      '..........aa..aabb...',
+      '....aa..aabb.abbc.wr.',
+      '..aabb.abbc..bc.ssrm.',
+      '.abbc..bc..sssss.....',
+      '.bc..ssssss....ab....',
+      'sssss....ab....bbbb..',
+      '...ab....bbbb...bccc.',
+      '...bbbb...bccc....cc.',
+      '....bccc....cc.......',
+      '......cc.............'
+    ],
+    S: [
+      '........a....',
+      '...a...ab....',
+      '..ab..abc.wr.',
+      '.abc.sssssrm.',
+      'sssss...ab...',
+      '...ab...bbc..',
+      '...bbc...cc..',
+      '....cc.......'
+    ]
+  };
   const laurelCache = {};
-  function laurel(len, flip) {
-    const key = len + ':' + (flip ? 1 : 0);
+  // size: 'L' | 'S' (numbers kept for old call sites: >= 14 -> 'L'); flash: brightest tones (selected cursor)
+  function laurel(size, flip, flash) {
+    const sz = typeof size === 'number' ? (size >= 14 ? 'L' : 'S') : (size || 'L');
+    const key = sz + ':' + (flip ? 1 : 0) + (flash ? 'f' : '');
     if (laurelCache[key]) return laurelCache[key];
-    const p = new O.Pix(len + 4, 11);
-    const cy = 6;
-    for (let x = 0; x < len; x++) p.set(x + 1, cy + Math.round(Math.sin((x / len) * Math.PI) * -1), GOLD[3]);
-    for (let i = 2; i < len - 1; i += 4) {
-      const y0 = cy + Math.round(Math.sin((i / len) * Math.PI) * -1);
-      // upper leaf
-      p.set(i + 1, y0 - 1, GOLD[2]); p.set(i + 2, y0 - 2, GOLD[1]); p.set(i + 3, y0 - 3, GOLD[0]); p.set(i + 2, y0 - 3, GOLD[1]);
-      // lower leaf
-      p.set(i + 3, y0 + 1, GOLD[2]); p.set(i + 4, y0 + 2, GOLD[2]); p.set(i + 5, y0 + 2, GOLD[3]); p.set(i + 4, y0 + 1, GOLD[1]);
-    }
-    p.set(len + 1, cy - 1, GOLD[1]); p.set(len + 2, cy - 1, GOLD[0]); p.set(len + 1, cy - 2, GOLD[1]);
+    const lg = flash
+      ? { a: '#ffffff', b: GOLD[0], c: GOLD[2], s: GOLD[1], m: GOLD[1], r: GOLD[0], w: '#ffffff' }
+      : { a: GOLD[0], b: GOLD[1], c: GOLD[3], s: GOLD[2], m: GOLD[2], r: GOLD[1], w: '#ffffff' };
+    const p = pad(fromMap(LAUREL_MAP[sz], lg), 1);
     p.selout(OUT);
     let cv = p.canvas();
     if (flip) { const f = O.makeCanvas(cv.width, cv.height), g = f.getContext('2d'); g.translate(cv.width, 0); g.scale(-1, 1); g.drawImage(cv, 0, 0); cv = f; }
     laurelCache[key] = cv;
     return cv;
+  }
+  // A pair of laurels framing a centred label: cy = the label's vertical centre, hw = half its width.
+  // bob: 1px outward bob (menu cursors); flash: bright tones.
+  function laurels(c, cx, cy, hw, size, gap, bob, flash) {
+    const Lf = laurel(size, true, flash), Lr = laurel(size, false, flash);
+    const g2 = gap === undefined ? 5 : gap, b = bob || 0;
+    const y = Math.round(cy - Lr.height / 2);
+    c.drawImage(Lf, Math.round(cx - hw - g2 - Lf.width - b), y);
+    c.drawImage(Lr, Math.round(cx + hw + g2 + b), y);
   }
   // Decorative gold rule with a central diamond.
   function rule(c, x, y, w) {
@@ -608,14 +658,31 @@ window.OLY = window.OLY || {};
     const ring = new O.Pix(24, 24); ring.ellipse(12, 12, 10.5, 10.5, '#');
     for (let y = 0; y < 24; y++) for (let x = 0; x < 24; x++) if (Math.hypot(x + 0.5 - 12, y + 0.5 - 12) < 7.6) ring.set(x, y, null);
     p.blit(dome(ring, GOLD, { r: 1.8, base: 2, k: 3.4, spec: '#ffffff' }), 0, 0);
-    p.ellipse(12, 12, 7.6, 7.6, '#2a1a44');
+    // lapis enamel disc: deep blue with a soft top-left highlight crescent and a darker lower-right
     for (let y = 0; y < 24; y++) for (let x = 0; x < 24; x++) {
-      const d = Math.hypot(x + 0.5 - 12, y + 0.5 - 12);
-      if (d < 7.6 && y < 12 && d > 5.5) p.set(x, y, '#3b2a5c');
-      if (d < 7.6 && d >= 6.6) p.set(x, y, OUT);
+      const dx = x + 0.5 - 12, dy = y + 0.5 - 12, d = Math.hypot(dx, dy);
+      if (d >= 7.6) continue;
+      let col = '#2a4a8a';
+      if (d >= 6.6) col = OUT;
+      else if (Math.hypot(dx + 2.2, dy + 2.2) > 6.2 && dx + dy < -2) col = '#4a6ab0';
+      else if (Math.hypot(dx - 1.6, dy - 1.6) > 5.6 && dx + dy > 3) col = '#1e3468';
+      p.set(x, y, col);
     }
+    p.set(8, 7, '#8aa8e0'); p.set(7, 8, '#6a8ad0');
     medal = p.canvas();
     return medal;
+  }
+  // 1px glint sweeping around the medallion's gold rim every ~4 s.
+  function medalShine(c, cx, cy, t) {
+    const ph = t % 240;
+    if (ph > 36) return;
+    const a0 = -Math.PI * 0.75 + (ph / 36) * Math.PI * 1.3;
+    for (let k = -2; k <= 2; k++) {
+      const a = a0 + k * 0.09, x = Math.round(cx + Math.cos(a) * 9.6 - 0.5), y = Math.round(cy + Math.sin(a) * 9.6 - 0.5);
+      c.globalAlpha = k === 0 ? 0.95 : Math.abs(k) === 1 ? 0.6 : 0.3;
+      c.fillStyle = '#ffffff'; c.fillRect(x, y, 1, 1);
+    }
+    c.globalAlpha = 1;
   }
   function lifeBar(c, x, y, hp, maxHp, t, big) {
     const seg = big ? 5 : 4, bh = big ? 7 : 5, bw = maxHp * seg;
@@ -668,6 +735,19 @@ window.OLY = window.OLY || {};
     }
     return cv;
   }
+  // "Not yet found": a hollow 1px ghost outline of the sprite's silhouette (outline pixels only, interior empty).
+  function ghostOutline(src, col) {
+    const w = src.width, h = src.height, cv = O.makeCanvas(w, h), g = cv.getContext('2d');
+    const d = src.getContext('2d').getImageData(0, 0, w, h).data;
+    // the sprite's own plum sel-out is the outermost ring: use the ring just inside it so the shape stays exact
+    const on = (x, y) => x >= 0 && y >= 0 && x < w && y < h && d[(y * w + x) * 4 + 3] > 128;
+    g.fillStyle = col;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      if (!on(x, y)) continue;
+      if (!on(x - 1, y) || !on(x + 1, y) || !on(x, y - 1) || !on(x, y + 1)) g.fillRect(x, y, 1, 1);
+    }
+    return cv;
+  }
   // "Not yet owned" version of a sprite: its own shading remapped to a dim violet ramp, semi-transparent.
   function dimSprite(src, ramp, alpha, edge) {
     const w = src.width, h = src.height, cv = O.makeCanvas(w, h), g = cv.getContext('2d');
@@ -692,7 +772,7 @@ window.OLY = window.OLY || {};
   function emptyItem(name) {
     const s = O.SPR[name]; if (!s) return null;
     const k = 'ghost_' + name;
-    if (!hud[k] || hud[k + 'src'] !== s.n) { hud[k + 'src'] = s.n; hud[k] = dimSprite(s.n, DIMR, 0.7, '#1e1632'); }
+    if (!hud[k] || hud[k + 'src'] !== s.n) { hud[k + 'src'] = s.n; hud[k] = ghostOutline(s.n, 'rgba(200,180,255,0.42)'); }
     return hud[k];
   }
   let hudBuf = null;
@@ -711,7 +791,9 @@ window.OLY = window.OLY || {};
     if (hud.oliveT > 0) hud.oliveT--;
     if (hud.ambT > 0) hud.ambT--;
     // the HUD steps aside while someone is talking (the dialogue box takes the top of the screen)
-    const want = g.dialog && g.state !== 'pause' ? 0 : 1;
+    // ...and it is hidden behind the STATUS screen, which shows the same information
+    const want = (g.dialog || g.state === 'pause') ? 0 : 1;
+    if (g.state === 'pause') hud.vis = 0;
     if (hud.vis === undefined) hud.vis = want;
     hud.vis += (want - hud.vis) * 0.2;
     if (Math.abs(want - hud.vis) < 0.02) hud.vis = want;
@@ -725,6 +807,7 @@ window.OLY = window.OLY || {};
     c.drawImage(medallion(), 4, 3);
     if (!hud.lyre) hud.lyre = hudLyre();
     c.drawImage(hud.lyre, 4 + 12 - (hud.lyre.width >> 1), 3 + 12 - (hud.lyre.height >> 1));
+    medalShine(c, 16, 15, t);
     // life bar
     lifeBar(c, 27, 5, st.hp, st.maxHp, t);
     // olives
@@ -766,11 +849,12 @@ window.OLY = window.OLY || {};
     const T = goldTitle(it.name);
     const cy = 52, slide = Math.round((1 - ease(age / 18)) * 6);
     c.globalAlpha = a;
-    c.drawImage(softScrim(Math.min(W, T.width + 120), 44, 0.7), Math.round(W / 2 - Math.min(W, T.width + 120) / 2), cy - 16);
+    const rw0 = Math.min(W, T.width + 150);
+    c.drawImage(ribbon(rw0, 46, 0.72), Math.round(W / 2 - rw0 / 2), cy - 17);
     rt(c, 'TREASURE FOUND', W / 2, cy - 10 + slide, [GOLD[0], GOLD[0], GOLD[1], GOLD[1], GOLD[1], GOLD[2], GOLD[2], GOLD[2]], { al: 'c', ol: OUT, tr: 2 });
     const x = Math.round(W / 2 - T.width / 2);
     c.drawImage(T, x, cy + slide);
-    c.drawImage(laurel(14, true), x - 22, cy + 5 + slide); c.drawImage(laurel(14, false), x + T.width + 4, cy + 5 + slide);
+    laurels(c, W / 2, cy + slide + 13, T.width / 2 - 7, 'L', 4);
     c.globalAlpha = 1;
   }
   function slot(c, x, y, s, lit) {
@@ -849,8 +933,7 @@ window.OLY = window.OLY || {};
       plate(c, tx - 6, y + h - 7, pw, label, GODS[d.speaker] ? '#6a3a10' : '#3a2a4a');
     } else {
       // narration: laurel ornaments on the bottom edge
-      const lw = laurel(18, false), rw = laurel(18, true);
-      c.drawImage(lw, x + w / 2 - 34, y + h - 6); c.drawImage(rw, x + w / 2 + 12, y + h - 6);
+      laurels(c, x + w / 2, y + h, 3, 'S', 3);
       c.drawImage(STUD, x + w / 2 - 3, y + h - 3);
     }
     const page = d.pages[d.page] || [];
@@ -1089,10 +1172,24 @@ window.OLY = window.OLY || {};
     const ry = ty + 9;
     rule(c, x - 26 - rw, ry, rw); rule(c, x + T.width + 26, ry, rw);
     c.drawImage(STUD_S, x - 29 - rw, ry - 1); c.drawImage(STUD_S, x + T.width + 26 + rw, ry - 1);
-    c.drawImage(laurel(14, true), x - 22, ry - 6); c.drawImage(laurel(14, false), x + T.width + 4, ry - 6);
+    laurels(c, W / 2, ty + 13, T.width / 2 - 7, 'L', 3);
     c.globalAlpha = 1;
   }
   let bannerRibbon = null;
+  // Soft dark ribbon made of quantised, ordered-dithered alpha (no smooth blur edges): fades out at both ends.
+  const ribbonCache = {};
+  function ribbon(w, h, a) {
+    const k = w + 'x' + h + ':' + a;
+    if (ribbonCache[k]) return ribbonCache[k];
+    const cv = O.makeCanvas(w, h), g = cv.getContext('2d');
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const v = Math.pow(Math.sin(((y + 0.5) / h) * Math.PI), 0.7) * Math.min(1, Math.sin(((x + 0.5) / w) * Math.PI) * 1.8) * a;
+      const q = Math.floor(v * 6 + O.bayer(x, y) * 0.99) / 6;
+      if (q > 0) { g.fillStyle = 'rgba(14,8,30,' + q.toFixed(3) + ')'; g.fillRect(x, y, 1, 1); }
+    }
+    ribbonCache[k] = cv;
+    return cv;
+  }
   const bossTrack = { hp: null, ghost: 0, t: 0, ref: null, shown: 0 };
   function drawBossBar(c, g, boss) {
     if (bossTrack.ref !== boss) { bossTrack.ref = boss; bossTrack.hp = boss.hp; bossTrack.ghost = boss.hp; bossTrack.shown = 0; }
@@ -1104,8 +1201,7 @@ window.OLY = window.OLY || {};
     const bw = 220, x = Math.round((W - bw) / 2), y = H - 20 + Math.round((1 - k) * 24);
     // name
     rt(c, 'THE ERYMANTHIAN BOAR', W / 2, y - 11, '#ffd0b0', { al: 'c', ol: OUT, tr: 1 });
-    c.drawImage(laurel(12, true), W / 2 - textWidth('THE ERYMANTHIAN BOAR', 1, 1) / 2 - 20, y - 13);
-    c.drawImage(laurel(12, false), W / 2 + textWidth('THE ERYMANTHIAN BOAR', 1, 1) / 2 + 4, y - 13);
+    laurels(c, W / 2, y - 7, textWidth('THE ERYMANTHIAN BOAR', 1, 1) / 2, 'S', 4);
     // frame
     box(c, x - 1, y, bw + 2, 10, OUT); box(c, x, y - 1, bw, 12, OUT);
     box(c, x, y, bw, 10, GOLD[2]); hl(c, x, y, bw, GOLD[0]); hl(c, x, y + 9, bw, GOLD[3]);
@@ -1533,25 +1629,39 @@ window.OLY = window.OLY || {};
     }
     return out.canvas();
   }
-  function notes(c, x, y, t, n) {
+  // Music notes: hand-authored gold glyphs (5x8 eighth note, 8x8 beamed pair) with a plum sel-out on the exterior.
+  const NOTE_MAPS = [
+    ['..ab.', '..a.b', '..a.b', '..a..', '..a..', '.ab..', 'abb..', '.bc..'],
+    ['..aaaaaa', '..abbbbb', '..a....a', '..a....a', '..a....a', '.ab...ab', 'abb..abb', '.bc...bc']
+  ];
+  const noteCv = [];
+  function noteGlyph(i) {
+    if (!noteCv[i]) {
+      const p = pad(fromMap(NOTE_MAPS[i], { a: '#fff7b0', b: '#ffe27a', c: '#d8a030' }), 1);
+      p.selout(OUT);
+      noteCv[i] = p.canvas();
+    }
+    return noteCv[i];
+  }
+  // One note centred on (x, y) with a tiny warm glow behind it.
+  function note(c, x, y, dbl, a) {
+    const g = noteGlyph(dbl ? 1 : 0);
+    const al = a === undefined ? 1 : a;
+    glowAt(c, x, y, 7, 'rgba(255,220,130,1)', 0.35 * al);
+    c.globalAlpha = al;
+    c.drawImage(g, Math.round(x - g.width / 2), Math.round(y - g.height / 2));
+    c.globalAlpha = 1;
+  }
+  // Notes rising and drifting from (x, y) (the lyre), fading in and out.
+  function notes(c, x, y, t, n, spread) {
+    const k = spread || 1;
     for (let i = 0; i < n; i++) {
       const tt = (t + i * 53) % 160;
       if (tt > 130) continue;
-      const nx = Math.round(x + tt * 0.32 + Math.sin(tt * 0.08 + i) * 4), ny = Math.round(y - tt * 0.42);
+      const nx = x + tt * 0.32 * k + Math.sin(tt * 0.08 + i) * 4 * k, ny = y - tt * 0.42 * k;
       const a = tt < 12 ? tt / 12 : tt > 100 ? (130 - tt) / 30 : 1;
-      c.globalAlpha = Math.max(0, a);
-      note(c, nx, ny, ['#fff7b0', '#ffffff', '#b8e6ff'][i % 3], i % 2);
-      c.globalAlpha = 1;
+      note(c, nx, ny, i % 2, Math.max(0, a));
     }
-  }
-  function note(c, x, y, col, dbl) {
-    c.fillStyle = OUT;
-    c.fillRect(x - 1, y + 4, 5, 4); c.fillRect(x + 2, y - 1, 3, 7);
-    if (dbl) { c.fillRect(x + 4, y - 1, 5, 3); c.fillRect(x + 7, y - 1, 3, 7); c.fillRect(x + 4, y + 4, 6, 4); }
-    c.fillStyle = col;
-    c.fillRect(x, y + 5, 3, 2); c.fillRect(x + 3, y, 1, 6);
-    if (dbl) { c.fillRect(x + 3, y, 5, 1); c.fillRect(x + 8, y, 1, 6); c.fillRect(x + 5, y + 5, 3, 2); }
-    else { c.fillRect(x + 4, y, 1, 1); c.fillRect(x + 5, y + 1, 1, 1); }
   }
   function motes(c, t, n, x0, x1, y0, y1, col) {
     for (let i = 0; i < n; i++) {
@@ -2189,7 +2299,7 @@ window.OLY = window.OLY || {};
     box(c, tx0 - 8, y - 2, T.width + 16, 18, '#1c1236');
     hl(c, tx0 - 8, y - 2, T.width + 16, GOLD[3]);
     c.drawImage(T, tx0, y - 8);
-    c.drawImage(laurel(14, true), tx0 - 24, y - 1); c.drawImage(laurel(14, false), tx0 + T.width + 6, y - 1);
+    laurels(c, W / 2, y - 8 + 13, T.width / 2 - 7, 'L', 4);
     // hero column
     portraitFrame(c, x + 14, y + 24, 'portrait_orpheus', t, false);
     plate(c, x + 10, y + 84, 64, 'ORPHEUS');

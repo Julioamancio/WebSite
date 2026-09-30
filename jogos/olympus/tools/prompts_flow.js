@@ -233,8 +233,10 @@ const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>').re
 
 function card(p) {
   const tags = [`<span class="tag">${p.ratio}</span>`,
-    p.key ? '<span class="tag"><i class="sw"></i>magenta</span>' : '<span class="tag">cheia</span>',
+    p.video ? '<span class="tag">vídeo 8 s</span>' : p.key ? '<span class="tag"><i class="sw"></i>magenta</span>' : '<span class="tag">cheia</span>',
     p.isNew ? '<span class="tag new">novo</span>' : ''].join('');
+  // p.facts ([label, text] pairs) replaces the default "No jogo" row; "Nome no projeto" stays (the page script reads it)
+  const facts = (p.facts || [['No jogo', p.game]]).map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('\n      ');
   return `
 <article class="card${p.first ? ' is-first' : ''}" id="p${p.n}" data-sec="${p.sec}" data-id="${p.n}">
   <div class="meta"><div class="num">${p.n}</div><div class="tags">${tags}</div></div>
@@ -244,7 +246,7 @@ function card(p) {
     <p class="nota" hidden></p>
     <dl class="facts">
       <div><dt>Nome no projeto</dt><dd><code class="fname">${esc(base(p.file))}</code></dd></div>
-      <div><dt>No jogo</dt><dd>${esc(p.game)}</dd></div>
+      ${facts}
     </dl>
     <pre class="prompt" tabindex="0" aria-label="Prompt ${p.n}">${esc(p.text)}</pre>
     <div class="actions">

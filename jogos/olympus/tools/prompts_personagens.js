@@ -18,11 +18,15 @@ const pose = (heads) => `[POSE] ONE single character only, alone in the frame, n
 const BG = '[BACKGROUND] Flat, solid, pure magenta background (#FF00FF), perfectly uniform, with no gradient, no floor, no shadow on the ground and no details. Crisp clean edge between the character and the magenta, with no glow spilling onto it. Never use magenta, pink, purple, violet or lilac anywhere on the character.';
 const NEG = (extra) => `[NEGATIVE] no pixel art, no pixelated look, no retro 8-bit or 16-bit style, no low-poly look, no photorealism, no chibi, no big head, no second character, no reflection, no text, no letters, no logo, no watermark, no signature, no border, no frame, no character sheet, no multiple views, no background scenery, no ground shadow, no cropped feet or head, no modern clothing${extra ? ', ' + extra : ''}, no purple, no violet, no pink, no lilac.`;
 const char = (heads, body, extra, first) => [STYLE, WORLD, first ? null : REF, pose(heads), body, BG, NEG(extra)].filter(Boolean).join('\n\n');
+// Four-legged creatures: wide frame and their own pose block (the human one talks about heads tall and standing on two feet).
+const CREATURE_POSE = '[POSE] ONE single creature only, alone in the frame, nothing else. The whole body inside the frame with a small margin on every side, nothing cropped: from the snout to the tail and from the top of the mane down to the hooves. Strict side view in profile, facing RIGHT: exactly ONE eye is visible and the snout points to the right edge of the image; if both eyes are visible, the image is wrong. Standing still in an alert pose, all four hooves flat on one ground line near the bottom of the image. Camera at shoulder height, flat, no perspective, no foreshortening.';
+const creature = (body, extra) => [STYLE.replace('portrait 9:16', 'landscape 16:9').replace('game character', 'game creature'), WORLD, REF, CREATURE_POSE, body, BG.replace(/character/g, 'creature'), NEG(extra).replace('no second character', 'no second animal, no rider')].join('\n\n');
 
 const SECTIONS = [
   { id: 'heroi', name: 'Herói', intro: 'O Orfeu define o estilo de todos. Gere ele primeiro e só passe para os outros quando gostar.' },
   { id: 'vila', name: 'Pessoas da vila', intro: 'Quem o Orfeu encontra em Arcádia. A Eurídice também aparece na história e como fantasma (o fantasma sai desta imagem, por código).' },
-  { id: 'deuses', name: 'Deuses', intro: 'Maiores e mais imponentes que os mortais. O brilho divino em volta deles quem desenha é o jogo, por isso o prompt pede sem brilho.' }
+  { id: 'deuses', name: 'Deuses', intro: 'Maiores e mais imponentes que os mortais. O brilho divino em volta deles quem desenha é o jogo, por isso o prompt pede sem brilho.' },
+  { id: 'criaturas', name: 'Chefes e criaturas', intro: 'Bases para as cutscenes e para o AutoSprite. O javali é largo, então vai em 16:9.' }
 ];
 
 const P = [
@@ -69,7 +73,18 @@ const P = [
     game: 'História e Parte 2 · prende a alma da Eurídice',
     // No proper name, and no grey skin + blue flaming hair: that is a famous film villain, and Flow refused it (29/09/2026).
     text: char('7', '[CHARACTER] The stern king of the underworld from ancient Greek myth: tall, regal and imposing, a pale but natural human skin tone, black wavy hair to the shoulders and a short black beard, dark serious eyes with a faint cold cyan glint, a dark iron crown with sharp pointed spikes, long black and dark steel-blue robes with iron clasps and a silver Greek key border, a dark cloak over his shoulders, dark leather sandals. In his right hand (the hand nearer the viewer) he holds a tall dark iron staff with two straight prongs at the top, planted on the ground.',
-      'no flaming hair, no glow around the body, no smoke, no throne') }
+      'no flaming hair, no glow around the body, no smoke, no throne') },
+  { n: '09', sec: 'deuses', isNew: true, title: 'Rainha do Submundo', file: 'queen', ratio: '9:16', key: true,
+    sum: 'Rainha jovem e triste: tranças castanhas com flores murchas, coroa fina de prata, vestido verde e ouro, flor de romã murcha nas mãos.',
+    game: 'Cutscene do fim da Parte 1 e Parte 7 · chora com a Canção',
+    // No proper name (Persephone): Flow refuses named myth figures in character prompts. The blossom is coral-red, never pink (magenta key).
+    text: char('6.5', '[CHARACTER] A graceful, sad young queen of the underworld from ancient Greek myth: long dark brown hair braided with small withered spring flowers, gentle green eyes, pale skin, a thin silver crown, a deep green and gold ankle-length gown, simple dark leather sandals. With both hands she holds a single wilted coral-red pomegranate blossom in front of her chest and looks down at it sadly.',
+      'no throne, no glow around the body, no pink flowers') },
+  { n: '10', sec: 'criaturas', isNew: true, title: 'Javali gigante', file: 'boar', ratio: '16:9', key: true,
+    sum: 'Chefe da Parte 1: javali enorme, pelo castanho-avermelhado, crina eriçada, presas de marfim e a corda dourada enrolada numa presa.',
+    game: 'Covil do Javali · chefe (a corda na presa é a 1ª corda da lira)',
+    text: creature('[CHARACTER] A huge mythical wild boar boss: as tall at the shoulder as a grown man and much longer than it is tall, dark reddish-brown bristly fur, a tall bristly mane rising along its spine, long curved ivory tusks, one tusk wrapped with a single thin glowing golden lyre string, small fierce red eyes, a scarred snout, a thin puff of steam at the nostrils, heavy dark hooves.',
+      'no blood, no wounds, no saddle') }
 ];
 
 const STEPS = [

@@ -30,7 +30,7 @@ const ledger = fs.existsSync(LEDGER) ? JSON.parse(fs.readFileSync(LEDGER, 'utf8'
 const taken = new Set(Object.values(ledger).map((e) => e.origem + '|' + e.mtime));
 
 const images = fs.readdirSync(DOWNLOADS, { withFileTypes: true })
-  .filter((d) => d.isFile() && /\.(png|jpe?g|webp)$/i.test(d.name))
+  .filter((d) => d.isFile() && /\.(png|jpe?g|webp|mp4|webm|mov)$/i.test(d.name)) // mp4/webm/mov: cutscene clips
   .map((d) => { const full = path.join(DOWNLOADS, d.name); return { name: d.name, full, mtime: fs.statSync(full).mtimeMs }; });
 
 if (!dry) fs.mkdirSync(OUT, { recursive: true });

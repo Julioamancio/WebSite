@@ -1,0 +1,412 @@
+<title>Cutscenes do Orpheus</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Marcellus&display=swap">
+<style>
+/* Layout: a reading page — concept, the 7-part saga as an ordered path, fixed character sheets, then Part 1 as numbered cutscenes of 8-second scene cards. */
+:root{
+  --bg:#ecf0f3; --surface:#ffffff; --sunk:#f3f6f8; --ink:#14203a; --muted:#56627a; --line:#d2d9e2;
+  --aegean:#1b5898; --gold:#8a5f10; --olive:#4b6a1f; --night:#1d2440; --on-night:#e9ecf6;
+  --display:"Marcellus","Palatino Linotype",Georgia,serif; --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0d1320; --surface:#151e30; --sunk:#10182a; --ink:#e5eaf2; --muted:#9ba7bc; --line:#27324a; --aegean:#74abea; --gold:#e3b862; --olive:#a4c56b; --night:#0a0f1c; --on-night:#e9ecf6; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0d1320; --surface:#151e30; --sunk:#10182a; --ink:#e5eaf2; --muted:#9ba7bc; --line:#27324a; --aegean:#74abea; --gold:#e3b862; --olive:#a4c56b; --night:#0a0f1c; --on-night:#e9ecf6; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg); color:var(--ink); font:15px/1.65 var(--body); margin:0}
+.wrap{max-width:980px; margin:0 auto; padding-inline:20px; padding-block:0 72px}
+.hero{background:var(--night); color:var(--on-night); padding-block:40px 32px}
+.hero .wrap{padding-block:0}
+.eyebrow{font:500 12px/1.2 var(--mono); letter-spacing:.08em; text-transform:uppercase; opacity:.75}
+h1{font:400 clamp(34px,6vw,54px)/1.05 var(--display); margin:10px 0 12px; text-wrap:balance}
+.hero p{margin:0; max-width:62ch; opacity:.9}
+.stats{display:flex; flex-wrap:wrap; gap:8px 22px; margin-top:18px; font:500 13px/1.3 var(--mono); opacity:.85}
+h2{font:400 28px/1.15 var(--display); margin:40px 0 6px; text-wrap:balance}
+.sub{margin:0 0 16px; color:var(--muted); max-width:70ch}
+.concept{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr)); gap:12px}
+.concept div{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:14px 16px; min-width:0}
+.concept dt{font:500 11px/1.4 var(--mono); letter-spacing:.07em; text-transform:uppercase; color:var(--aegean)}
+.concept dd{margin:4px 0 0}
+ol.saga{list-style:none; margin:0; padding:0; display:grid; gap:10px}
+.part{display:grid; grid-template-columns:44px minmax(0,1fr); gap:14px; background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:14px 16px}
+.part.now{border-color:var(--gold); box-shadow:0 0 0 1px var(--gold)}
+.pn{font:400 30px/1 var(--display); color:var(--gold); text-align:center}
+.part h3{margin:0; font:600 17px/1.3 var(--body)}
+.part p{margin:4px 0 0}
+.meta-line{color:var(--muted); font-size:14px}
+.sheets{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr)); gap:12px}
+.sheet{background:var(--surface); border:1px solid var(--line); border-radius:8px; padding:14px 16px; min-width:0}
+.sheet header{display:flex; flex-wrap:wrap; justify-content:space-between; gap:6px; align-items:baseline}
+.sheet h3{margin:0; font:500 13px/1.3 var(--mono); letter-spacing:.05em}
+.chip-s{font:500 11px/1 var(--mono); color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:3px 5px}
+.sheet p{margin:8px 0 0; font:13px/1.55 var(--mono); color:var(--ink); overflow-wrap:anywhere}
+.cs{margin-top:28px}
+.cs-head{display:grid; grid-template-columns:auto minmax(0,1fr); gap:14px; align-items:center}
+.cs-id{font:500 13px/1 var(--mono); background:var(--night); color:var(--on-night); border-radius:6px; padding:8px 10px}
+.cs-head h3{margin:0; font:400 24px/1.15 var(--display)}
+.when{margin:2px 0 0; color:var(--muted); font-size:14px}
+.script{margin:14px 0 0; padding:14px 18px; border-left:3px solid var(--gold); background:var(--surface); border-radius:0 8px 8px 0}
+.script p{margin:0; font:italic 16px/1.6 var(--display)}
+.script p + p{margin-top:6px}
+.note{margin:12px 0 0; color:var(--muted); font-size:14px}
+.scenes{display:grid; gap:10px; margin-top:12px}
+.scene{display:grid; grid-template-columns:64px minmax(0,1fr); background:var(--surface); border:1px solid var(--line); border-radius:8px; overflow:hidden}
+.sn{background:var(--sunk); border-right:1px solid var(--line); display:grid; align-content:center; justify-items:center; gap:2px; padding:10px 4px; font:500 11px/1.2 var(--mono); color:var(--muted)}
+.sn b{font:400 26px/1 var(--display); color:var(--aegean); font-variant-numeric:tabular-nums}
+.sbody{padding:12px 16px; min-width:0}
+.acao{margin:0 0 10px; font-weight:500}
+.sbody dl{display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr)); gap:6px 18px; margin:0}
+.sbody dl div{min-width:0}
+.sbody .wide{grid-column:1/-1}
+.sbody dt{font:500 11px/1.4 var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
+.sbody dd{margin:0; font-size:14px; overflow-wrap:anywhere}
+code{font:12.5px var(--mono); color:var(--aegean)}
+ul.ideas{margin:0; padding-left:20px; display:grid; gap:6px; max-width:75ch}
+.next{margin-top:36px; background:var(--surface); border:1px solid var(--gold); border-radius:8px; padding:16px 18px}
+.next h2{margin:0 0 6px; font-size:22px}
+.next p{margin:0}
+@media (max-width:560px){.scene{grid-template-columns:minmax(0,1fr)} .sn{border-right:0; border-bottom:1px solid var(--line); grid-auto-flow:column; justify-content:start; gap:8px; padding:8px 14px}}
+</style>
+
+<div class="hero"><div class="wrap">
+  <div class="eyebrow">Orpheus: Song of Olympus · roteiro e storyboard</div>
+  <h1>Cutscenes do Orpheus</h1>
+  <p>A história completa em sete partes e as cutscenes da Parte 1, cena por cena, para gerar no Flow (Veo) no mesmo 2.5D do jogo. Esta página é para aprovar a história: os prompts de cada cena vêm depois do seu ok.</p>
+  <div class="stats"><span>10 cutscenes</span><span>17 cenas de 8 s</span><span>~2 min 16 s de vídeo</span><span>9 fichas de personagem</span></div>
+</div></div>
+
+<div class="wrap">
+  <h2>Conceito</h2>
+  <dl class="concept"><div><dt>Premissa</dt><dd>Hades leva a alma de Eurídice e quebra a lira de ouro de Orfeu. As sete cordas voam pela Grécia e o mundo começa a perder a cor. Orfeu precisa recuperar as sete cordas, uma por região, para tocar a Canção completa, abrir os portões do Submundo e trazer Eurídice de volta.</dd></div><div><dt>Tom</dt><dd>Épico e mágico, com humor leve nos deuses. Nada de sangue: a morte e as lutas são mostradas com sombra, luz e cor.</dd></div><div><dt>Público</dt><dd>Alunos e jogadores a partir de 10 anos. Textos em inglês simples (A2–B1), para ler na caixa do jogo.</dd></div><div><dt>Formato</dt><dd>Clipes de até 8 s no Flow (Veo), 16:9, no mesmo 2.5D dos cenários e das bases: 3D estilizado, luz suave, cara de filme de animação.</dd></div><div><dt>Série</dt><dd>Sete partes. Cada parte abre com um gancho da anterior e fecha com um gancho para a próxima.</dd></div><div><dt>Voz</dt><dd>Sugestão: os clipes vêm só com música, ambiente e efeitos, sem fala. O Veo muda a voz de um clipe para outro, e o texto em inglês na caixa do jogo é o que ensina. Se você preferir narrador falado, eu troco.</dd></div></dl>
+
+  <h2>A saga em 7 partes</h2>
+  <p class="sub">Cada parte é uma região da Grécia com um deus que ajuda, um chefe e uma corda da lira. A Parte 1 é a que já existe no jogo.</p>
+  <ol class="saga"><li class="part now"><div class="pn">1</div><div><h3>Arcádia</h3><p class="meta-line">Zeus (bênção) e o deus mensageiro (sandálias aladas) · chefe: <strong>Javali de Erimanto</strong></p><p>A 1ª corda está enrolada na presa do javali. Ao voltar para a lira, a floresta recupera a cor.</p></div></li><li class="part"><div class="pn">2</div><div><h3>Ática</h3><p class="meta-line">Atena (escudo de bronze) · chefe: <strong>A Esfinge de Tebas</strong></p><p>A Esfinge só entrega a 2ª corda a quem responder às charadas dela, em inglês.</p></div></li><li class="part"><div class="pn">3</div><div><h3>Argólida</h3><p class="meta-line">Hefesto (espada forjada) · chefe: <strong>A Hidra de Lerna</strong></p><p>Cada cabeça cortada volta; a corda está presa na cabeça do meio.</p></div></li><li class="part"><div class="pn">4</div><div><h3>Mar Egeu</h3><p class="meta-line">Poseidon (respirar debaixo d’água) · chefe: <strong>Cila, o monstro do estreito</strong></p><p>A 4ª corda brilha no fundo do mar, entre as ruínas de um templo afundado.</p></div></li><li class="part"><div class="pn">5</div><div><h3>Creta</h3><p class="meta-line">Dédalo e Ariadne (o fio para não se perder) · chefe: <strong>O Minotauro, no Labirinto</strong></p><p>O Labirinto muda de forma; o fio de Ariadne mostra o caminho até a corda.</p></div></li><li class="part"><div class="pn">6</div><div><h3>Monte Olimpo</h3><p class="meta-line">Apolo (conserta a moldura da lira) · chefe: <strong>Talos, o gigante de bronze da escadaria</strong></p><p>Com seis cordas, a lira toca alto o bastante para ser ouvida no Submundo.</p></div></li><li class="part"><div class="pn">7</div><div><h3>Submundo</h3><p class="meta-line">Caronte, Cérbero e a Rainha do Submundo · chefe: <strong>O Rei do Submundo (Hades)</strong></p><p>A Canção faz Cérbero dormir e a Rainha chorar. Hades devolve a 7ª corda e Eurídice, com uma condição: na subida, Orfeu não pode olhar para trás. No jogo, andar para a esquerda na última fase faz Eurídice desaparecer. No final, as cores voltam a toda a Grécia e o casal toca a Canção sob a mesma oliveira.</p></div></li></ol>
+
+  <h2>Fichas dos personagens</h2>
+  <p class="sub">Em inglês e fixas: vão coladas palavra por palavra em toda cena em que o personagem aparece, e no Flow anexa-se a base dele. O rei do Submundo e o deus mensageiro ficam sem nome próprio, porque o Flow recusou os nomes.</p>
+  <div class="sheets"><article class="sheet"><header><h3>ORPHEUS</h3><span class="chip-s">base: orpheus.png</span></header><p>A young Greek hero around 20 years old, stylized 3D animated-film character, slim athletic build, defined jaw, kind but determined brown eyes, short wavy auburn hair, a bright scarlet headband tied at the back with two long tails, a white short sleeveless chiton ending above the knee with a gold Greek key trim and a brown leather shoulder strap, a brown leather belt with a round bronze buckle, a short crimson cape hanging from his shoulders, bronze bracers on both forearms, brown leather sandals laced up to the calves. Calm, brave posture; moves lightly and decisively.</p></article><article class="sheet"><header><h3>EURYDICE</h3><span class="chip-s">base: eurydice.png</span></header><p>A gentle young Greek woman around 19 years old, stylized 3D animated-film character, long straight golden-blonde hair falling down her back, a small crown of white flowers, a soft kind face with a faint smile, a white sleeveless ankle-length dress with a thin gold belt and a gold Greek key hem, thin leather sandals. Graceful and calm; often holds her hands together in front of her waist.</p></article><article class="sheet"><header><h3>EURYDICE'S SOUL</h3><span class="chip-s">base: eurydice.png</span></header><p>The spirit of a gentle young Greek woman around 19 years old, stylized 3D animated-film character, exactly the same face, hair, flower crown and dress as the living woman, but translucent and softly glowing pale cyan from within, with a faint trail of light at the hem of her dress. Moves slowly, as if floating.</p></article><article class="sheet"><header><h3>THE VILLAGE ELDER</h3><span class="chip-s">base: elder.png</span></header><p>A wise old Greek man around 75 years old, stylized 3D animated-film character, long white hair and a long white beard reaching his chest, bushy white eyebrows, warm tired eyes, slightly hunched back, a brown wool himation wrapped over a cream tunic, simple leather sandals, leaning on a tall gnarled wooden staff. Speaks slowly and kindly.</p></article><article class="sheet"><header><h3>ZEUS</h3><span class="chip-s">base: zeus.png</span></header><p>The king of the gods, stylized 3D animated-film character, a towering broad-shouldered old man with long flowing white hair and a full white beard, a golden laurel crown, stern majestic eyes, white robes with gold trim draped over one shoulder and a deep blue sash, one muscular arm bare, golden sandals, holding a crackling golden lightning bolt in his right hand.</p></article><article class="sheet"><header><h3>THE MESSENGER GOD</h3><span class="chip-s">base: hermes.png</span></header><p>A young messenger god from Greek myth, stylized 3D animated-film character, youthful and slim, curly brown hair under a round golden traveler's hat with two small white wings, a playful confident smile, a light-blue short chiton with gold trim, a small white cloak pinned at one shoulder, golden sandals with small white wings at the ankles, holding a slender golden herald's staff with two thin golden serpents coiled around it and small wings at the top. Light on his feet, always a little in motion.</p></article><article class="sheet"><header><h3>THE KING OF THE UNDERWORLD</h3><span class="chip-s">base: hades.png</span></header><p>The stern king of the underworld from Greek myth, stylized 3D animated-film character, tall, regal and imposing, pale natural skin, black wavy shoulder-length hair and a short black beard, dark serious eyes with a faint cold cyan glint, a dark iron crown with sharp pointed spikes, long black and dark steel-blue robes with a silver Greek key border and a dark cloak, holding a tall dark iron two-pronged staff. Moves slowly and speaks coldly.</p></article><article class="sheet"><header><h3>THE QUEEN OF THE UNDERWORLD</h3><span class="chip-s">sem base</span></header><p>A graceful, sad young queen of the underworld from Greek myth, stylized 3D animated-film character, long dark brown hair braided with small withered spring flowers, gentle green eyes, pale skin, a deep green and gold ankle-length gown with a thin silver crown, holding a single wilted pomegranate blossom in her hands.</p></article><article class="sheet"><header><h3>THE GIANT BOAR</h3><span class="chip-s">sem base</span></header><p>A huge mythical wild boar, stylized 3D animated-film creature, as tall at the shoulder as a grown man, dark reddish-brown bristly fur, a tall bristly mane along its spine, long curved ivory tusks, one tusk wrapped with a single thin glowing golden lyre string, small fierce red eyes, a scarred snout, steam puffing from its nostrils.</p></article></div>
+
+  <h2>Parte 1 — cutscenes</h2>
+  <p class="sub">O texto em inglês aparece na caixa do jogo enquanto o clipe roda. A coluna "Anexar no Flow" diz quais imagens do projeto usar como ingrediente (no máximo 3).</p>
+  
+<section class="cs" id="CS1">
+  <header class="cs-head"><div class="cs-id">CS1</div><div><h3>A Canção de Orfeu</h3><p class="when">Novo jogo, logo depois da tela de título</p></div></header>
+  <blockquote class="script"><p>Long ago, in the green hills of Arcadia, there lived a young musician named Orpheus.</p><p>When he played his golden lyre, rivers stopped to listen and trees began to dance.</p><p>And his heart belonged to the gentle Eurydice.</p></blockquote>
+  <div class="scenes">
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>01</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">Orfeu, sentado numa pedra sob a oliveira, dedilha uma lira dourada de sete cordas. Notas de luz dourada saem das cordas e flutuam. Dois cervos e um bando de passarinhos chegam e param para ouvir.</p>
+        <dl>
+          <div><dt>Local</dt><dd>Colina de Arcádia com uma oliveira antiga, fim de tarde dourado, brisa leve.</dd></div>
+          <div><dt>Personagens</dt><dd>ORPHEUS</dd></div>
+          <div><dt>Câmera</dt><dd>Plano geral, dolly-in lento.</dd></div>
+          <div><dt>Luz</dt><dd>Golden hour, contraluz quente, rim light suave.</dd></div>
+          <div><dt>Áudio</dt><dd>Melodia de lira suave; passarinhos; brisa.</dd></div>
+          <div><dt>Transição</dt><dd>Dissolve.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/orpheus.png</code></dd></div>
+        </dl>
+      </div>
+    </article>
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>02</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">Os galhos da oliveira balançam no ritmo da música e as flores se abrem viradas para Orfeu. Eurídice sobe a trilha sorrindo e senta ao lado dele.</p>
+        <dl>
+          <div><dt>Local</dt><dd>Mesma colina, mesma luz, logo em seguida.</dd></div>
+          <div><dt>Personagens</dt><dd>ORPHEUS, EURYDICE</dd></div>
+          <div><dt>Câmera</dt><dd>Plano médio, arco lento para a direita.</dd></div>
+          <div><dt>Luz</dt><dd>Golden hour.</dd></div>
+          <div><dt>Áudio</dt><dd>A melodia continua; brilho sonoro das flores abrindo.</dd></div>
+          <div><dt>Transição</dt><dd>Fade para branco.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/orpheus.png</code> <code>personagens/eurydice.png</code></dd></div>
+        </dl>
+      </div>
+    </article>
+  </div>
+</section>
+<section class="cs" id="CS2">
+  <header class="cs-head"><div class="cs-id">CS2</div><div><h3>O Casamento</h3><p class="when">Continua direto da CS1</p></div></header>
+  <blockquote class="script"><p>On a bright spring day, Orpheus and Eurydice were married under the old olive tree.</p></blockquote>
+  <div class="scenes">
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>03</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">Orfeu e Eurídice de mãos dadas diante da oliveira enfeitada. O Ancião ergue o cajado para abençoar os dois. Pétalas brancas caem do céu.</p>
+        <dl>
+          <div><dt>Local</dt><dd>Campo florido do casamento, tarde de primavera (o mesmo do cenário 14).</dd></div>
+          <div><dt>Personagens</dt><dd>ORPHEUS, EURYDICE, THE VILLAGE ELDER</dd></div>
+          <div><dt>Câmera</dt><dd>Plano médio-aberto, grua subindo devagar.</dd></div>
+          <div><dt>Luz</dt><dd>Tarde clara de primavera.</dd></div>
+          <div><dt>Áudio</dt><dd>Lira e flauta festivas; vivas ao longe; pétalas.</dd></div>
+          <div><dt>Transição</dt><dd>Match cut para o entardecer.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/orpheus.png</code> <code>personagens/eurydice.png</code> <code>cenarios/historia_casamento.jpg</code></dd></div>
+        </dl>
+      </div>
+    </article>
+  </div>
+</section>
+<section class="cs" id="CS3">
+  <header class="cs-head"><div class="cs-id">CS3</div><div><h3>A Serpente de Sombra</h3><p class="when">Continua</p></div></header>
+  <blockquote class="script"><p>But at sunset, a serpent made of shadows crawled out of the ground...</p></blockquote>
+  <div class="scenes">
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>04</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">Sozinha, Eurídice pega uma guirlanda caída. Atrás dela, no capim alto e escuro, uma serpente feita de fumaça preta com dois olhos ciano se aproxima.</p>
+        <dl>
+          <div><dt>Local</dt><dd>O mesmo campo ao entardecer, guirlandas caídas na grama (cenário 15).</dd></div>
+          <div><dt>Personagens</dt><dd>EURYDICE</dd></div>
+          <div><dt>Câmera</dt><dd>Ângulo baixo, por dentro do capim, empurrando devagar até ela.</dd></div>
+          <div><dt>Luz</dt><dd>Entardecer, céu violeta e laranja, sombras longas.</dd></div>
+          <div><dt>Áudio</dt><dd>Vento no capim; os grilos param; zumbido grave.</dd></div>
+          <div><dt>Transição</dt><dd>Corte seco.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/eurydice.png</code> <code>cenarios/historia_serpente.jpg</code></dd></div>
+        </dl>
+      </div>
+    </article>
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>05</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">A serpente de sombra dá o bote e some numa nuvem de fumaça escura no tornozelo dela. Eurídice perde o fôlego e cai devagar entre as flores; a guirlanda escapa das mãos. Ao fundo, Orfeu solta a lira e corre até ela.</p>
+        <dl>
+          <div><dt>Local</dt><dd>Mesmo lugar, segundos depois.</dd></div>
+          <div><dt>Personagens</dt><dd>EURYDICE, ORPHEUS</dd></div>
+          <div><dt>Câmera</dt><dd>Plano médio, troca de foco de Eurídice para Orfeu.</dd></div>
+          <div><dt>Luz</dt><dd>Entardecer.</dd></div>
+          <div><dt>Áudio</dt><dd>Silvo; a corda da lira vibrando ao cair; passos correndo; a música para.</dd></div>
+          <div><dt>Transição</dt><dd>Corte seco.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/eurydice.png</code> <code>personagens/orpheus.png</code> <code>cenarios/historia_serpente.jpg</code></dd></div>
+        </dl>
+      </div>
+    </article>
+  </div>
+</section>
+<section class="cs" id="CS4">
+  <header class="cs-head"><div class="cs-id">CS4</div><div><h3>O Rei do Submundo</h3><p class="when">Continua</p></div></header>
+  <blockquote class="script"><p>The serpent was sent by Hades, the King of the Underworld. He took Eurydice's soul down to the dark halls of Tartarus.</p><p>Then he broke the golden lyre. Its seven strings flew across Greece like falling stars...</p><p>...and the colors of the world began to fade.</p></blockquote>
+  <div class="scenes">
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>06</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">O chão racha com uma luz azul e fria. O Rei do Submundo sobe devagar pela fenda. A alma de Eurídice, translúcida e brilhando, se ergue das flores e flutua até a mão aberta dele.</p>
+        <dl>
+          <div><dt>Local</dt><dd>O campo à noite.</dd></div>
+          <div><dt>Personagens</dt><dd>THE KING OF THE UNDERWORLD, EURYDICE'S SOUL</dd></div>
+          <div><dt>Câmera</dt><dd>Plano geral em contra-plongée, tilt para cima lento.</dd></div>
+          <div><dt>Luz</dt><dd>Noite, luz azul fria vindo de baixo.</dd></div>
+          <div><dt>Áudio</dt><dd>Estrondo grave; terra rachando; coro fantasmagórico.</dd></div>
+          <div><dt>Transição</dt><dd>Corte seco.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/hades.png</code> <code>personagens/eurydice.png</code></dd></div>
+        </dl>
+      </div>
+    </article>
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>07</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">O Rei pega a lira dourada da grama e fecha a mão. As sete cordas se partem e sobem para o céu noturno, cada uma para um lado, como estrelas cadentes. Orfeu, ajoelhado, estende a mão.</p>
+        <dl>
+          <div><dt>Local</dt><dd>Mesmo lugar.</dd></div>
+          <div><dt>Personagens</dt><dd>THE KING OF THE UNDERWORLD, ORPHEUS</dd></div>
+          <div><dt>Câmera</dt><dd>Close médio na lira; depois tilt para cima seguindo as cordas.</dd></div>
+          <div><dt>Luz</dt><dd>Noite azul; rastros dourados.</dd></div>
+          <div><dt>Áudio</dt><dd>Sete notas subindo e se partindo; whoosh.</dd></div>
+          <div><dt>Transição</dt><dd>Corte seco.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/hades.png</code> <code>personagens/orpheus.png</code></dd></div>
+        </dl>
+      </div>
+    </article>
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>08</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">A fenda se fecha. Orfeu fica sozinho, ajoelhado, segurando a moldura vazia da lira. Em volta dele, flores e grama vão ficando cinza, a cor escorrendo para longe.</p>
+        <dl>
+          <div><dt>Local</dt><dd>Mesmo lugar.</dd></div>
+          <div><dt>Personagens</dt><dd>ORPHEUS</dd></div>
+          <div><dt>Câmera</dt><dd>Pull-back lento até plano geral.</dd></div>
+          <div><dt>Luz</dt><dd>Luar, a imagem perdendo saturação.</dd></div>
+          <div><dt>Áudio</dt><dd>Silêncio; vento; uma nota grave e triste.</dd></div>
+          <div><dt>Transição</dt><dd>Fade para preto.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/orpheus.png</code></dd></div>
+        </dl>
+      </div>
+    </article>
+  </div>
+</section>
+<section class="cs" id="CS5">
+  <header class="cs-head"><div class="cs-id">CS5</div><div><h3>O Juramento</h3><p class="when">Fim da abertura; corta para o vilarejo (o jogo começa)</p></div></header>
+  <blockquote class="script"><p>At dawn, Orpheus made a promise:</p><p>&quot;I will find the seven strings. I will play our song again. And I will bring you home.&quot;</p></blockquote>
+  <div class="scenes">
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>09</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">Orfeu, com a moldura vazia da lira nas costas, olha para o Monte Olimpo ao longe. Sobre a floresta, uma luzinha dourada pisca (a primeira corda). Ele fecha o punho e começa a descer a estrada.</p>
+        <dl>
+          <div><dt>Local</dt><dd>Topo da colina ao amanhecer, estrada descendo rumo ao Olimpo (cenário 16).</dd></div>
+          <div><dt>Personagens</dt><dd>ORPHEUS</dd></div>
+          <div><dt>Câmera</dt><dd>Por trás, sobre o ombro dele; depois push passando por ele rumo ao horizonte.</dd></div>
+          <div><dt>Luz</dt><dd>Nascer do sol, dourado quente.</dd></div>
+          <div><dt>Áudio</dt><dd>Tema heroico subindo; passarinhos da manhã.</dd></div>
+          <div><dt>Transição</dt><dd>Corte para o jogo.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/orpheus.png</code> <code>cenarios/historia_juramento.jpg</code></dd></div>
+        </dl>
+      </div>
+    </article>
+  </div>
+</section>
+<section class="cs" id="CS6">
+  <header class="cs-head"><div class="cs-id">CS6</div><div><h3>O Raio de Zeus</h3><p class="when">Primeira vez que Orfeu entra no Templo de Zeus (antes do diálogo)</p></div></header>
+  <p class="note">Sem narração: o diálogo do jogo continua depois do clipe.</p>
+  <div class="scenes">
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>10</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">Orfeu entra no salão. Um raio cai no altar e, no clarão, Zeus aparece flutuando acima do chão, enorme, olhando para ele.</p>
+        <dl>
+          <div><dt>Local</dt><dd>Interior do Templo de Zeus à noite (cenário 06).</dd></div>
+          <div><dt>Personagens</dt><dd>ORPHEUS, ZEUS</dd></div>
+          <div><dt>Câmera</dt><dd>Contra-plongée por trás de Orfeu; push-in rápido no clarão.</dd></div>
+          <div><dt>Luz</dt><dd>Templo escuro; clarão branco-dourado.</dd></div>
+          <div><dt>Áudio</dt><dd>Trovão; eco; coro crescendo.</dd></div>
+          <div><dt>Transição</dt><dd>Corte para o diálogo.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/orpheus.png</code> <code>personagens/zeus.png</code> <code>cenarios/templo_zeus.jpg</code></dd></div>
+        </dl>
+      </div>
+    </article>
+  </div>
+</section>
+<section class="cs" id="CS7">
+  <header class="cs-head"><div class="cs-id">CS7</div><div><h3>O Javali de Erimanto</h3><p class="when">Entrada no Covil do Javali (antes da luta)</p></div></header>
+  <blockquote class="script"><p>Deep in the forest, the first string shone on the tusk of a monster.</p></blockquote>
+  <div class="scenes">
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>11</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">Orfeu entra com o porrete. Do túnel escuro sai o javali gigante, soltando vapor pelo focinho; numa das presas brilha a corda dourada. Ele cava o chão com a pata e urra.</p>
+        <dl>
+          <div><dt>Local</dt><dd>O covil: caverna com tochas e cristais ciano (cenário 11).</dd></div>
+          <div><dt>Personagens</dt><dd>ORPHEUS, THE GIANT BOAR</dd></div>
+          <div><dt>Câmera</dt><dd>Plano geral; push rápido até a cara do javali.</dd></div>
+          <div><dt>Luz</dt><dd>Tochas quentes e brilho ciano dos cristais.</dd></div>
+          <div><dt>Áudio</dt><dd>Passos pesados; bufo; urro; pedras caindo.</dd></div>
+          <div><dt>Transição</dt><dd>Cartela &quot;THE ERYMANTHIAN BOAR&quot; e começa a luta.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/orpheus.png</code> <code>cenarios/caverna_fundo.jpg</code></dd></div>
+        </dl>
+      </div>
+    </article>
+  </div>
+</section>
+<section class="cs" id="CS8">
+  <header class="cs-head"><div class="cs-id">CS8</div><div><h3>A Primeira Corda</h3><p class="when">Logo depois de vencer o javali</p></div></header>
+  <blockquote class="script"><p>The first string came home.</p><p>One clear note rang out, and color returned to the forest.</p></blockquote>
+  <div class="scenes">
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>12</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">O javali derrotado se deita e encolhe, brilhando, até virar um javalizinho inofensivo que foge correndo. A corda dourada se desenrola da presa e flutua até as mãos de Orfeu.</p>
+        <dl>
+          <div><dt>Local</dt><dd>O covil, depois da luta.</dd></div>
+          <div><dt>Personagens</dt><dd>ORPHEUS, THE GIANT BOAR</dd></div>
+          <div><dt>Câmera</dt><dd>Plano médio, órbita lenta.</dd></div>
+          <div><dt>Luz</dt><dd>Tochas; brilho dourado vindo da corda.</dd></div>
+          <div><dt>Áudio</dt><dd>Brilho mágico; guincho do filhote; motivo de caixinha de música.</dd></div>
+          <div><dt>Transição</dt><dd>Corte seco.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/orpheus.png</code> <code>cenarios/caverna_fundo.jpg</code></dd></div>
+        </dl>
+      </div>
+    </article>
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>13</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">Orfeu prende a corda na lira e toca uma nota limpa. Uma onda de luz dourada sai da lira pela floresta, e árvores e flores cinzentas voltam a ter cor. Vaga-lumes sobem.</p>
+        <dl>
+          <div><dt>Local</dt><dd>A floresta de Arcádia à noite, cinza e sem cor.</dd></div>
+          <div><dt>Personagens</dt><dd>ORPHEUS</dd></div>
+          <div><dt>Câmera</dt><dd>Close na mão tocando; depois pull-back rápido até plano geral.</dd></div>
+          <div><dt>Luz</dt><dd>Noite que esquenta com a onda dourada.</dd></div>
+          <div><dt>Áudio</dt><dd>Uma nota de lira brilhante; whoosh de cor; sons da floresta voltando.</dd></div>
+          <div><dt>Transição</dt><dd>Fade.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/orpheus.png</code></dd></div>
+        </dl>
+      </div>
+    </article>
+  </div>
+</section>
+<section class="cs" id="CS9">
+  <header class="cs-head"><div class="cs-id">CS9</div><div><h3>O Mensageiro dos Deuses</h3><p class="when">Entrada no Santuário de Hermes (antes do diálogo)</p></div></header>
+  <p class="note">Sem narração: o diálogo do jogo continua depois do clipe.</p>
+  <div class="scenes">
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>14</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">Uma rajada de vento espalha penas brancas. O deus mensageiro pousa de leve no chão de mármore, na frente de Orfeu, faz uma reverência brincalhona e estende um par de sandálias douradas com asas.</p>
+        <dl>
+          <div><dt>Local</dt><dd>Santuário de mármore acima das nuvens (cenário 12).</dd></div>
+          <div><dt>Personagens</dt><dd>ORPHEUS, THE MESSENGER GOD</dd></div>
+          <div><dt>Câmera</dt><dd>Plano médio-aberto, leve contra-plongée; o deus pousa dentro do quadro.</dd></div>
+          <div><dt>Luz</dt><dd>Raios de sol vindo do alto à esquerda.</dd></div>
+          <div><dt>Áudio</dt><dd>Rajada de vento; asas batendo; flauta leve e brincalhona.</dd></div>
+          <div><dt>Transição</dt><dd>Corte para o diálogo.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/orpheus.png</code> <code>personagens/hermes.png</code> <code>cenarios/santuario_hermes.jpg</code></dd></div>
+        </dl>
+      </div>
+    </article>
+  </div>
+</section>
+<section class="cs" id="CS10">
+  <header class="cs-head"><div class="cs-id">CS10</div><div><h3>Fim da Parte 1</h3><p class="when">Depois de ganhar as sandálias (substitui a tela de fim atual)</p></div></header>
+  <blockquote class="script"><p>With the winged sandals, Orpheus set out for Attica.</p><p>Far below, in the silent Underworld, the King was watching... and his Queen wept for a spring she could not see.</p><p>And in the darkest hall of Tartarus, Eurydice began to hum a song she had not forgotten.</p><p>END OF PART 1</p></blockquote>
+  <div class="scenes">
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>15</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">Com as sandálias aladas, Orfeu corre e salta alto sobre um riacho e um muro de pedra, rumo às montanhas da Ática no horizonte.</p>
+        <dl>
+          <div><dt>Local</dt><dd>Colinas de Arcádia de dia, com cor de novo.</dd></div>
+          <div><dt>Personagens</dt><dd>ORPHEUS</dd></div>
+          <div><dt>Câmera</dt><dd>Travelling lateral acompanhando ele (enquadramento de jogo de plataforma).</dd></div>
+          <div><dt>Luz</dt><dd>Tarde clara.</dd></div>
+          <div><dt>Áudio</dt><dd>Tema heroico; vento; bater de asas em cada pulo.</dd></div>
+          <div><dt>Transição</dt><dd>Dissolve para o escuro.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/orpheus.png</code></dd></div>
+        </dl>
+      </div>
+    </article>
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>16</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">O Rei, no trono escuro, olha uma poça brilhante que mostra Orfeu correndo. Ao lado, a Rainha segura uma flor de romã murcha e olha para ela, triste; uma lágrima cai nas pétalas.</p>
+        <dl>
+          <div><dt>Local</dt><dd>Salão do trono do Submundo (cenário 13).</dd></div>
+          <div><dt>Personagens</dt><dd>THE KING OF THE UNDERWORLD, THE QUEEN OF THE UNDERWORLD</dd></div>
+          <div><dt>Câmera</dt><dd>Push-in lento da poça até a Rainha.</dd></div>
+          <div><dt>Luz</dt><dd>Luz ciano fria do rio; chamas azuis.</dd></div>
+          <div><dt>Áudio</dt><dd>Drone grave; gotas; uma nota de lira bem longe.</dd></div>
+          <div><dt>Transição</dt><dd>Corte seco.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/hades.png</code> <code>cenarios/submundo.jpg</code></dd></div>
+        </dl>
+      </div>
+    </article>
+    <article class="scene">
+      <div class="sn"><span>Cena</span><b>17</b><span>8 s</span></div>
+      <div class="sbody">
+        <p class="acao">A alma de Eurídice, brilhando, está sentada abraçando os joelhos. Ela ouve uma nota fraca, levanta a cabeça e começa a cantarolar; uma faísca dourada acende no escuro.</p>
+        <dl>
+          <div><dt>Local</dt><dd>O salão mais fundo do Tártaro: caverna escura com correntes de luz.</dd></div>
+          <div><dt>Personagens</dt><dd>EURYDICE'S SOUL</dd></div>
+          <div><dt>Câmera</dt><dd>Push-in lento até o rosto dela.</dd></div>
+          <div><dt>Luz</dt><dd>Escuridão; brilho ciano suave vindo dela; faísca dourada.</dd></div>
+          <div><dt>Áudio</dt><dd>Silêncio; nota de lira fraca; ela cantarolando, sem palavras.</dd></div>
+          <div><dt>Transição</dt><dd>Fade para preto e a cartela &quot;END OF PART 1&quot;.</dd></div>
+          <div class="wide"><dt>Anexar no Flow</dt><dd><code>personagens/eurydice.png</code></dd></div>
+        </dl>
+      </div>
+    </article>
+  </div>
+</section>
+
+  <h2>Ideias de jogo que a história traz</h2>
+  <ul class="ideas"><li>As cordas da lira viram item: um contador de 7 cordas no HUD, e cada chefe derrotado devolve uma.</li><li>Cada região começa sem cor e volta a ter cor quando a corda dela volta. Dá para fazer com filtro de cor no motor, sem arte nova.</li><li>O javali derrotado vira um filhote e foge, em vez de morrer (combina com o público infantil).</li><li>Última fase: a subida do Submundo, onde andar para a esquerda (olhar para trás) faz Eurídice sumir.</li><li>O Orfeu toca a lira nas cutscenes; a animação de tocar lira (AutoSprite) fica para quando a lira tiver base.</li></ul>
+
+  <div class="next"><h2>Próximo passo</h2><p>Aprovando a história e o storyboard (ou pedindo mudanças), eu escrevo o prompt de cada cena para o Flow, com botão Copiar e a marcação de Pronto, igual às outras páginas.</p></div>
+</div>

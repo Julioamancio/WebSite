@@ -13,7 +13,7 @@ Regra da casa (erros já pagos no Valmora): **primeiro UMA animação de teste (
 - `generate_spritesheet`: **~5 créditos por animação**. `regenerate_*`: 0 (só recorta o vídeo que já existe).
 - Depois de gerar, **sempre reextrair no máximo**: `frameSize: 0`, `maxFrames: 0`, `compression: "none"` (senão a folha sai borrada).
 - A resposta pode vir trocada quando dois pedidos rodam juntos: conferir em `list_jobs` antes de reenviar.
-- Estimativa deste plano: 8 animações do Orfeu + 7 idles = **15 animações ≈ 75 créditos** (mais refações).
+- Estimativa deste plano: 8 animações do Orfeu + 7 idles + 7 de falar = **22 animações ≈ 110 créditos** (mais refações).
 
 ## Travas em TODO prompt de animação (colar no início)
 ```
@@ -48,6 +48,19 @@ Todos: `<nome>_idle_0..3` (4 quadros) + um quadro com olho fechado → `<nome>_b
 | zeus | Majestic breathing idle, the lightning bolt stays raised in his right hand in every frame and crackles slightly, robes and beard stir gently. BLINKS ONCE in the middle of the clip. |
 | hermes | Light, bouncy idle on his toes, the small wings on his hat and sandals flutter, the golden staff stays in his right hand in every frame. BLINKS ONCE in the middle of the clip. |
 | hades | Cold, still idle, the dark robes and cloak stir slightly as if in a cold wind, the tall staff stays planted in his right hand in every frame. BLINKS ONCE in the middle of the clip. |
+
+## NPCs e deuses — animação de FALAR (7 animações, pedido do Júlio em 29/09)
+Toca enquanto a caixa de diálogo do NPC está aberta (o motor precisa trocar `idle` por `talk` durante o diálogo — fazer na integração).
+Todos: `<nome>_talk_0..5` (6 quadros, em loop). Travas de sempre + no fim: `Mouth moving as if talking, clear lip movement, no sound effects drawn, no speech bubble, no text.`
+| Personagem | Prompt (depois das travas) |
+|---|---|
+| eurydice | Talking gently to someone in front of her, soft smile, one hand rising a little from her waist as she speaks, then returning. |
+| elder | Talking wisely and slowly, nodding, his free hand gesturing forward as he explains, the staff stays planted in his right hand in every frame. |
+| merchant | Talking cheerfully like a market seller, lifting the clay jar of ambrosia a little to show it, then lowering it; the jar stays in her hands in every frame. |
+| villager | Chatting with a friendly smile, tilting her head, the basket stays in the crook of her right arm in every frame. |
+| zeus | Speaking with authority, chin raised, his free hand opening in a commanding gesture, the lightning bolt stays raised in his right hand in every frame. |
+| hermes | Speaking quickly and playfully, grinning, bouncing lightly on his toes, pointing forward with his free hand, the staff stays in his right hand in every frame. |
+| hades | Speaking coldly and slowly, narrowing his eyes, his free hand closing into a fist, the staff stays planted in his right hand in every frame. |
 
 - O fantasma da Eurídice (`eurydice_ghost_0..3`) sai do idle dela **por código** (tom ciano claro e transparência) — não gastar crédito.
 - Inimigos (cobra, morcego, sátiro, javali) ainda não têm base: fazer os prompts do Flow deles depois.

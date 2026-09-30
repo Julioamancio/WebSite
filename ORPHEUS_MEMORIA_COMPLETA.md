@@ -49,6 +49,7 @@
 | 7 | Correção de proporção do Orfeu (procedural) iniciada | **Cancelada** pelo Júlio: "vamos fazer tudo no AutoSprite" |
 | 8 | Pedido de prompts para os **cenários no Google Flow** | 16 prompts prontos (seção 9) |
 | 9 | 29/09/2026: página de prompts com botão Copiar + 5 fachadas de frente (casas, barraca, templo, caverna). Logo depois o Júlio disse: **"não quero pixel da época, a ideia é boneco 2,5D, platform, bem bonito"** | Prompts do Flow e estilo do AutoSprite (7.2) **reescritos em 2.5D**. Pixel art está descartada para arte nova |
+| 10 | 29/09/2026: Júlio pediu animação de falar nos NPCs e "cutscenes legais com história fantástica" | Falar entrou no `docs/PLANO_AUTOSPRITE.md` (~110 créditos no total). História nova: **as 7 cordas da lira** (Hades quebra a lira, as cordas voam pela Grécia, o mundo perde a cor; uma corda por parte; final com "não olhe para trás"). Storyboard da Parte 1 (10 cutscenes, 17 clipes de 8 s para o Flow/Veo) em `docs/CUTSCENES.md`, fonte `tools/cutscenes.js`, página https://claude.ai/artifact/SKtiuantjcQfUvb8dEodVc — **esperando aprovação** antes dos prompts de cena |
 
 Críticas registradas da v3 (úteis se algum módulo procedural continuar em uso):
 - **Orfeu:** "chibi" (cabeça 12 px de 37; 1:3,1), pernas curtas, lê como criança/menina (saia rodada + cabelo volumoso + fitas vermelhas), capa rígida, braços finos, rastro do golpe fraco, agachado alto demais (29 px para hitbox de 22), some na floresta à noite.

@@ -193,3 +193,47 @@ proporção 9:16 · fundo magenta. No jogo: História e Parte 2 · prende a alma
 
 [NEGATIVE] no pixel art, no pixelated look, no retro 8-bit or 16-bit style, no low-poly look, no photorealism, no chibi, no big head, no second character, no reflection, no text, no letters, no logo, no watermark, no signature, no border, no frame, no character sheet, no multiple views, no background scenery, no ground shadow, no cropped feet or head, no modern clothing, no flaming hair, no glow around the body, no smoke, no throne, no purple, no violet, no pink, no lilac.
 ```
+
+### 09 — Rainha do Submundo · `queen`
+
+proporção 9:16 · fundo magenta · novo. No jogo: Cutscene do fim da Parte 1 e Parte 7 · chora com a Canção.
+
+```
+[STYLE] Beautiful stylized 3D game character for a premium 2.5D side-scrolling platformer, rendered like a high-end animated film: soft global illumination, warm key light from the upper-left, gentle cool rim light on the back edge, hand-painted texture detail on skin, hair, cloth, leather and metal, clean strong silhouette, expressive face, high resolution, sharp clean edges, portrait 9:16.
+
+[WORLD] Mythological Ancient Greece, region of Arcadia. Clothes and objects are ancient Greek: chitons, himations, leather sandals, bronze, olive wood, gold trim, Greek key (meander) patterns. Light always comes from the upper-left.
+
+[REFERENCE] If a reference image is attached, use it only for the art style (rendering, level of detail, colors, lighting). Do not copy its character, face, clothes or objects.
+
+[POSE] ONE single character only, alone in the frame, nobody else. Full body with the whole body inside the frame and a small margin on every side: nothing cropped, from the top of the head (and anything held above it) down to the soles of the feet. Strict side view in profile, facing RIGHT: exactly ONE eye and ONE ear are visible and the nose points to the right edge of the image; if both eyes are visible, the image is wrong. Relaxed standing idle pose, weight on both feet, feet flat on one ground line near the bottom of the image. Stylized adult proportions, about 6.5 heads tall — NOT chibi, NOT big-headed. Camera at chest height, flat, no perspective, no foreshortening.
+
+[CHARACTER] A graceful, sad young queen of the underworld from ancient Greek myth: long dark brown hair braided with small withered spring flowers, gentle green eyes, pale skin, a thin silver crown, a deep green and gold ankle-length gown, simple dark leather sandals. With both hands she holds a single wilted coral-red pomegranate blossom in front of her chest and looks down at it sadly.
+
+[BACKGROUND] Flat, solid, pure magenta background (#FF00FF), perfectly uniform, with no gradient, no floor, no shadow on the ground and no details. Crisp clean edge between the character and the magenta, with no glow spilling onto it. Never use magenta, pink, purple, violet or lilac anywhere on the character.
+
+[NEGATIVE] no pixel art, no pixelated look, no retro 8-bit or 16-bit style, no low-poly look, no photorealism, no chibi, no big head, no second character, no reflection, no text, no letters, no logo, no watermark, no signature, no border, no frame, no character sheet, no multiple views, no background scenery, no ground shadow, no cropped feet or head, no modern clothing, no throne, no glow around the body, no pink flowers, no purple, no violet, no pink, no lilac.
+```
+
+## Chefes e criaturas
+
+Bases para as cutscenes e para o AutoSprite. O javali é largo, então vai em 16:9.
+
+### 10 — Javali gigante · `boar`
+
+proporção 16:9 · fundo magenta · novo. No jogo: Covil do Javali · chefe (a corda na presa é a 1ª corda da lira).
+
+```
+[STYLE] Beautiful stylized 3D game creature for a premium 2.5D side-scrolling platformer, rendered like a high-end animated film: soft global illumination, warm key light from the upper-left, gentle cool rim light on the back edge, hand-painted texture detail on skin, hair, cloth, leather and metal, clean strong silhouette, expressive face, high resolution, sharp clean edges, landscape 16:9.
+
+[WORLD] Mythological Ancient Greece, region of Arcadia. Clothes and objects are ancient Greek: chitons, himations, leather sandals, bronze, olive wood, gold trim, Greek key (meander) patterns. Light always comes from the upper-left.
+
+[REFERENCE] If a reference image is attached, use it only for the art style (rendering, level of detail, colors, lighting). Do not copy its character, face, clothes or objects.
+
+[POSE] ONE single creature only, alone in the frame, nothing else. The whole body inside the frame with a small margin on every side, nothing cropped: from the snout to the tail and from the top of the mane down to the hooves. Strict side view in profile, facing RIGHT: exactly ONE eye is visible and the snout points to the right edge of the image; if both eyes are visible, the image is wrong. Standing still in an alert pose, all four hooves flat on one ground line near the bottom of the image. Camera at shoulder height, flat, no perspective, no foreshortening.
+
+[CHARACTER] A huge mythical wild boar boss: as tall at the shoulder as a grown man and much longer than it is tall, dark reddish-brown bristly fur, a tall bristly mane rising along its spine, long curved ivory tusks, one tusk wrapped with a single thin glowing golden lyre string, small fierce red eyes, a scarred snout, a thin puff of steam at the nostrils, heavy dark hooves.
+
+[BACKGROUND] Flat, solid, pure magenta background (#FF00FF), perfectly uniform, with no gradient, no floor, no shadow on the ground and no details. Crisp clean edge between the creature and the magenta, with no glow spilling onto it. Never use magenta, pink, purple, violet or lilac anywhere on the creature.
+
+[NEGATIVE] no pixel art, no pixelated look, no retro 8-bit or 16-bit style, no low-poly look, no photorealism, no chibi, no big head, no second animal, no rider, no reflection, no text, no letters, no logo, no watermark, no signature, no border, no frame, no character sheet, no multiple views, no background scenery, no ground shadow, no cropped feet or head, no modern clothing, no blood, no wounds, no saddle, no purple, no violet, no pink, no lilac.
+```

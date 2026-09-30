@@ -75,7 +75,8 @@
     Object.keys(M).forEach((n) => {
       const m = M[n], img = HD.sheets[n], c = charOf(n);
       if (!img) return;
-      const k = (HEIGHT[c] || 40) / (ref[c] || m.body);
+      // calibrated sheets (m.own): every clip starts standing, so its own standing height sets the scale
+      const k = (HEIGHT[c] || 40) / (m.own ? m.body : (ref[c] || m.body));
       Object.keys(m.frames).forEach((fname) => { O.SPR[fname] = hdFrame(img, m.frames[fname], m, k); });
     });
     if (O.SPR.lyre_play_0 && O.SPR.lyre_play_0.hd) { O.SPR.hero_lyre_0 = O.SPR.lyre_play_0; O.SPR.hero_lyre_1 = O.SPR.lyre_play_4 || O.SPR.lyre_play_0; }
@@ -495,10 +496,10 @@
   const notesT = [];
   function keyArt(c, t, dim) {
     const im = HD.img.titulo, z = 1.2 + Math.sin(t * 0.002) * 0.03, s = (W / im.width) * z;
-    const hw = W / 2 / s / im.width, cx = Math.max(hw, 0.36 + Math.sin(t * 0.0015) * 0.02), cy = 0.535 - 64 / (W * z);
+    const hw = W / 2 / s / im.width, cx = Math.max(hw, 0.36 + Math.sin(t * 0.0015) * 0.02), cy = 0.556 - 64 / (W * z);
     c.save(); c.imageSmoothingEnabled = true; c.imageSmoothingQuality = 'high';
     c.drawImage(im, W / 2 - cx * im.width * s, H / 2 - cy * im.height * s, im.width * s, im.height * s);
-    const px = W / 2 + (0.25 - cx) * im.width * s, py = H / 2 + (0.535 - cy) * im.height * s;
+    const px = W / 2 + (0.25 - cx) * im.width * s, py = H / 2 + (0.556 - cy) * im.height * s;
     const e = O.SPR['lyre_play_' + (Math.floor(t / 9) % 8)];
     if (e) { HD.shadow(c, px, py, 9, 0.3); c.save(); c.translate(px, py); c.scale(0.85, 0.85); HD.drawFrame(c, e, 0, 0, false, false); c.restore(); }
     if (t % 28 === 0) notesT.push({ t0: t, x: px + 6, y: py - 28, ch: Math.random() < 0.5 ? '♪' : '♫', dx: 0.12 + Math.random() * 0.1 });

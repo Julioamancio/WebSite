@@ -78,6 +78,8 @@ for out_name, s in spec.items():
     w, h = x1 - x0, y1 - y0
     sheet = Image.new('RGBA', (w * len(chosen), h), (0, 0, 0, 0))
     meta = {'image': out_name + '.png', 'w': w, 'h': h, 'ax': round(ax0 - x0), 'ay': ay0 - y0, 'frames': {}}
+    # standing height on frame 0 of the raw clip (every clip starts from the base pose): hd.js scales by it
+    b0 = alpha_bbox(fr[0]); meta['stand'] = b0[3] - b0[1]
     for i, (n, im) in enumerate(zip(names, chosen)):
         sheet.paste(im.crop((x0, y0, x1, y1)), (i * w, 0))
         meta['frames'][n] = {'x': i * w, 'y': 0, 'src': s['frames'][n]}

@@ -98,7 +98,7 @@ def sprites():
         f0 = next(iter(m['frames'].values()))
         bb = img.crop((f0['x'], 0, f0['x'] + m['w'], m['h'])).getchannel('A').point(lambda v: 255 if v > 40 else 0).getbbox()
         man[nome] = {'img': 'sprites/' + nome + '.webp', 'w': round(w, 2), 'h': round(h, 2), 'ax': round(m['ax'] * k, 2),
-                     'ay': round(m['ay'] * k, 2), 'body': round((m['ay'] - bb[1]) * k, 2),
+                     'ay': round(m['ay'] * k, 2), 'body': round((m.get('stand') or (m['ay'] - bb[1])) * k, 2), 'own': 'stand' in m,
                      'frames': {n: round(v['x'] * k, 2) for n, v in m['frames'].items()}}
         print(f'{nome}.webp {im.width}x{im.height} {os.path.getsize(os.path.join(SPR_OUT, nome + ".webp")) // 1024} KB')
     with open(os.path.join(OUT, 'sprites', 'manifest.js'), 'w', encoding='utf-8') as fp:

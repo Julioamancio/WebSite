@@ -18,16 +18,16 @@
   const C = (x, gy, z) => [x, gy - 64 / (W * (z || 1)), z || 1];
   const CS = {
     cs1: [
-      { bg: 'titulo', dur: 10, cam: [C(0.45, 0.535, 1.0), C(0.28, 0.535, 1.35)], music: 'title', fadeIn: 1.2,
-        actors: [HERO('lyre_play', 0.25, 0.535, { n: 8, fps: 7, sc: 0.7 })],
-        fx: [{ k: 'notes', x: 0.268, y: 0.49, t0: 1 }, { k: 'birds', t0: 2 }],
+      { bg: 'titulo', dur: 10, cam: [C(0.45, 0.556, 1.0), C(0.28, 0.556, 1.35)], music: 'title', fadeIn: 1.2,
+        actors: [HERO('lyre_play', 0.25, 0.556, { n: 8, fps: 7, sc: 0.7 })],
+        fx: [{ k: 'notes', x: 0.268, y: 0.511, t0: 1 }, { k: 'birds', t0: 2 }],
         text: [[0.8, 'Long ago, in the green hills of Arcadia, there lived a young musician named Orpheus.'],
                [5.2, 'When he played his golden lyre, rivers stopped to listen and trees began to dance.']] },
-      { bg: 'titulo', dur: 8, cam: C(0.28, 0.535, 1.4), fadeOut: 1.2,
-        actors: [HERO('lyre_play', 0.25, 0.535, { n: 8, fps: 7, sc: 0.7 }),
-                 HERO('eurydice_walk', [0.45, 0.305], 0.535, { n: 8, fps: 10, sc: 0.7, flip: true, move: [0.3, 4.3], t1: 4.3 }),
-                 HERO('eurydice_idle', 0.305, 0.535, { n: 4, fps: 4, sc: 0.7, flip: true, t0: 4.3 })],
-        fx: [{ k: 'notes', x: 0.268, y: 0.49 }, { k: 'hearts', x: 0.285, y: 0.47, t0: 4.6 }],
+      { bg: 'titulo', dur: 8, cam: C(0.28, 0.556, 1.4), fadeOut: 1.2,
+        actors: [HERO('lyre_play', 0.25, 0.556, { n: 8, fps: 7, sc: 0.7 }),
+                 HERO('eurydice_walk', [0.45, 0.305], 0.556, { n: 8, fps: 10, sc: 0.7, flip: true, move: [0.3, 4.3], t1: 4.3 }),
+                 HERO('eurydice_idle', 0.305, 0.556, { n: 4, fps: 4, sc: 0.7, flip: true, t0: 4.3 })],
+        fx: [{ k: 'notes', x: 0.268, y: 0.511 }, { k: 'hearts', x: 0.285, y: 0.491, t0: 4.6 }],
         text: [[1, 'And his heart belonged to the gentle Eurydice.']] }
     ],
     cs2: [

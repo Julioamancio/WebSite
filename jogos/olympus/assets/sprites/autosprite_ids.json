@@ -71,5 +71,9 @@
       "character": "cmunjjnp0000eq9xiv93lmm3k",
       "pose": "cmunjjnpt000gq9xiayeb38sc"
     }
+  },
+  "poses_extra": {
+    "orpheus_unarmed": "cmuodbtd8000w9tjr398e3egg",
+    "orpheus_lyre": "cmuni42a0000333vpt5jommca"
   }
 }

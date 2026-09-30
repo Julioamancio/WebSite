@@ -12,9 +12,11 @@
   O.px = (v) => Math.round(v * S) / S; // snap to one device pixel
 
   // Height of each character in game units, feet to top of head (ORPHEUS_MEMORIA_COMPLETA 7.5).
-  const HEIGHT = { orpheus: 40, lyre: 40, eurydice: 37, elder: 36, merchant: 37, villager: 36, zeus: 48, hermes: 46, hades: 46,
-    boar: 48, satyr: 44, bat: 15, snake: 10 };
-  const charOf = (sheet) => (sheet.indexOf('orpheus_lyre') === 0 ? 'lyre' : sheet.split('_')[0]);
+  const HEIGHT = { orpheus: 40, lyre: 40, fists: 40, eurydice: 37, elder: 36, merchant: 37, villager: 36, zeus: 48, hermes: 46, hades: 46,
+    boar: 48, satyr: 44, bat: 9, snake: 17 }; // snake: a large mythical viper (longer than Orpheus), bat: wingspan ~half the hero
+  const charOf = (sheet) => (sheet.indexOf('orpheus_lyre') === 0 ? 'lyre' : sheet.indexOf('orpheus_p_') === 0 ? 'fists' : sheet.split('_')[0]);
+  // sheets generated from a different pose carry their own size reference (same height in the game)
+  const REF_SHEET = { lyre: 'orpheus_lyre_play', fists: 'orpheus_p_idle' };
 
   function loadImg(src) {
     return new Promise((ok) => {
@@ -66,7 +68,7 @@
     const ref = {}, PRIO = ['_idle', '_walk', '_move', '_fly'];
     Object.keys(M).forEach((n) => {
       const c = charOf(n);
-      if (c === 'lyre') { if (n === 'orpheus_lyre_play') ref.lyre = M[n].body; return; }
+      if (REF_SHEET[c]) { if (n === REF_SHEET[c]) ref[c] = M[n].body; return; }
       const cand = PRIO.map((suf) => M[c + suf]).find(Boolean);
       if (cand) ref[c] = cand.body;
     });
@@ -392,10 +394,10 @@
       logo(c, 'ORPHEUS', 'SONG OF OLYMPUS', 30, t);
       if (this.state === 'press') {
         const a = 0.55 + Math.sin(t * 0.07) * 0.45;
-        label(c, 'PRESS START', MX, 158, 8, 'rgba(255,244,214,' + a + ')');
+        label(c, 'PRESS START', MX, 164, 8, 'rgba(255,244,214,' + a + ')');
       } else {
-        ['NEW GAME', 'CONTINUE'].forEach((o, i) => {
-          const on = this.sel === i, en = i === 0 || this.hasSave, y = 158 + i * 14;
+        this.titleMenu().forEach((it, i) => {
+          const o = it.t, on = this.sel === i, en = !it.off, y = 142 + i * 14;
           if (on) {
             const gr = c.createLinearGradient(MX - 60, 0, MX + 60, 0);
             gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.5, 'rgba(20,10,30,0.55)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
@@ -405,8 +407,7 @@
           label(c, o, MX, y, 8, !en ? 'rgba(170,160,190,0.6)' : on ? '#ffe9a8' : '#f4ecdc');
         });
       }
-      label(c, 'Z: ATTACK   X: JUMP   ↑: TALK   ENTER: START   M: MUTE', W / 2, 200, 4.4, 'rgba(255,240,220,0.8)');
-      label(c, 'A FAN TRIBUTE - 2026', W / 2, 209, 3.8, 'rgba(230,210,240,0.55)');
+      label(c, 'A FAN TRIBUTE - 2026', W / 2, 206, 3.8, 'rgba(230,210,240,0.55)');
     };
     GP.drawEnding = function (c) {
       if (!HD.img.titulo) return oldEnding.call(this, c);

@@ -42,6 +42,29 @@ const GAME = require('url').pathToFileURL(path.resolve(__dirname, '..', 'index.h
     out.jump = jump(false); out.jumpSandals = jump(true);
     // continue from save
     g.state = 'gameover'; g.continueAfterDeath(); out.continue = { state: g.state, lvl: g.lvl.id, hp: g.st.hp };
+    // weapons: fists before the club (shorter reach), the club after it, C swaps between them
+    g.st = { hp: 12, maxHp: 12, olives: 0, ambrosia: 0, items: { club: false, sandals: false }, flags: { nwHint: 1 } };
+    g.state = 'play'; g.trans = null; g.dialog = null;
+    g.loadLevel('forest', { tx: 1, row: 11 });
+    const bat = (dx) => { g.enemies = [OLY.makeEnemy({ kind: 'bat', tx: 3, row: 10 })]; const b = g.enemies[0]; b.state = 'fly'; b.update = () => {}; g.player.place(2 * T, 176); g.player.facing = 1; g.player.inv = 999; b.x = g.player.x + g.player.w + dx; b.y = 176 - 26; return b; };
+    bat(4); step(2); I.latch.attack = true; step(16); out.punchNear = g.enemies.length === 0;
+    bat(18); step(2); I.latch.attack = true; step(16); out.punchFar = g.enemies.length === 0;
+    g.st.items.club = true; g.st.weapon = 'club';
+    bat(18); step(2); I.latch.attack = true; step(16); out.clubFar = g.enemies.length === 0;
+    step(12); I.latch.swap = true; step(2); out.swapTo = g.st.weapon; I.latch.swap = true; step(2); out.swapBack = g.st.weapon;
+    // enemy attacks hurt: satyr club, snake strike, boar tusks
+    const hurtBy = (kind, place) => {
+      g.dialog = null; g.st.hp = 12; g.player.place(6 * T, 176); g.player.inv = 0; g.player.facing = 1;
+      const e = kind === 'boar' ? new OLY.Boar(9 * T, 176) : OLY.makeEnemy({ kind, tx: 8 });
+      g.enemies = [e]; place(e); const hp0 = g.st.hp;
+      for (let i = 0; i < 160 && g.st.hp === hp0; i++) step(1);
+      return hp0 - g.st.hp;
+    };
+    out.satyrHits = hurtBy('satyr', (e) => { e.x = g.player.x + 24; e.swingCool = 0; e.dmg = 0; });
+    out.snakeHits = hurtBy('snake', (e) => { e.x = g.player.x + 40; e.cool = 0; e.facing = -1; e.dmg = 0; });
+    g.loadLevel('den', { tx: 2, row: 11 }); g.st.flags.cs_boar = 1;
+    out.boarGore = hurtBy('boar', (e) => { e.setState('idle'); e.st = 25; e.x = g.player.x + g.player.w + 4; e.dir = e.facing = -1; e.dmg = 0; });
+    g.st = Object.assign(g.st, { items: { club: true, sandals: true } });
     // cutscenes: entering the temple plays the Zeus cutscene, then Zeus talks; the opening runs to the village
     OLY.Cutscene.available = cutAvail; g.st.flags = {}; g.state = 'play'; g.trans = null;
     g.loadLevel('zeus', { tx: 2, row: 11 }); out.cutZeus = g.state === 'cut';

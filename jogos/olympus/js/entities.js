@@ -7,6 +7,22 @@
   const STAND_H = 34, CROUCH_H = 22;
   O.HERO = { STAND_H, CROUCH_H, W: 12, ATK: 20, REACH: 22 };
 
+  /* ---------- WEAPONS ----------
+     Each weapon: its reach and damage, the HUD icon, the item that unlocks it (none = always owned) and the
+     prefix of its animation frames (the AutoSprite sheets have the weapon drawn in: '<prefix>run_3' ...).
+     A frame missing for a weapon falls back to the club set ('hero_...'). New weapon = one line + its sheets. */
+  O.WEAPONS = {
+    fists: { name: 'FISTS', reach: 13, dmg: 1, icon: 'icon_fists', prefix: 'hero_p_' },
+    club: { name: 'WOODEN CLUB', reach: 22, dmg: 1, icon: 'icon_club', prefix: 'hero_', item: 'club' }
+  };
+  O.WEAPON_ORDER = ['fists', 'club'];
+  O.ownedWeapons = (st) => O.WEAPON_ORDER.filter((k) => !O.WEAPONS[k].item || (st.items && st.items[O.WEAPONS[k].item]));
+  O.weaponOf = (st) => {
+    const own = O.ownedWeapons(st);
+    if (!st.weapon || own.indexOf(st.weapon) < 0) st.weapon = own[own.length - 1];
+    return O.WEAPONS[st.weapon];
+  };
+
   /* ---------- tile collision for any body {x,y,w,h,vx,vy} ---------- */
   O.moveBody = function (b, lvl) {
     b.hitWall = false;
@@ -78,6 +94,7 @@
     }
     update(g) {
       const I = g.I, lvl = g.lvl, st = g.st;
+      this.weapon = O.weaponOf(st);
       if (this.inv > 0) this.inv--;
       if (this.landT > 0) this.landT--;
       const ctrl = this.hurtT === 0;
@@ -87,7 +104,8 @@
       if (this.atk > 0) wantCrouch = this.atkCrouch && this.onGround;
       this.setCrouch(wantCrouch, lvl);
 
-      if (ctrl && I.pressed.attack && this.atk === 0 && st.items.club) {
+      if (ctrl && I.pressed.swap && this.atk === 0) g.swapWeapon();
+      if (ctrl && I.pressed.attack && this.atk === 0) {
         this.atk = O.HERO.ATK; this.atkCrouch = this.crouch; this.atkAir = !this.onGround; this.swingId++;
         g.sfx('swing');
       }
@@ -159,7 +177,7 @@
       if (this.atk <= 0) return null;
       const e = this.atkElapsed();
       if (e < 7 || e > 13) return null;
-      const reach = O.HERO.REACH, feet = this.y + this.h;
+      const reach = (this.weapon || O.WEAPONS.club).reach, feet = this.y + this.h;
       return {
         x: this.facing > 0 ? this.x + this.w : this.x - reach,
         y: this.crouch ? feet - 14 : feet - 28,
@@ -167,7 +185,14 @@
         h: 14
       };
     }
+    // The frame of the equipped weapon's set, or the club set when that weapon lacks this frame.
     frameName(g) {
+      const n = this.baseFrame(g), w = this.weapon;
+      if (!w || w.prefix === 'hero_') return n;
+      const alt = w.prefix + n.slice(5);
+      return O.SPR[alt] ? alt : n;
+    }
+    baseFrame(g) {
       if (this.hurtT > 0) return 'hero_hurt';
       if (this.atk > 0) {
         const base = this.crouch ? 'hero_catk' : !this.onGround ? 'hero_jatk' : 'hero_atk';
@@ -178,7 +203,7 @@
       if (this.landT > 0) return 'hero_land';
       if (this.vx !== 0) return O.frame('hero_run', this.anim, 5, 8);
       const idle = O.frame('hero_idle', this.idleT, 12, 4);
-      if (idle === 'hero_idle_0' && (this.idleT % 200) < 6 && O.SPR.hero_blink) return 'hero_blink';
+      if (idle === 'hero_idle_0' && (this.idleT % 200) < 6 && O.SPR[(this.weapon && this.weapon.prefix || 'hero_') + 'blink']) return 'hero_blink';
       return idle;
     }
     draw(c, g) {
@@ -232,30 +257,41 @@
   }
   O.Enemy = Enemy;
 
+  // Snake: crawls; when the hero is near and on its level it COILS (warning), then STRIKES forward fast.
   class Snake extends Enemy {
     constructor(x, feet) {
-      super(x, feet - 10, 20, 10);
-      this.cool = 60; this.lunge = 0; this.lowProfile = true;
+      super(x, feet - 12, 30, 12); // hitbox follows the bigger snake
+      this.cool = 60; this.lunge = 0; this.coil = 0; this.lowProfile = true; this.atkDmg = 2;
     }
     update(g) {
       this.tick();
       const p = g.player, lvl = g.lvl;
-      if (this.knock > 0) this.knock--;
-      else if (this.lunge > 0) { this.lunge--; this.vx = this.facing * 1.5; }
+      if (this.knock > 0) { this.knock--; this.coil = 0; }
+      else if (this.coil > 0) {
+        this.vx = 0;
+        if (--this.coil === 0) { this.lunge = 16; g.sfx('swing'); }
+      } else if (this.lunge > 0) { this.lunge--; this.vx = this.facing * 2.6; }
       else {
         this.vx = this.facing * 0.35;
         if (this.cool > 0) this.cool--;
         const dx = p.x + p.w / 2 - (this.x + this.w / 2);
-        if (this.cool === 0 && Math.abs(dx) < 64 && Math.abs(p.y + p.h - (this.y + this.h)) < 12) {
-          this.facing = dx < 0 ? -1 : 1; this.lunge = 22; this.cool = 100;
+        if (this.cool === 0 && Math.abs(dx) < 70 && Math.abs(p.y + p.h - (this.y + this.h)) < 12) {
+          this.facing = dx < 0 ? -1 : 1; this.coil = 18; this.cool = 110;
         }
       }
       this.fall(lvl);
-      if (this.hitWall || (this.onGround && this.edgeAhead(lvl))) { this.facing *= -1; this.lunge = 0; }
+      if (this.hitWall || (this.onGround && this.edgeAhead(lvl))) { this.facing *= -1; this.lunge = 0; this.coil = 0; }
     }
-    draw(c, g) { this.drawFrame(c, g, this.lunge > 0 ? O.frame('snake_lunge', this.t, 6, 2) : O.frame('snake_move', this.t, 8, 4)); }
+    // the open jaws during the strike reach a little ahead of the body
+    attackBox() {
+      if (this.lunge <= 0) return null;
+      return { x: this.facing > 0 ? this.x + this.w - 4 : this.x - 8, y: this.y - 6, w: 12, h: 14 };
+    }
+    draw(c, g) {
+      if (this.coil > 0) this.drawFrame(c, g, 'snake_lunge_0', (this.coil >> 1) & 1 ? 0.6 : -0.6, 0);
+      else this.drawFrame(c, g, this.lunge > 0 ? 'snake_lunge_1' : O.frame('snake_move', this.t, 8, 4));
+    }
   }
-
   class Bat extends Enemy {
     constructor(x, y) {
       super(x, y, 16, 10);
@@ -287,35 +323,56 @@
     }
   }
 
+  // Satyr: chases the hero, hops over walls, and when close RAISES the club (warning) and SMASHES it down.
   class Satyr extends Enemy {
     constructor(x, feet) {
       super(x, feet - 34, 14, 34);
-      this.hp = 3; this.dmg = 2; this.olives = 3; this.dropChance = 0.85; this.jumpCool = 0;
+      this.hp = 3; this.dmg = 1; this.atkDmg = 2; this.olives = 3; this.dropChance = 0.85; this.jumpCool = 0;
+      this.swing = 0; this.swingCool = 40;
     }
+    static get SWING() { return { total: 46, wind: 18, hit: 27 }; }
     update(g) {
       this.tick();
-      const p = g.player, lvl = g.lvl;
-      const dx = p.x + p.w / 2 - (this.x + this.w / 2);
+      const p = g.player, lvl = g.lvl, S = Satyr.SWING;
+      const dx = p.x + p.w / 2 - (this.x + this.w / 2), dy = Math.abs(p.y + p.h - (this.y + this.h));
       if (this.jumpCool > 0) this.jumpCool--;
-      if (this.knock > 0) { this.knock--; this.vx *= 0.9; }
-      else if (Math.abs(dx) < 160) {
+      if (this.swingCool > 0) this.swingCool--;
+      if (this.knock > 0) { this.knock--; this.vx *= 0.9; this.swing = 0; }
+      else if (this.swing > 0) {
+        this.vx = 0;
+        const e = S.total - this.swing;
+        if (e === S.wind) g.sfx('swing');
+        if (--this.swing === 0) this.swingCool = 60;
+      } else if (Math.abs(dx) < 160) {
         this.facing = dx < 0 ? -1 : 1;
-        this.vx = this.facing * 0.75;
-        if (this.onGround && this.edgeAhead(lvl)) this.vx = 0;
-        if (this.onGround && this.jumpCool === 0 &&
-            (this.blocked || (p.atk > 0 && Math.abs(dx) < 52 && Math.random() < 0.25))) {
-          this.vy = -4.2; this.jumpCool = 50;
+        if (this.onGround && this.swingCool === 0 && Math.abs(dx) < 34 && dy < 14) { this.swing = S.total; this.vx = 0; }
+        else {
+          this.vx = this.facing * 0.75;
+          if (this.onGround && this.edgeAhead(lvl)) this.vx = 0;
+          if (this.onGround && this.jumpCool === 0 &&
+              (this.blocked || (p.atk > 0 && Math.abs(dx) < 52 && Math.random() < 0.25))) {
+            this.vy = -4.2; this.jumpCool = 50;
+          }
         }
       } else this.vx = 0;
       this.fall(lvl);
       this.blocked = this.hitWall;
     }
+    attackBox() {
+      if (this.swing <= 0) return null;
+      const S = Satyr.SWING, e = S.total - this.swing;
+      if (e < S.wind || e > S.hit) return null;
+      return { x: this.facing > 0 ? this.x + this.w : this.x - 22, y: this.y + 4, w: 22, h: 30 };
+    }
     draw(c, g) {
-      const name = !this.onGround ? 'satyr_jump' : this.vx !== 0 ? O.frame('satyr_walk', this.t, 6, 6) : O.frame('satyr_idle', this.t, 16, 2);
+      let name;
+      if (this.swing > 0 && O.SPR.satyr_attack_0) {
+        const S = Satyr.SWING, e = S.total - this.swing;
+        name = 'satyr_attack_' + (e < 10 ? 0 : e < S.wind ? 1 : e < S.wind + 4 ? 2 : e < S.hit + 4 ? 3 : 4);
+      } else name = !this.onGround ? 'satyr_jump' : this.vx !== 0 ? O.frame('satyr_walk', this.t, 6, 6) : O.frame('satyr_idle', this.t, 16, 2);
       this.drawFrame(c, g, name);
     }
   }
-
   /* ---------- BOSS: Erymanthian Boar ---------- */
   class Boar extends Enemy {
     constructor(x, feet) {
@@ -324,6 +381,11 @@
       this.state = 'wait'; this.st = 0; this.dir = -1; this.facing = -1;
     }
     contactDmg() { return this.state === 'charge' ? 3 : this.state === 'stun' ? 1 : 2; }
+    get atkDmg() { return 3; }
+    attackBox() {
+      if (this.state !== 'gore' || this.st < 14 || this.st > 26) return null;
+      return { x: this.dir > 0 ? this.x + this.w - 6 : this.x - 26, y: this.y - 10, w: 32, h: 34 };
+    }
     setState(s) { this.state = s; this.st = 0; }
     update(g) {
       this.tick();
@@ -340,7 +402,14 @@
         case 'idle':
           this.vx = 0;
           this.dir = this.facing = dx < 0 ? -1 : 1;
+          // too close for a charge: toss the tusks (warning: head lowered, then the sweep)
+          if (this.st > 20 && Math.abs(dx) < 46 && Math.abs(p.y + p.h - (this.y + this.h)) < 20) { this.setState('gore'); g.sfx('roar'); break; }
           if (this.st > 35) this.setState('paw');
+          break;
+        case 'gore':
+          this.vx = 0;
+          if (this.st === 16) g.shake = Math.max(g.shake, 8);
+          if (this.st > 44) this.setState('paw');
           break;
         case 'paw':
           if (this.st % 10 === 0) g.dust(this.x + this.w / 2 - this.dir * 18, this.y + this.h, 0);
@@ -389,6 +458,7 @@
       if (this.state === 'charge') name = O.frame('boar_run', this.t, 4, 6);
       else if (this.state === 'stun' || this.state === 'dying') name = O.frame('boar_stun', this.t, 8, 4);
       else if (this.state === 'paw') name = O.frame('boar_paw', this.st, 5, 4);
+      else if (this.state === 'gore' && O.SPR.boar_gore_0) name = 'boar_gore_' + Math.min(4, this.st < 14 ? (this.st < 7 ? 0 : 1) : this.st < 20 ? 2 : this.st < 30 ? 3 : 4);
       else name = O.frame('boar_idle', this.t, 10, 4);
       if (this.state === 'dying' && (this.st & 2)) return;
       this.drawFrame(c, g, name);

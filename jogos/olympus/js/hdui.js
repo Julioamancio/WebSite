@@ -218,6 +218,14 @@
       c.fillStyle = vgrad(c, [[0, '#fffbe0'], [0.5, '#ffd24a'], [1, '#e08a10']], 0, 17); c.fill();
       c.lineWidth = 0.45; c.strokeStyle = '#7a3a08'; c.stroke();
     },
+    icon_fists(c) { // a clenched fist seen from the side
+      c.beginPath(); c.moveTo(3, 6); c.quadraticCurveTo(3, 3, 6, 3); c.lineTo(12, 3); c.quadraticCurveTo(14.4, 3, 14.4, 5.6); c.lineTo(14.4, 10.4); c.quadraticCurveTo(14.4, 13, 11.6, 13); c.lineTo(6, 13); c.lineTo(4.6, 15.4); c.lineTo(1.4, 15.4); c.lineTo(2.2, 11); c.quadraticCurveTo(1.6, 8, 3, 6); c.closePath();
+      c.fillStyle = vgrad(c, [[0, '#ffd8b8'], [0.5, '#e8a07a'], [1, '#a8603e']], 3, 15); c.fill();
+      c.lineWidth = 0.5; c.strokeStyle = '#5a2e18'; c.stroke();
+      c.strokeStyle = 'rgba(90,46,24,0.7)'; c.lineWidth = 0.4; [5.6, 8.4, 11.2].forEach((y) => { lin(c, [[8.8, y], [14.2, y]]); c.stroke(); });
+      c.fillStyle = vgrad(c, [[0, '#f0c070'], [1, '#9a6020']], 11, 16); c.fillRect(1.8, 12.4, 4.6, 1.6);
+      hi(c, 7, 4.6, 2, 0.8, 0.5);
+    },
     rock(c, w, h) { // falling boulder in the boar's den
       const cx = w / 2, cy = h / 2;
       c.beginPath();
@@ -242,8 +250,7 @@
   function registerIcons() {
     const R = 12;
     Object.keys(ICONS).forEach((n) => {
-      const old = O.SPR[n];
-      if (!old) return;
+      const old = O.SPR[n] || { w: 16, h: 16, ax: 8, ay: 15 };
       const w = old.w, h = old.h, cv = document.createElement('canvas');
       cv.width = Math.round(w * R); cv.height = Math.round(h * R);
       const g = cv.getContext('2d');
@@ -351,11 +358,13 @@
         iconIn(c, 'ambrosia', ax0 + i * 11, 23.5 + bob, 10.5, !has);
       }
       // item slots (top right)
-      [['club', 'icon_club'], ['sandals', 'icon_sandals']].forEach((it, i) => {
-        const x = W - 48 + i * 22, y = 5, has = !!st.items[it[0]];
-        slot(c, x, y, 18, has);
-        iconIn(c, it[1], x + 9, y + 9, 13, !has);
-      });
+      // weapon slot (the equipped weapon; C swaps when more than one is owned) + the sandals
+      const wpn = O.weaponOf ? O.weaponOf(st) : null, many = O.ownedWeapons && O.ownedWeapons(st).length > 1;
+      slot(c, W - 48, 5, 18, true);
+      if (wpn) iconIn(c, wpn.icon, W - 39, 14, 13);
+      if (many) { c.save(); rr(c, W - 52, 18.5, 8, 7, 2); c.fillStyle = vgrad(c, [[0, '#ffffff'], [1, '#cfc8dc']], 18.5, 25.5); c.fill(); c.restore(); T(c, 'C', W - 48, 22.2, { font: FD, size: 5, color: '#2a1a3a', align: 'center', shadow: false }); }
+      slot(c, W - 26, 5, 18, !!st.items.sandals);
+      iconIn(c, 'icon_sandals', W - 17, 14, 13, !st.items.sandals);
       c.restore();
     }
     if (g.state === 'itemget' && O.ITEMS && O.ITEMS[g.itemKey]) itemToast(c, g);
@@ -567,13 +576,18 @@
     section(c, 'QUEST', rx, y + 94, cw);
     c.save(); rr(c, rx, y + 100, cw, 46, 4); c.fillStyle = 'rgba(8,4,20,0.45)'; c.fill(); c.lineWidth = 0.4; c.strokeStyle = 'rgba(255,210,74,0.25)'; c.stroke(); c.restore();
     O.wrap(O.questHint(st), 38).slice(0, 4).forEach((l, i) => T(c, l, rx + 7, y + 108 + i * 10, { size: 7.4, color: '#ece4f6', maxW: cw - 14 }));
-    // footer
-    const fy = y + h - 11;
-    const kw = measure(c, 'START', 6.4, FD, '700', 0.8) + 10;
-    const rw = measure(c, 'RESUME', 7, FD, '700', 1.2), tot = kw + 6 + rw, fx = W / 2 - tot / 2;
-    c.save(); rr(c, fx, fy - 5, kw, 10, 3); c.fillStyle = vgrad(c, [[0, '#ffffff'], [1, '#c8c0d8']], fy - 5, fy + 5); c.fill(); c.lineWidth = 0.5; c.strokeStyle = '#3a2a4a'; c.stroke(); c.restore();
-    T(c, 'START', fx + kw / 2, fy + 0.2, { font: FD, size: 6.4, color: '#2a1a3a', align: 'center', shadow: false, track: 0.8 });
-    T(c, 'RESUME', fx + kw + 6, fy, { font: FD, size: 7, color: (t >> 5) & 1 ? '#f0e8f8' : '#c8b8dc', track: 1.2 });
+    // footer: RESUME / OPTIONS / HOW TO PLAY (A to choose, START resumes)
+    if (g.state === 'pause') {
+      const fy = y + h - 11, m = g.pauseMenu ? g.pauseMenu() : [{ t: 'RESUME' }], ps = g.psel || 0, gap = 18;
+      const ws = m.map((it) => measure(c, it.t, 7, FD, '700', 1.2));
+      let fx = W / 2 - (ws.reduce((a, b) => a + b, 0) + gap * (m.length - 1)) / 2;
+      m.forEach((it, i) => {
+        const sel = i === ps;
+        if (sel) { c.save(); rr(c, fx - 6, fy - 5.5, ws[i] + 12, 11, 5.5); c.fillStyle = 'rgba(255,210,74,0.18)'; c.fill(); c.lineWidth = 0.5; c.strokeStyle = 'rgba(255,220,120,0.75)'; c.stroke(); c.restore(); }
+        T(c, it.t, fx, fy, { font: FD, size: 7, color: sel ? 'gold' : '#b8a8d0', track: 1.2 });
+        fx += ws[i] + gap;
+      });
+    }
     c.restore();
   }
 
@@ -627,6 +641,104 @@
     c.restore();
   }
 
+  /* ================= OPTIONS ================= */
+  function keycap(c, x, y, label, o) {
+    o = o || {};
+    const size = o.size || 6.4, w = Math.max(10, measure(c, label, size, o.font || FD, '700') + 7), h = 10;
+    c.save();
+    rr(c, x, y - h / 2 + 0.8, w, h, 2.4); c.fillStyle = 'rgba(0,0,0,0.45)'; c.fill();
+    rr(c, x, y - h / 2, w, h, 2.4);
+    c.fillStyle = o.pad ? vgrad(c, [[0, '#ffb09a'], [1, '#b8302a']], y - 5, y + 5) : vgrad(c, [[0, '#ffffff'], [1, '#cfc8dc']], y - 5, y + 5);
+    c.fill(); c.lineWidth = 0.45; c.strokeStyle = '#3a2a4a'; c.stroke();
+    T(c, label, x + w / 2, y + 0.2, { font: o.font || FD, size, color: o.pad ? '#ffffff' : '#2a1a3a', align: 'center', shadow: false });
+    c.restore();
+    return w;
+  }
+  // a row of keys separated by a small "or" (or "+" when marked)
+  function keys(c, x, y, list, pad) {
+    list.forEach((k, i) => {
+      if (i) { const sep = list[i - 1] === '+' || k === '+' ? '' : 'or'; if (sep) { x += 2; x += T(c, sep, x, y, { size: 5.6, color: DIM }) + 2; } }
+      if (k === '+') { x += 1.5; x += T(c, '+', x, y, { font: FD, size: 7, color: 'gold' }) + 1.5; return; }
+      x += keycap(c, x, y, k, { pad: pad && /^(A|B)$/.test(k) }) + 1;
+    });
+  }
+  function drawOptions(c, g) {
+    const S = O.Settings, t = g.t;
+    c.save();
+    c.fillStyle = 'rgba(6,3,16,0.55)'; c.fillRect(0, 0, W, H);
+    const x = 72, y = 34, w = 240, h = 150;
+    panel(c, x, y, w, h, { r: 6, a: 0.97 });
+    T(c, 'OPTIONS', W / 2, y + 14, { font: FD, weight: '900', size: 13, color: 'gold', align: 'center', stroke: 'rgba(50,18,8,0.95)', track: 2 });
+    goldRules(c, W / 2, y + 14, measure(c, 'OPTIONS', 13, FD, '900', 2) / 2 + 8, 40);
+    const rows = [['MUSIC', 'vol', S.music], ['SOUND EFFECTS', 'vol', S.sfx], ['FULLSCREEN', 'fs'], ['BACK', 'back']];
+    rows.forEach(([label, kind, v], i) => {
+      const ry = y + 38 + i * 22, sel = g.osel === i;
+      if (sel) {
+        c.save(); rr(c, x + 12, ry - 8, w - 24, 16, 5); c.fillStyle = 'rgba(255,210,74,0.14)'; c.fill(); c.lineWidth = 0.5; c.strokeStyle = 'rgba(255,220,120,0.7)'; c.stroke(); c.restore();
+        gem(c, x + 12 + Math.sin(t * 0.15), ry, 2.2);
+      }
+      T(c, label, x + 22, ry, { font: FD, size: 7.4, color: sel ? 'gold' : CREAM, track: 1 });
+      if (kind === 'vol') {
+        const bx = x + 118, bw = 90;
+        for (let k = 0; k < 10; k++) {
+          const on = k < v, sx = bx + k * (bw / 10);
+          c.save(); rr(c, sx, ry - 3.5, bw / 10 - 1.4, 7, 1.5);
+          c.fillStyle = on ? vgrad(c, [[0, '#fff3b0'], [1, '#d08a1c']], ry - 3.5, ry + 3.5) : 'rgba(255,255,255,0.12)'; c.fill();
+          c.restore();
+        }
+        T(c, v === 0 ? 'OFF' : String(v), bx + bw + 6, ry, { font: FD, size: 6.8, color: v === 0 ? '#c89090' : CREAM });
+        if (sel) { T(c, '◀', bx - 9, ry, { size: 6, color: 'gold' }); T(c, '▶', bx + bw + 20, ry, { size: 6, color: 'gold' }); }
+      } else if (kind === 'fs') {
+        const onFs = S.isFull();
+        T(c, S.canFull ? (onFs ? 'ON' : 'OFF') : 'NOT AVAILABLE', x + 118, ry, { font: FD, size: 7, color: onFs ? 'gold' : '#c8b8dc' });
+        if (sel && S.canFull) T(c, 'PRESS A (OR F)', x + 150, ry, { size: 6, color: DIM });
+      }
+    });
+    T(c, '↑ ↓ CHOOSE    ← → CHANGE    START: BACK', W / 2, y + h - 10, { size: 6.2, color: DIM, align: 'center' });
+    c.restore();
+  }
+
+  /* ================= HOW TO PLAY ================= */
+  const HOWTO = [
+    ['MOVE', ['←', '→'], ['D-PAD']],
+    ['JUMP', ['X', 'SPACE'], ['A']],
+    ['ATTACK (FISTS OR WEAPON)', ['Z', 'J'], ['B']],
+    ['LOW ATTACK (SNAKES!)', ['↓', '+', 'Z'], ['↓', '+', 'B']],
+    ['SWITCH WEAPON', ['C', 'Q'], ['Y', '⚔']],
+    ['TALK / ENTER A DOOR', ['↑'], ['↑']],
+    ['STATUS / PAUSE', ['ENTER', 'P'], ['START']],
+    ['DRINK AMBROSIA', ['Z'], ['B']],
+    ['FULLSCREEN', ['F'], ['⛶']],
+    ['MUTE SOUND', ['M'], ['OPTIONS']]
+  ];
+  function drawHowto(c, g) {
+    const t = g.t;
+    c.save();
+    c.fillStyle = 'rgba(6,3,16,0.6)'; c.fillRect(0, 0, W, H);
+    const x = 18, y = 8, w = W - 36, h = 200;
+    panel(c, x, y, w, h, { r: 6, a: 0.97 });
+    T(c, 'HOW TO PLAY', W / 2, y + 12, { font: FD, weight: '900', size: 12, color: 'gold', align: 'center', stroke: 'rgba(50,18,8,0.95)', track: 2 });
+    const c1 = x + 14, c2 = x + 128, c3 = x + 238, hy = y + 27;
+    T(c, 'KEYBOARD', c2, hy, { font: FD, size: 6.4, color: 'gold', track: 1.2 });
+    T(c, 'GAMEPAD / PHONE', c3, hy, { font: FD, size: 6.4, color: 'gold', track: 1.2 });
+    c.fillStyle = vgrad(c, [[0, 'rgba(240,192,80,0.7)'], [1, 'rgba(240,192,80,0.1)']], 0, 1); c.fillRect(c1, hy + 5, w - 28, 0.5);
+    HOWTO.forEach(([label, kb, pad], i) => {
+      const ry = hy + 14 + i * 12.6;
+      if (i % 2 === 0) { c.fillStyle = 'rgba(255,255,255,0.04)'; c.fillRect(c1 - 4, ry - 6, w - 20, 12.6); }
+      const hot = i >= 2 && i <= 4;
+      T(c, label, c1, ry, { size: 7.2, color: hot ? '#ffe7a0' : CREAM });
+      keys(c, c2, ry, kb, false);
+      keys(c, c3, ry, pad, true);
+    });
+    const ty = y + h - 30;
+    c.save(); rr(c, c1 - 4, ty - 7, w - 20, 16, 4); c.fillStyle = 'rgba(255,200,90,0.1)'; c.fill(); c.lineWidth = 0.4; c.strokeStyle = 'rgba(255,210,110,0.45)'; c.stroke(); c.restore();
+    gem(c, c1 + 2, ty + 1, 2);
+    T(c, 'TIP: YOU START WITH YOUR FISTS. THE ELDER IN THE VILLAGE GIVES YOU A CLUB (STAND NEXT TO HIM, PRESS ↑).', c1 + 8, ty + 1, { size: 6.4, color: '#ffe7a0', maxW: w - 34 });
+    const a = 0.6 + 0.4 * Math.sin(t * 0.08);
+    T(c, g.menuT > 20 ? 'PRESS A, X OR START TO CONTINUE' : '', W / 2, y + h - 9, { font: FD, size: 6.4, color: 'rgba(255,240,210,' + a + ')', align: 'center', track: 1 });
+    c.restore();
+  }
+
   /* ================= HOOK UP ================= */
   const HDV = { drawHUD, drawDialog, drawBanner, drawBossBar, drawPause, drawGameOver };
   const U = O.UI || {};
@@ -637,5 +749,5 @@
       return orig && orig(c, g, a, b);
     };
   });
-  O.HDUI = { init: registerIcons, T, measure, panel, gem, FD, FB };
+  O.HDUI = { init: registerIcons, T, measure, panel, gem, FD, FB, drawOptions, drawHowto };
 })(window.OLY);

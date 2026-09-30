@@ -1,0 +1,14 @@
+{
+ "orpheus_p_jump": {
+  "raw": "orpheus_p_jump",
+  "char": "orpheus",
+  "anchor_raw": "orpheus_p_jump",
+  "pes": true,
+  "frames": {
+   "hero_p_jump": 15,
+   "hero_p_peak": 21,
+   "hero_p_fall": 27,
+   "hero_p_land": 33
+  }
+ }
+}

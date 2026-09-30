@@ -15,13 +15,43 @@
   let game = null;
 
   const isTouch = () => document.body.classList.contains('touch');
+  // Desktop: the picture fills the window. Touch: the controls never cover the picture —
+  // landscape puts them in columns left and right of it (START / fullscreen in a strip below),
+  // portrait puts the picture on top and the controls underneath.
+  const place = (el, css) => { if (el) Object.assign(el.style, { left: '', right: '', top: '', bottom: '', transform: '' }, css); };
   function resize() {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight - (isTouch() && vw < window.innerHeight ? 190 : 0);
-    const s = Math.max(0.5, Math.min(vw / O.W, vh / O.H));
-    canvas.style.width = Math.round(O.W * s) + 'px';
-    canvas.style.height = Math.round(O.H * s) + 'px';
+    const vw = window.innerWidth, vh = window.innerHeight, cs = canvas.style;
+    if (!isTouch()) {
+      const s = Math.max(0.5, Math.min(vw / O.W, vh / O.H));
+      cs.width = Math.round(O.W * s) + 'px'; cs.height = Math.round(O.H * s) + 'px'; cs.marginTop = '';
+      return;
+    }
+    const T = document.getElementById('touch');
+    const pad = Math.round(O.clamp(Math.min(vw, vh) * 0.3, 96, 150)), ab = Math.round(pad * 1.06);
+    T.style.setProperty('--pad', pad + 'px'); T.style.setProperty('--ab', ab + 'px');
+    const dpad = T.querySelector('.dpad'), abx = T.querySelector('.ab'), mid = T.querySelector('.mid');
+    let w, h, top;
+    if (vw >= vh) {
+      const side = Math.max(pad, ab) + 24, strip = 46;
+      const s = Math.min((vw - 2 * side) / O.W, (vh - strip) / O.H);
+      w = O.W * s; h = O.H * s; top = Math.max(4, (vh - strip - h) / 2);
+      const cy = top + h / 2;
+      place(dpad, { left: Math.round((side - pad) / 2) + 'px', top: Math.round(cy - pad / 2) + 'px' });
+      place(abx, { right: Math.round((side - ab) / 2) + 'px', top: Math.round(cy - ab / 2) + 'px' });
+      place(mid, { left: '50%', bottom: '6px', transform: 'translateX(-50%)' });
+    } else {
+      const s = vw / O.W;
+      w = vw; h = O.H * s; top = 8;
+      const cy = top + h + (vh - top - h - 50) / 2;
+      place(dpad, { left: '14px', top: Math.round(cy - pad / 2) + 'px' });
+      place(abx, { right: '14px', top: Math.round(cy - ab / 2) + 'px' });
+      place(mid, { left: '50%', bottom: '14px', transform: 'translateX(-50%)' });
+    }
+    cs.width = Math.round(w) + 'px'; cs.height = Math.round(h) + 'px'; cs.marginTop = Math.round(top) + 'px';
   }
+  const fsBtn = document.querySelector('#touch .fs');
+  if (fsBtn) fsBtn.addEventListener('click', (e) => { e.preventDefault(); O.Settings.toggleFull(); });
+  if (!O.Settings.canFull) document.body.classList.add('nofs');
   if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) document.body.classList.add('touch');
   window.addEventListener('resize', resize);
   window.addEventListener('pointerdown', (e) => {

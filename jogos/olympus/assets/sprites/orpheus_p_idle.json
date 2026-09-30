@@ -1,0 +1,29 @@
+{
+ "image": "orpheus_p_idle.png",
+ "w": 173,
+ "h": 544,
+ "ax": 92,
+ "ay": 538,
+ "frames": {
+  "hero_p_idle_0": {
+   "x": 0,
+   "y": 0,
+   "src": 0
+  },
+  "hero_p_idle_1": {
+   "x": 173,
+   "y": 0,
+   "src": 14
+  },
+  "hero_p_idle_2": {
+   "x": 346,
+   "y": 0,
+   "src": 28
+  },
+  "hero_p_idle_3": {
+   "x": 519,
+   "y": 0,
+   "src": 42
+  }
+ }
+}

@@ -1,0 +1,28 @@
+{
+ "orpheus_p_idle": {
+  "raw": "orpheus_p_idle",
+  "char": "orpheus",
+  "anchor_raw": "orpheus_p_idle",
+  "frames": {
+   "hero_p_idle_0": 0,
+   "hero_p_idle_1": 14,
+   "hero_p_idle_2": 28,
+   "hero_p_idle_3": 42
+  }
+ },
+ "orpheus_p_run": {
+  "raw": "orpheus_p_run",
+  "char": "orpheus",
+  "anchor_raw": "orpheus_p_run",
+  "frames": {
+   "hero_p_run_0": 24,
+   "hero_p_run_1": 26,
+   "hero_p_run_2": 28,
+   "hero_p_run_3": 30,
+   "hero_p_run_4": 32,
+   "hero_p_run_5": 34,
+   "hero_p_run_6": 36,
+   "hero_p_run_7": 38
+  }
+ }
+}

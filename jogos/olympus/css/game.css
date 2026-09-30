@@ -33,82 +33,63 @@ html, body {
     font-family: monospace;
 }
 
-/* ---------- touch controls (shown only on touch devices) ---------- */
+/* ---------- touch controls (shown only on touch devices) ----------
+   The game canvas is placed by main.js; the controls live OUTSIDE it:
+   landscape = left and right columns beside the picture, portrait = below it. */
 #touch { display: none; }
 
-body.touch #wrap {
-    align-items: flex-start;
-    padding-top: 8px;
-}
+body.touch #wrap { align-items: flex-start; justify-content: center; }
 
 body.touch #touch {
-    display: flex;
+    display: block;
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 180px;
-    padding: 0 16px 24px;
-    align-items: center;
-    justify-content: space-between;
+    inset: 0;
     pointer-events: none;
 }
-
-#touch > * { pointer-events: auto; }
+#touch > * { pointer-events: auto; position: absolute; }
 
 .dpad {
-    position: relative;
-    width: 140px;
-    height: 140px;
+    width: var(--pad, 124px);
+    height: var(--pad, 124px);
     border-radius: 50%;
-    background: rgba(124, 124, 124, 0.25);
-    border: 2px solid rgba(252, 252, 252, 0.3);
+    background: radial-gradient(circle at 40% 35%, rgba(90, 70, 130, 0.55), rgba(20, 12, 40, 0.75));
+    border: 2px solid rgba(240, 200, 110, 0.55);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
     touch-action: none;
 }
-
-.arrow {
-    position: absolute;
-    width: 0;
-    height: 0;
-    border: 12px solid transparent;
-}
-.arrow.up    { top: 10px;    left: 58px; border-bottom-color: rgba(252, 252, 252, 0.6); }
-.arrow.down  { bottom: 10px; left: 58px; border-top-color: rgba(252, 252, 252, 0.6); }
-.arrow.left  { left: 10px;   top: 58px;  border-right-color: rgba(252, 252, 252, 0.6); }
-.arrow.right { right: 10px;  top: 58px;  border-left-color: rgba(252, 252, 252, 0.6); }
+.arrow { position: absolute; width: 0; height: 0; border: 11px solid transparent; }
+.arrow.up    { top: 8%;    left: calc(50% - 11px); border-bottom-color: rgba(255, 236, 190, 0.85); }
+.arrow.down  { bottom: 8%; left: calc(50% - 11px); border-top-color: rgba(255, 236, 190, 0.85); }
+.arrow.left  { left: 8%;   top: calc(50% - 11px);  border-right-color: rgba(255, 236, 190, 0.85); }
+.arrow.right { right: 8%;  top: calc(50% - 11px);  border-left-color: rgba(255, 236, 190, 0.85); }
 
 #touch button {
-    font: bold 16px monospace;
-    color: #fcfcfc;
-    border: 2px solid rgba(252, 252, 252, 0.5);
-    background: rgba(216, 40, 0, 0.55);
+    font: 700 18px Cinzel, Georgia, serif;
+    color: #fff4d8;
+    border: 2px solid rgba(240, 200, 110, 0.75);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
     touch-action: none;
+    padding: 0;
 }
-#touch button.on { background: rgba(248, 184, 0, 0.8); }
+#touch button.on { filter: brightness(1.4); transform: scale(0.94); }
 
-.mid { align-self: flex-end; }
-.mid button {
-    padding: 8px 12px;
-    border-radius: 12px;
-    background: rgba(124, 124, 124, 0.45) !important;
-    font-size: 12px !important;
-}
-
-.ab {
-    display: flex;
-    gap: 14px;
-    align-items: center;
-}
+.ab { width: var(--ab, 132px); height: var(--ab, 132px); }
 .ab button {
-    width: 64px;
-    height: 64px;
+    position: absolute;
+    width: calc(var(--ab, 132px) * 0.48);
+    height: calc(var(--ab, 132px) * 0.48);
     border-radius: 50%;
 }
-.ab .b { margin-top: 36px; }
+.ab .a { right: 0; top: 0; background: radial-gradient(circle at 40% 35%, #e0503c, #7a1420); }
+.ab .b { left: 0; bottom: 0; background: radial-gradient(circle at 40% 35%, #d8a030, #7a4a10); }
 
-/* Landscape phones: controls overlay the sides of the screen */
-@media (orientation: landscape) {
-    body.touch #wrap { align-items: center; padding-top: 0; }
-    body.touch #touch { height: 100%; padding: 16px; background: none; }
-    .mid { align-self: flex-end; }
+.mid { display: flex; gap: 10px; }
+.mid button {
+    height: 34px;
+    padding: 0 14px !important;
+    border-radius: 17px;
+    background: rgba(30, 20, 56, 0.8);
+    font-size: 13px !important;
 }
+.mid .fs { width: 42px; font-size: 20px !important; }
+body.nofs .mid .fs { display: none; }

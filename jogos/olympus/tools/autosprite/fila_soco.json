@@ -1,0 +1,66 @@
+[
+ {
+  "char": "orpheus",
+  "name": "orpheus_p_idle",
+  "kind": "idle",
+  "end": true,
+  "pose": "cmuodbtd8000w9tjr398e3egg",
+  "prompt": "He holds NOTHING in his hands, NO club, NO weapon. Breathing idle: stands ready with loosely closed fists, chest rising and falling gently, cape and headband tails swaying slightly."
+ },
+ {
+  "char": "orpheus",
+  "name": "orpheus_p_run",
+  "kind": "run",
+  "loop": false,
+  "pose": "cmuodbtd8000w9tjr398e3egg",
+  "prompt": "He holds NOTHING in his hands, NO club, NO weapon. Running in place toward the right (treadmill run, he stays in place): energetic run cycle, fists pumping, cape flowing behind."
+ },
+ {
+  "char": "orpheus",
+  "name": "orpheus_p_jump",
+  "kind": "jump",
+  "air": true,
+  "end": true,
+  "pose": "cmuodbtd8000w9tjr398e3egg",
+  "prompt": "He holds NOTHING in his hands, NO weapon. Full jump in place: bends knees, takes off, rises with knees tucked, top of the jump, falls with legs reaching down, lands with a small squash."
+ },
+ {
+  "char": "orpheus",
+  "name": "orpheus_p_punch",
+  "kind": "attack",
+  "end": true,
+  "pose": "cmuodbtd8000w9tjr398e3egg",
+  "prompt": "He holds NOTHING, NO club, NO weapon. Quick boxing punch: pulls his right fist back, then throws a straight punch forward at chest height with the arm fully extended, then returns to a ready stance."
+ },
+ {
+  "char": "orpheus",
+  "name": "orpheus_p_lowpunch",
+  "kind": "custom",
+  "pose": "cmuodbtd8000w9tjr398e3egg",
+  "prompt": "He holds NOTHING, NO club, NO weapon. Crouches low, knees bent, body lowered to two thirds of his height, then from the crouch throws a low punch forward near the ground, and stays crouched."
+ },
+ {
+  "char": "orpheus",
+  "name": "orpheus_p_airpunch",
+  "kind": "custom",
+  "air": true,
+  "end": true,
+  "pose": "cmuodbtd8000w9tjr398e3egg",
+  "prompt": "He holds NOTHING, NO club, NO weapon. Jumps up, and in the air with legs tucked throws a strong punch forward with his fist, then lands."
+ },
+ {
+  "char": "satyr",
+  "name": "satyr_attack",
+  "kind": "attack",
+  "club": true,
+  "end": true,
+  "prompt": "The satyr lifts the wooden club high over his horned head, then smashes it down hard in front of him, then returns to his ready stance."
+ },
+ {
+  "char": "boar",
+  "name": "boar_gore",
+  "kind": "attack",
+  "end": true,
+  "prompt": "The giant boar lowers its head, then violently tosses its head up and forward, sweeping its long curved tusks upward in front of it, snorting, then returns to standing on all four hooves."
+ }
+]

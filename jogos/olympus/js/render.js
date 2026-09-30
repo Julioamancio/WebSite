@@ -182,6 +182,11 @@
       case 'press': case 'title': this.drawTitle(c); break;
       case 'story': this.drawStory(c); break;
       case 'cut': O.Cutscene.draw(c, this); break;
+      case 'options': case 'howto':
+        if (this.menuFrom === 'title') this.drawTitle(c);
+        else { this.drawWorld(c); if (this.menuFrom === 'pause') this.drawPause(c); }
+        if (O.HDUI) O.HDUI[this.state === 'options' ? 'drawOptions' : 'drawHowto'](c, this);
+        break;
       case 'play': case 'itemget': case 'dying': this.drawWorld(c); this.drawHUD(c); if (this.dialog) this.drawDialog(c); break;
       case 'pause': this.drawWorld(c); this.drawHUD(c); this.drawPause(c); break;
       case 'gameover': this.drawGameOver(c); break;

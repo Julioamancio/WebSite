@@ -92,7 +92,12 @@
     startNew(withStory) {
       this.st = newState();
       // HD: the opening is the cinematic cutscene (CS1-CS5); the old story pages stay as fallback.
-      if (withStory && O.Cutscene && O.Cutscene.start(this, ['cs1', 'cs2', 'cs3', 'cs4', 'cs5'], () => this.startNew(false))) return;
+      // First game on this browser: after the opening, show HOW TO PLAY once.
+      const afterOpening = () => {
+        this.startNew(false);
+        if (O.Settings && !O.Settings.seenHowto) { O.Settings.seenHowto = true; O.Settings.save(); this.openMenu('howto', 'play'); }
+      };
+      if (withStory && O.Cutscene && O.Cutscene.start(this, ['cs1', 'cs2', 'cs3', 'cs4', 'cs5'], afterOpening)) return;
       if (withStory) {
         this.state = 'story'; this.page = 0; this.chars = 0; this.storyT = 0;
         this.music('title');
@@ -188,7 +193,7 @@
     }
     giveItem(key, next) {
       const st = this.st;
-      if (key === 'club') st.items.club = true;
+      if (key === 'club') { st.items.club = true; st.weapon = 'club'; }
       if (key === 'sandals') st.items.sandals = true;
       if (key === 'blessing') { st.maxHp += 4; st.hp = st.maxHp; }
       this.state = 'itemget'; this.itemT = 130; this.itemKey = key; this.itemNext = next;
@@ -265,14 +270,22 @@
             this.music('title'); this.sfx('select');
           }
           break;
-        case 'title':
-          if (this.hasSave && (I.pressed.up || I.pressed.down)) { this.sel = 1 - this.sel; this.sfx('blip'); }
+        case 'title': {
+          const m = this.titleMenu();
+          if (!m[this.sel] || m[this.sel].off) this.sel = 0;
+          if (I.pressed.up) { this.sel = this.moveSel(m, this.sel, -1); this.sfx('blip'); }
+          if (I.pressed.down) { this.sel = this.moveSel(m, this.sel, 1); this.sfx('blip'); }
           if (I.pressed.start || I.pressed.jump || I.pressed.attack) {
             this.sfx('select');
-            if (this.sel === 1 && this.hasSave) this.trans = { t: 0, dir: 1, cb: () => this.loadSave() };
-            else this.trans = { t: 0, dir: 1, cb: () => this.startNew(true) };
+            const k = m[this.sel].k;
+            if (k === 'continue') this.trans = { t: 0, dir: 1, cb: () => this.loadSave() };
+            else if (k === 'new') this.trans = { t: 0, dir: 1, cb: () => this.startNew(true) };
+            else this.openMenu(k, 'title');
           }
           break;
+        }
+        case 'options': this.updateOptions(); break;
+        case 'howto': this.updateHowto(); break;
         case 'story': this.updateStory(); break;
         case 'cut': O.Cutscene.update(this); break;
         case 'play': this.updatePlay(); break;
@@ -338,8 +351,69 @@
       }
     }
 
+    /* ----- menus: title list, OPTIONS and HOW TO PLAY (reached from the title or the status screen) ----- */
+    titleMenu() {
+      return [{ k: 'new', t: 'NEW GAME' }, { k: 'continue', t: 'CONTINUE', off: !this.hasSave }, { k: 'options', t: 'OPTIONS' }, { k: 'howto', t: 'HOW TO PLAY' }];
+    }
+    pauseMenu() { return [{ k: 'resume', t: 'RESUME' }, { k: 'options', t: 'OPTIONS' }, { k: 'howto', t: 'HOW TO PLAY' }]; }
+    moveSel(list, cur, d) {
+      let i = cur;
+      for (let n = 0; n < list.length; n++) { i = (i + d + list.length) % list.length; if (!list[i].off) return i; }
+      return cur;
+    }
+    openMenu(k, from) { this.menuFrom = from; this.state = k; this.osel = 0; this.menuT = 0; }
+    closeMenu() {
+      this.sfx('select');
+      this.state = this.menuFrom === 'pause' ? 'pause' : this.menuFrom === 'play' ? 'play' : 'title';
+    }
+    updateOptions() {
+      const I = this.I, S = O.Settings, N = 4;
+      this.menuT++;
+      if (I.pressed.up) { this.osel = (this.osel + N - 1) % N; this.sfx('blip'); }
+      if (I.pressed.down) { this.osel = (this.osel + 1) % N; this.sfx('blip'); }
+      const d = (I.pressed.right ? 1 : 0) - (I.pressed.left ? 1 : 0), ok = I.pressed.jump || I.pressed.attack;
+      if (this.osel === 0 && d) { S.music = O.clamp(S.music + d, 0, 10); S.apply(); S.save(); this.sfx('blip'); }
+      if (this.osel === 1 && d) { S.sfx = O.clamp(S.sfx + d, 0, 10); S.apply(); S.save(); this.sfx('olive'); }
+      if (this.osel === 2 && (ok || d)) { S.toggleFull(); this.sfx('select'); }
+      if (this.menuT > 6 && ((this.osel === 3 && ok) || I.pressed.start)) this.closeMenu();
+    }
+    updateHowto() {
+      const I = this.I;
+      this.menuT++;
+      if (this.menuT > 20 && (I.pressed.start || I.pressed.jump || I.pressed.attack)) this.closeMenu();
+    }
+    // Cycle through the weapons Orpheus owns (C / Q, gamepad Y, the sword button on phones).
+    swapWeapon() {
+      const own = O.ownedWeapons(this.st), p = this.player;
+      if (own.length < 2) { this.popText(p.x - 12, p.y - 10, O.WEAPONS[own[0]].name, '#e8e0f4'); return; }
+      const i = own.indexOf(this.st.weapon);
+      this.st.weapon = own[(i + 1) % own.length];
+      p.weapon = O.WEAPONS[this.st.weapon];
+      this.sfx('select');
+      this.popText(p.x - 14, p.y - 10, p.weapon.name, '#ffe7a0');
+    }
+    // Pressing attack before the Elder gives the club: say why, once, then a short pop-up.
+    noWeapon() {
+      if (this.nwT > 0) return;
+      this.nwT = 90;
+      const p = this.player;
+      if (!this.st.flags.nwHint) {
+        this.st.flags.nwHint = 1;
+        this.say('', ['YOU HAVE NO WEAPON YET. FIND THE ELDER IN THE VILLAGE, STAND NEXT TO HIM AND PRESS UP TO TALK.']);
+      } else this.popText(p.x - 14, p.y - 10, 'NO WEAPON!', '#ffd0a0');
+    }
+
     updatePause() {
       const I = this.I, st = this.st;
+      const m = this.pauseMenu();
+      if (this.psel === undefined) this.psel = 0;
+      if (I.pressed.up || I.pressed.left) { this.psel = (this.psel + m.length - 1) % m.length; this.sfx('blip'); }
+      if (I.pressed.down || I.pressed.right) { this.psel = (this.psel + 1) % m.length; this.sfx('blip'); }
+      if (I.pressed.jump) {
+        const k = m[this.psel].k;
+        if (k === 'resume') { this.state = 'play'; this.sfx('pause'); return; }
+        this.sfx('select'); this.openMenu(k, 'pause'); return;
+      }
       if (I.pressed.start) { this.state = 'play'; this.sfx('pause'); return; }
       if (I.pressed.attack && st.ambrosia > 0 && st.hp < st.maxHp) {
         st.ambrosia--;
@@ -353,7 +427,8 @@
       if (this.dialog) { this.updateDialog(); this.updateAmbient(); return; }
       if (this.hitstop > 0) { this.hitstop--; return; }
       const I = this.I, p = this.player, lvl = this.lvl, st = this.st;
-      if (I.pressed.start) { this.state = 'pause'; this.sfx('pause'); return; }
+      if (I.pressed.start) { this.state = 'pause'; this.psel = 0; this.sfx('pause'); return; }
+      if (this.nwT > 0) this.nwT--;
       if (this.banner > 0) this.banner--;
       if (this.shake > 0) this.shake--;
 
@@ -364,8 +439,11 @@
       for (const e of this.enemies) {
         e.update(this);
         if (e.remove) continue;
-        if (ab && O.overlap(ab, e)) e.hit(this, 1, p.facing, p.swingId);
+        if (ab && O.overlap(ab, e)) e.hit(this, (p.weapon || O.WEAPONS.club).dmg, p.facing, p.swingId);
         if (e.harmful() && p.inv === 0 && O.overlap(p, e)) p.hurt(this, e.contactDmg(), e.x + e.w / 2);
+        // enemy attacks (satyr's club, snake's strike, boar's tusks) reach beyond the body
+        const eb = e.attackBox && e.attackBox();
+        if (eb && p.inv === 0 && O.overlap(p, eb)) p.hurt(this, e.atkDmg || 2, e.x + e.w / 2);
       }
       this.enemies = this.enemies.filter((e) => !e.remove);
 

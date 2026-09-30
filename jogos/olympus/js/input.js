@@ -6,10 +6,10 @@
     ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right',
     ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down',
     KeyX: 'jump', KeyK: 'jump', Space: 'jump',
-    KeyZ: 'attack', KeyJ: 'attack',
+    KeyZ: 'attack', KeyJ: 'attack', KeyC: 'swap', KeyQ: 'swap',
     Enter: 'start', KeyP: 'start', Escape: 'start'
   };
-  const ACTIONS = ['left', 'right', 'up', 'down', 'jump', 'attack', 'start'];
+  const ACTIONS = ['left', 'right', 'up', 'down', 'jump', 'attack', 'start', 'swap'];
 
   const I = O.Input = { down: {}, pressed: {}, kb: {}, touch: {}, pad: {}, latch: {}, prev: {} };
   ACTIONS.forEach((a) => { I.down[a] = I.pressed[a] = I.kb[a] = I.touch[a] = I.pad[a] = I.latch[a] = I.prev[a] = false; });
@@ -44,6 +44,7 @@
       I.pad.jump = I.pad.jump || b(0);
       I.pad.attack = I.pad.attack || b(2) || b(1);
       I.pad.start = I.pad.start || b(9);
+      I.pad.swap = I.pad.swap || b(3) || b(4);
     }
   }
 

@@ -202,3 +202,9 @@ As páginas marcam **Pronto** num banco do Artifact (coleção `prontos`, id = n
 - Tarefa 3 (Rainha e Javali no Flow): o javali foi criado direto no AutoSprite; a Rainha ainda não tem base (na cutscene final ela só aparece no texto).
 - Publicar de novo: `python jogos/olympus/tools/empacotar.py <versao> <saida.tgz>` e seguir o roteiro da memória `orpheus-vps` (upload por HTTP; SSH desta rede trava acima de ~20 KB).
 - Pendências conhecidas da beta: HUD e fonte da caixa de diálogo ainda são pixel; céu da vila é um degradê (falta o cenário 03); a Rainha não tem sprite; botões de toque um pouco em cima da arte no celular.
+
+## PARADA EM 30/09/2026 (Júlio desligou o PC) — commit 629c234, NÃO publicado
+
+- Feito localmente: `js/hdui.js` (HUD, diálogo, banner, barra do chefe, status, game over e ícones em HD; fontes Cinzel/Marcellus) e a correção do glitch dos NPCs (a piscada antiga, pixelada, aparecia no meio da animação; `hd.js` agora troca qualquer quadro pixel que sobrar pelo HD).
+- Falta antes de publicar: (1) o banner com o nome da área e o título "GAME OVER" não apareceram nas capturas do Playwright (no navegador do app o GAME OVER desenha; investigar com `tools/gameshot.js`); (2) rodar `node regressao.js` e `node fps.js`; (3) empacotar e publicar (memória `orpheus-vps`).
+- O site no ar ainda é a beta 5c1f9c7 (com o glitch da piscada dos NPCs).

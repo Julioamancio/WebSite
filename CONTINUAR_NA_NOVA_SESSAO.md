@@ -208,3 +208,9 @@ As páginas marcam **Pronto** num banco do Artifact (coleção `prontos`, id = n
 - Feito localmente: `js/hdui.js` (HUD, diálogo, banner, barra do chefe, status, game over e ícones em HD; fontes Cinzel/Marcellus) e a correção do glitch dos NPCs (a piscada antiga, pixelada, aparecia no meio da animação; `hd.js` agora troca qualquer quadro pixel que sobrar pelo HD).
 - Falta antes de publicar: (1) o banner com o nome da área e o título "GAME OVER" não apareceram nas capturas do Playwright (no navegador do app o GAME OVER desenha; investigar com `tools/gameshot.js`); (2) rodar `node regressao.js` e `node fps.js`; (3) empacotar e publicar (memória `orpheus-vps`).
 - O site no ar ainda é a beta 5c1f9c7 (com o glitch da piscada dos NPCs).
+## 30/09/2026 (tarde) — RESOLVIDO e publicado (commit 27f4575, pacote b20260930c)
+
+- Interface em HD no ar; glitch da piscada dos NPCs corrigido e conferido (400 quadros simulados sem nenhum quadro pixelado).
+- O "banner/GAME OVER sumido" era: (a) captura cedo demais no Chromium sem GPU (usar `g.update=function(){this.t++}` no gameshot para congelar); (b) defeito real no game over, que reiniciava a animação quando o jogo pulava mais de 2 passos entre desenhos (aparelho lento) — corrigido.
+- Desempenho: filtro de canvas a cada quadro custava ~10 fps; ícones cinza agora são calculados uma vez. `tools/fps_partes.js` mede o custo de cada parte. Resultado: 60 fps em todas as fases.
+- Pendências menores: céu da vila (cenário 03), sprite da Rainha, botões de toque sobre a arte no celular.

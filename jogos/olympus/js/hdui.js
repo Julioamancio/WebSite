@@ -107,7 +107,7 @@
   }
   function slot(c, x, y, s, lit) {
     c.save();
-    shadowBox(c, 3, 1, 0.45);
+    rr(c, x, y + 1, s, s, 3); c.fillStyle = 'rgba(0,0,0,0.35)'; c.fill(); // cheap drop shadow (runs every frame)
     rr(c, x, y, s, s, 3);
     c.fillStyle = vgrad(c, [[0, lit ? 'rgba(70,52,110,0.92)' : 'rgba(30,22,50,0.8)'], [1, lit ? 'rgba(28,18,52,0.92)' : 'rgba(14,10,26,0.8)']], y, y + s);
     c.fill(); c.shadowColor = 'transparent';
@@ -116,12 +116,26 @@
     c.restore();
   }
   // Draw an HD frame so it fits in a box, centred (used for icons in slots and counters).
-  function iconIn(c, name, cx, cy, size, dim) {
+  // "Not yet owned" version of an icon: greyed once and cached (a canvas filter every frame costs ~10 fps).
+  const dimCache = {};
+  function dimOf(name) {
     const e = O.SPR[name];
+    if (!e || !e.hd) return e;
+    if (dimCache[name] && dimCache[name].src === e) return dimCache[name].f;
+    const cv = document.createElement('canvas'); cv.width = e.sw; cv.height = e.sh;
+    const g = cv.getContext('2d');
+    g.filter = 'grayscale(1) brightness(0.55)';
+    g.drawImage(e.img, e.sx, 0, e.sw, e.sh, 0, 0, e.sw, e.sh);
+    const f = O.HD.makeFrame(cv, e.sw, e.sh, e.ax / e.k, e.ay / e.k, e.k);
+    dimCache[name] = { src: e, f };
+    return f;
+  }
+  function iconIn(c, name, cx, cy, size, dim) {
+    const e = dim ? dimOf(name) : O.SPR[name];
     if (!e) return;
     const k = size / Math.max(e.w, e.h);
     c.save();
-    if (dim) { c.filter = 'grayscale(1) brightness(0.55)'; c.globalAlpha *= 0.45; }
+    if (dim) c.globalAlpha *= 0.45;
     c.translate(cx - (e.w / 2 - e.ax) * k, cy - (e.h / 2 - e.ay) * k); c.scale(k, k);
     if (e.hd) O.HD.drawFrame(c, e, 0, 0, false, false); else c.drawImage(e.n, -e.ax, -e.ay);
     c.restore();
@@ -253,7 +267,7 @@
   const hud = { hp: null, ghost: 0, ghostT: 0, healT: 0, olives: 0, oliveT: 0, amb: 0, ambT: 0, vis: undefined, lvl: null };
   function medallion(c, cx, cy, t) {
     c.save();
-    shadowBox(c, 3, 1, 0.5);
+    c.beginPath(); c.arc(cx, cy + 1, 11.4, 0, 7); c.fillStyle = 'rgba(0,0,0,0.35)'; c.fill();
     c.beginPath(); c.arc(cx, cy, 11, 0, 7);
     c.fillStyle = vgrad(c, [[0, '#fff3b8'], [0.35, '#f0b848'], [0.75, '#a86418'], [1, '#e8b050']], cy - 11, cy + 11); c.fill();
     c.shadowColor = 'transparent';
@@ -278,7 +292,7 @@
     o = o || {};
     const r = h / 2;
     c.save();
-    shadowBox(c, 2.5, 0.8, 0.5);
+    rr(c, x - 1.2, y - 0.4, w + 2.4, h + 2.4, r + 1.2); c.fillStyle = 'rgba(0,0,0,0.35)'; c.fill();
     rr(c, x - 1.2, y - 1.2, w + 2.4, h + 2.4, r + 1.2); c.fillStyle = goldLine(c, y - 1.2, y + h + 1.2); c.fill();
     c.shadowColor = 'transparent';
     rr(c, x, y, w, h, r); c.fillStyle = vgrad(c, [[0, '#1c0c1e'], [1, '#3a1a34']], y, y + h); c.fill();
@@ -346,15 +360,22 @@
     }
     if (g.state === 'itemget' && O.ITEMS && O.ITEMS[g.itemKey]) itemToast(c, g);
   }
+  // Soft dark band behind titles: fades out to the sides and to the top and bottom (cached per size).
+  const ribbons = {};
   function ribbon(c, cy, h, a) {
-    c.save();
-    const g = c.createLinearGradient(0, 0, W, 0);
-    g.addColorStop(0, 'rgba(10,6,24,0)'); g.addColorStop(0.22, 'rgba(10,6,24,' + a + ')'); g.addColorStop(0.78, 'rgba(10,6,24,' + a + ')'); g.addColorStop(1, 'rgba(10,6,24,0)');
-    c.fillStyle = g; c.fillRect(0, cy - h / 2, W, h);
-    c.globalCompositeOperation = 'destination-out';
-    const v = c.createLinearGradient(0, cy - h / 2, 0, cy + h / 2);
-    v.addColorStop(0, 'rgba(0,0,0,1)'); v.addColorStop(0.3, 'rgba(0,0,0,0)'); v.addColorStop(0.7, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,1)');
-    c.restore();
+    const key = h + ':' + a;
+    if (!ribbons[key]) {
+      const k = 4, cv = document.createElement('canvas'); cv.width = W * k; cv.height = h * k;
+      const g = cv.getContext('2d'), hg = g.createLinearGradient(0, 0, cv.width, 0);
+      hg.addColorStop(0, 'rgba(10,6,24,0)'); hg.addColorStop(0.22, 'rgba(10,6,24,' + a + ')'); hg.addColorStop(0.78, 'rgba(10,6,24,' + a + ')'); hg.addColorStop(1, 'rgba(10,6,24,0)');
+      g.fillStyle = hg; g.fillRect(0, 0, cv.width, cv.height);
+      g.globalCompositeOperation = 'destination-in';
+      const vg = g.createLinearGradient(0, 0, 0, cv.height);
+      vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(0.35, 'rgba(0,0,0,1)'); vg.addColorStop(0.65, 'rgba(0,0,0,1)'); vg.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = vg; g.fillRect(0, 0, cv.width, cv.height);
+      ribbons[key] = cv;
+    }
+    c.save(); c.imageSmoothingEnabled = true; c.drawImage(ribbons[key], 0, cy - h / 2, W, h); c.restore();
   }
   function goldRules(c, cx, y, half, len, a) {
     c.save();
@@ -560,7 +581,7 @@
   const goState = { t0: 0, last: -99 };
   function drawGameOver(c, g) {
     const t = g.t, GY = 150;
-    if (t - goState.last > 2) goState.t0 = t;
+    if (t - goState.last > 30) goState.t0 = t; // a new game over (slow devices skip several ticks per frame)
     goState.last = t;
     const lt = t - goState.t0, I = O.HD.img;
     c.save();

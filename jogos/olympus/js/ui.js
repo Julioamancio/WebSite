@@ -2445,7 +2445,7 @@ window.OLY = window.OLY || {};
   let goT0 = 0, goLastT = -99;
   function drawGameOver(c, g) {
     const t = g.t;
-    if (t - goLastT > 2) goT0 = t;
+    if (t - goLastT > 30) goT0 = t;
     goLastT = t;
     const lt = t - goT0;
     c.drawImage(gameOverBg(), 0, 0);

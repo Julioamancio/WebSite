@@ -1,0 +1,4 @@
+{
+ "orpheus_idle": {"raw": "orpheus_idle", "char": "orpheus", "frames": {"hero_idle_0": 0, "hero_idle_1": 14, "hero_idle_2": 28, "hero_idle_3": 42}},
+ "orpheus_run": {"raw": "orpheus_run", "char": "orpheus", "frames": {"hero_run_0": 24, "hero_run_1": 26, "hero_run_2": 28, "hero_run_3": 30, "hero_run_4": 32, "hero_run_5": 34, "hero_run_6": 36, "hero_run_7": 38}}
+}

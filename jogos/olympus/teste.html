@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Orpheus — teste dos sprites 2.5D</title>
+<style>
+  :root { --bg:#070a14; --ink:#e9ecf6; --muted:#9aa5bd; --gold:#e3b862; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; background:var(--bg); color:var(--ink); font:14px/1.4 system-ui, "Segoe UI", sans-serif; overflow:hidden; }
+  #wrap { position:fixed; inset:0; display:grid; place-items:center; }
+  canvas { width:100vw; height:56.25vw; max-height:100vh; max-width:177.78vh; display:block; background:#0b1022; }
+  #hud { position:fixed; top:10px; left:12px; right:12px; display:flex; flex-wrap:wrap; gap:6px 16px; font:500 12px/1.3 ui-monospace, Consolas, monospace; color:var(--muted); pointer-events:none; }
+  #hud b { color:var(--gold); font-weight:600; }
+  #loading { position:fixed; inset:0; display:grid; place-items:center; font-size:18px; color:var(--muted); }
+  .pad { position:fixed; bottom:14px; display:flex; gap:10px; user-select:none; -webkit-user-select:none; touch-action:none; }
+  .pad.l { left:14px; } .pad.r { right:14px; }
+  .pad button { width:64px; height:64px; border-radius:50%; border:1px solid #ffffff33; background:#ffffff14; color:var(--ink); font:600 18px system-ui; }
+  .pad button:active, .pad button.on { background:#ffffff33; }
+  @media (hover:hover) and (pointer:fine) { .pad { display:none; } }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="c" width="1920" height="1080"></canvas></div>
+<div id="hud"><span><b>ORPHEUS</b> teste dos sprites 2.5D (AutoSprite + cenário do Flow)</span><span>← → andar · Espaço/X pular · Z/J golpe · ↓ agachar</span><span id="st"></span></div>
+<div id="loading">Carregando…</div>
+<div class="pad l"><button data-k="left">◀</button><button data-k="right">▶</button><button data-k="down">▼</button></div>
+<div class="pad r"><button data-k="atk">B</button><button data-k="jump">A</button></div>
+<script>
+(function () {
+  'use strict';
+  var W = 1920, H = 1080, S = 5;             // escala do motor HD: unidades do jogo x5
+  var GROUND = 1000;                          // linha dos pés
+  var HERO_H = 40 * S;                        // Orfeu com ~40 unidades de altura
+  var cv = document.getElementById('c'), ctx = cv.getContext('2d');
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+
+  var BG = [
+    { f: 'assets/web/floresta_ceu.webp', k: 0.02, cover: true },
+    { f: 'assets/web/floresta_longe.webp', k: 0.10 },
+    { f: 'assets/web/floresta_meio.webp', k: 0.30 },
+    { f: 'assets/web/floresta_perto.webp', k: 0.60 }
+  ];
+  var SHEETS = ['orpheus_idle', 'orpheus_run', 'orpheus_jump', 'orpheus_attack'];
+  var spr = {};   // nome no motor -> {img, x, w, h, ax, ay}
+
+  function loadImg(src) {
+    return new Promise(function (ok, bad) { var i = new Image(); i.onload = function () { ok(i); }; i.onerror = function () { bad(new Error(src)); }; i.src = src; });
+  }
+  function loadSheet(n) {
+    return fetch('assets/sprites/' + n + '.json').then(function (r) { return r.json(); }).then(function (m) {
+      return loadImg('assets/sprites/' + m.image).then(function (img) {
+        Object.keys(m.frames).forEach(function (k) { spr[k] = { img: img, x: m.frames[k].x, w: m.w, h: m.h, ax: m.ax, ay: m.ay }; });
+      });
+    });
+  }
+  var scale = 1;
+  function draw(name, x, y, flip) {
+    var s = spr[name]; if (!s) return;
+    var dw = s.w * scale, dh = s.h * scale;
+    ctx.save(); ctx.translate(Math.round(x), Math.round(y));
+    if (flip) ctx.scale(-1, 1);
+    ctx.drawImage(s.img, s.x, 0, s.w, s.h, -s.ax * scale, -s.ay * scale, dw, dh);
+    ctx.restore();
+  }
+
+  // --- entrada
+  var keys = {};
+  var MAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowDown: 'down', KeyS: 'down',
+              Space: 'jump', KeyX: 'jump', KeyK: 'jump', KeyZ: 'atk', KeyJ: 'atk' };
+  addEventListener('keydown', function (e) { var k = MAP[e.code]; if (k) { keys[k] = true; e.preventDefault(); } });
+  addEventListener('keyup', function (e) { var k = MAP[e.code]; if (k) { keys[k] = false; e.preventDefault(); } });
+  Array.prototype.forEach.call(document.querySelectorAll('.pad button'), function (b) {
+    var k = b.dataset.k;
+    function on(e) { e.preventDefault(); keys[k] = true; b.classList.add('on'); }
+    function off(e) { e.preventDefault(); keys[k] = false; b.classList.remove('on'); }
+    b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off);
+  });
+
+  // --- Orfeu (números de js/entities.js, em unidades x5)
+  var P = { x: 900, y: GROUND, vx: 0, vy: 0, face: 1, ground: true, atk: 0, t: 0, blink: 180, land: 0 };
+  var prevJump = false, prevAtk = false, camX = 0;
+  function step() {
+    var walk = 1.5 * S, grav = 0.25 * S, jumpV = 4.8 * S, maxFall = 5 * S;
+    var dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+    var crouch = keys.down && P.ground && !P.atk;
+    if (keys.atk && !prevAtk && !P.atk) P.atk = 20;
+    if (keys.jump && !prevJump && P.ground && !P.atk) { P.vy = -jumpV; P.ground = false; }
+    prevJump = keys.jump; prevAtk = keys.atk;
+    P.vx = (P.atk && P.ground) || crouch ? 0 : dir * walk;
+    if (dir) P.face = dir;
+    P.x += P.vx;
+    if (!P.ground) { P.vy = Math.min(P.vy + grav, maxFall); P.y += P.vy; if (P.y >= GROUND) { P.y = GROUND; P.vy = 0; P.ground = true; P.land = 6; } }
+    if (P.atk) P.atk--;
+    if (P.land) P.land--;
+    P.t++;
+    if (--P.blink < -6) P.blink = 150 + Math.random() * 150;
+    P.crouch = crouch;
+    camX += (P.x - W * 0.45 - camX) * 0.12;
+  }
+  function heroFrame() {
+    if (P.atk) return 'hero_atk_' + Math.min(4, Math.floor((20 - P.atk) / 4));
+    if (!P.ground) return P.vy < -8 ? 'hero_jump' : P.vy < 6 ? 'hero_peak' : 'hero_fall';
+    if (P.land || P.crouch) return 'hero_land';
+    if (P.vx) return 'hero_run_' + (Math.floor(P.t / 4) % 8);
+    if (P.blink < 0) return 'hero_blink';
+    return 'hero_idle_' + (Math.floor(P.t / 12) % 4);
+  }
+
+  // --- cenário
+  function drawBG() {
+    BG.forEach(function (L) {
+      var im = L.img; if (!im) return;
+      if (L.cover) { ctx.drawImage(im, 0, 0, W, W * im.height / im.width); return; }
+      var s = 1, w = im.width * s, h = im.height * s;   // camadas já estão na escala de 1080
+      var sx = camX * L.k, first = Math.floor(sx / w);
+      for (var i = first; i * w - sx < W; i++) {
+        var x = i * w - sx, mir = ((i % 2) + 2) % 2 === 1;   // um bloco sim, um não, espelhado: sem emenda
+        ctx.save(); ctx.translate(x + (mir ? w : 0), GROUND + 40 - h); if (mir) ctx.scale(-1, 1);
+        ctx.drawImage(im, 0, 0, w, h); ctx.restore();
+      }
+    });
+    var g = ctx.createLinearGradient(0, GROUND - 10, 0, H);
+    g.addColorStop(0, 'rgba(8,12,26,0)'); g.addColorStop(0.35, 'rgba(8,12,26,0.85)'); g.addColorStop(1, '#060913');
+    ctx.fillStyle = g; ctx.fillRect(0, GROUND - 10, W, H - GROUND + 10);
+  }
+
+  var stEl = document.getElementById('st');
+  function frame() {
+    step();
+    ctx.clearRect(0, 0, W, H);
+    drawBG();
+    var name = heroFrame();
+    // sombra
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    var sh = Math.max(0.3, 1 - (GROUND - P.y) / 400);
+    ctx.beginPath(); ctx.ellipse(P.x - camX, GROUND + 4, 60 * sh, 12 * sh, 0, 0, Math.PI * 2); ctx.fill();
+    draw(name, P.x - camX, P.y, P.face < 0);
+    stEl.textContent = 'quadro: ' + name;
+    requestAnimationFrame(frame);
+  }
+
+  Promise.all(BG.map(function (L) { return loadImg(L.f).then(function (i) { L.img = i; }); }).concat(SHEETS.map(loadSheet)))
+    .then(function () {
+      scale = HERO_H / (spr.hero_idle_0.ay - 6);    // altura do corpo no idle (a folha tem 6 px de margem em cima)
+      document.getElementById('loading').remove();
+      requestAnimationFrame(frame);
+    })
+    .catch(function (e) { document.getElementById('loading').textContent = 'Falhou ao carregar: ' + e.message; });
+})();
+</script>
+</body>
+</html>

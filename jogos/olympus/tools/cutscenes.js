@@ -300,7 +300,7 @@ console.log(`OK: ${CUTSCENES.length} cutscenes, ${allScenes.length} cenas -> doc
 // ---------- stage 4: one Flow/Veo prompt per scene ----------
 // The English fields of each scene live in cutscenes_prompts.json (written and cross-checked by review agents);
 // the style, the reference line, the character sheets and the base negatives are fixed here, so they are identical in every clip.
-const CLIPS_URL = ''; // filled in after the first publish of docs/prompts_clipes.html
+const CLIPS_URL = 'https://claude.ai/artifact/9N1dVQMPKwPWXMLcMAv2Bk'; // filled in after the first publish of docs/prompts_clipes.html
 const FIELDS = path.join(__dirname, 'cutscenes_prompts.json');
 if (fs.existsSync(FIELDS)) {
   const { html: promptsHtml, markdown: promptsMd } = require('./prompts_flow.js');

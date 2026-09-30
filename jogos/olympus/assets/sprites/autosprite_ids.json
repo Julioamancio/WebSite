@@ -1,0 +1,57 @@
+{
+  "characters": {
+    "orpheus": "cmungojvc0008eh1b7j4u0n0e",
+    "eurydice": "cmungom8r000deh1bio6t7gwn",
+    "elder": "cmungoomu000oeh1bwk3wt0br",
+    "merchant": "cmungoqyj000j5bcfxhag1iog",
+    "villager": "cmungou5e000v986oxq3kc55a",
+    "zeus": "cmungoy920002fp9yd88kjehu",
+    "hermes": "cmungp0zc0006axid9qmk0x51",
+    "hades": "cmungp3e0000eaxidl85cgnsu"
+  },
+  "spritesheets": {},
+  "poses": {
+    "orpheus": "cmungojwg000aeh1bwp51z0ce",
+    "eurydice": "cmungom9k000feh1bqiftr01y",
+    "elder": "cmungoona000qeh1b7l7oy2r0",
+    "merchant": "cmungoqza000l5bcf4ap99tyx",
+    "villager": "cmungou6e000x986onv0qo5j4",
+    "zeus": "cmungoybf0004fp9yvs9pdhys",
+    "hermes": "cmungp1090008axidvo8spm00",
+    "hades": "cmungp3ei000gaxidpaaocfly"
+  },
+  "sq": {
+    "orpheus": {
+      "character": "cmunh0kvs0009dl4vwhen0ye4",
+      "pose": "cmunh0kwk000bdl4v2619mdvn"
+    },
+    "eurydice": {
+      "character": "cmunh0ntu00015go1ak7jcr85",
+      "pose": "cmunh0num00035go1iyyn7rbl"
+    },
+    "elder": {
+      "character": "cmunh0r7s00016ir2e7jobkru",
+      "pose": "cmunh0r8l00036ir2icvbqhps"
+    },
+    "merchant": {
+      "character": "cmunh0udp0001g8l6eyzanvuh",
+      "pose": "cmunh0uen0003g8l6phyaux5c"
+    },
+    "villager": {
+      "character": "cmunh0yos0001pgjepu6svrx4",
+      "pose": "cmunh0ypm0003pgjeyxsnkeg9"
+    },
+    "zeus": {
+      "character": "cmunh121h000dpgje0uorm5m2",
+      "pose": "cmunh121z000fpgje7r1bfuzo"
+    },
+    "hermes": {
+      "character": "cmunh14rz000hpgjekl6ub2mx",
+      "pose": "cmunh14sf000jpgjeu2tj3791"
+    },
+    "hades": {
+      "character": "cmunh17s8000lpgjenv6raaqf",
+      "pose": "cmunh17t2000npgje9l67hqsh"
+    }
+  }
+}

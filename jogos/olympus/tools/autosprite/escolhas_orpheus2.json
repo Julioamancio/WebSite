@@ -1,0 +1,4 @@
+{
+ "orpheus_jump": {"raw": "orpheus_jump", "char": "orpheus", "pes": true, "frames": {"hero_jump": 19, "hero_peak": 26, "hero_fall": 35, "hero_land": 42}},
+ "orpheus_attack": {"raw": "orpheus_attack", "char": "orpheus", "frames": {"hero_atk_0": 5, "hero_atk_1": 14, "hero_atk_2": 17, "hero_atk_3": 36, "hero_atk_4": 40}}
+}

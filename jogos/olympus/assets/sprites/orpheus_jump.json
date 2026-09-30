@@ -1,0 +1,29 @@
+{
+ "image": "orpheus_jump.png",
+ "w": 543,
+ "h": 540,
+ "ax": 309,
+ "ay": 534,
+ "frames": {
+  "hero_jump": {
+   "x": 0,
+   "y": 0,
+   "src": 19
+  },
+  "hero_peak": {
+   "x": 543,
+   "y": 0,
+   "src": 26
+  },
+  "hero_fall": {
+   "x": 1086,
+   "y": 0,
+   "src": 35
+  },
+  "hero_land": {
+   "x": 1629,
+   "y": 0,
+   "src": 42
+  }
+ }
+}

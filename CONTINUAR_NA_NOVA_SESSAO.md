@@ -214,3 +214,12 @@ As páginas marcam **Pronto** num banco do Artifact (coleção `prontos`, id = n
 - O "banner/GAME OVER sumido" era: (a) captura cedo demais no Chromium sem GPU (usar `g.update=function(){this.t++}` no gameshot para congelar); (b) defeito real no game over, que reiniciava a animação quando o jogo pulava mais de 2 passos entre desenhos (aparelho lento) — corrigido.
 - Desempenho: filtro de canvas a cada quadro custava ~10 fps; ícones cinza agora são calculados uma vez. `tools/fps_partes.js` mede o custo de cada parte. Resultado: 60 fps em todas as fases.
 - Pendências menores: céu da vila (cenário 03), sprite da Rainha, botões de toque sobre a arte no celular.
+## 30/09/2026 (fim da tarde) — publicado b20260930d (commit c7eeaab+)
+
+- Celular: controles em colunas fora da arte; botões ⚔ (troca de arma), START e ⛶ (tela cheia) numa faixa embaixo.
+- Título: NEW GAME / CONTINUE / OPTIONS / HOW TO PLAY. Pausa: RESUME / OPTIONS / HOW TO PLAY. OPTIONS: música, efeitos, tela cheia (js/settings.js, salvo no navegador). HOW TO PLAY aparece sozinho na 1ª partida.
+- Armas: tabela O.WEAPONS em js/entities.js (punhos desde o início, clava do Ancião; C/Q/Y troca). Arma nova = 1 linha + folhas com prefixo próprio (ex.: 'hero_s_' para espada). O AutoSprite desenha a arma no personagem: cada arma precisa do próprio conjunto (~6 animações).
+- Inimigos atacam com aviso: sátiro (clava, 2), cobra (enrola e dá o bote, 2), javali (investida curta de presas, 3). Cobra maior, morcego menor.
+- Lições do AutoSprite: tipo "attack" inventou um escudo no Orfeu sem arma (usar "custom" + "NO shield"); duas vezes um job "succeeded" sem vídeo ("Video has no URL") — tem que pedir de novo; erros 502 passageiros — `tools/autosprite/insistir.mjs` tenta a cada 3 min.
+- Créditos AutoSprite restantes: ~482.
+- Testes: `node regressao.js` (local) e `node regressao_online.js` (site publicado) cobrem soco, alcance, troca de arma e golpes dos inimigos.
